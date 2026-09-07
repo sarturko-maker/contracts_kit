@@ -112,6 +112,42 @@ class ReviewTableTest(KitFixture):
         self.assertTrue((self.root / "out/INDEX.html").exists())
         self.assertIn("Use /analyse", self.command("sort.py", success=False))
 
+    def test_contents_map_is_stored_but_fetched_only_per_document(self):
+        self.assertIn("no contents column", self.run_review("--contents", "001", success=False)
+                      if self.import_table() else "")
+        cmap = ("1 Definitions, p1-2: defined terms\n11 Precedence, p4: Agreement then Order then "
+                "Supplier conditions (priority/conflict)\nAppendix A Depots, p9: list of 7 covered depots\n"
+                "Signature section, p8: two blocks\nTotal pages 9; p10 NOT_REVIEWED")
+        for row in self.table_rows:
+            row["contents"] = ""
+        self.table_rows[0]["contents"] = cmap
+        self.save_table()
+        self.import_table()
+        self.assertEqual(cmap, self.packet()["answers"]["contents"])
+        self.assertIn("contents: NOT_REVIEWED", self.packet()["flags"])
+        self.assertIn("contents: blank", self.packet("002")["flags"])
+        index = self.run_review("--index")
+        self.assertNotIn("Appendix A Depots", index)
+        self.assertIn("5 entries", index)
+        self.assertIn("--contents 001", index)
+        lookup = self.run_review("--lookup", "depots")
+        self.assertIn("Appendix A Depots, p9", lookup)
+        self.assertNotIn("11 Precedence", lookup)
+        listing = self.run_review("--contents", "1")
+        self.assertIn("11 Precedence, p4", listing)
+        self.assertIn("Contents map for doc 001", listing)
+        request = self.root / "work/review-table/request.json"
+        request.write_text(json.dumps({"doc_id":"001", "mode":"text", "location":"clause 11, page 4",
+                                      "reason":"Map flags a priority clause while precedence says NOT_FOUND"}))
+        self.assertIn("Appendix A Depots", self.run_review("--request-check", str(request)))
+        self.assignments()
+        for account in self.erp_accounts:
+            self.judge(account, self.sorted_docs(account))
+        self.command("place.py", "--all", "--visuals")
+        corpus = (self.root / "out/customers/CORPUS.csv").read_text()
+        self.assertNotIn("Appendix A Depots", corpus)
+        self.assertNotIn("review_contents", corpus)
+
     def test_semicolon_csv_keeps_multiline_answers(self):
         self.save_table(delimiter=";")
         self.assertIn("9 rows imported", self.import_table())

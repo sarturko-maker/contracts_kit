@@ -19,7 +19,7 @@ unfamiliar pile where you want to fix the entity map and drop junk before paying
 
 Already have a bulk-review export? Use **ERP + Review_Table + the original contract files**.
 ERP controls account names; Review_Table supplies cited document facts. See the
-[ten focused column prompts and import instructions](docs/review-table-pilot.md) and the
+[eleven focused column prompts and import instructions](docs/review-table-pilot.md) and the
 [header template](inputs/Review_Table.example.csv). Both inputs accept CSV or XLSX.
 
 ```text
@@ -38,6 +38,8 @@ material doubt could change the conclusion, recording the reason, scope and find
 can remain unresolved. Missing citations and signature-attestation labels do not block analysis.
 A governing candidate with missing/NOT_FOUND priority information and a competing priority claim
 in another row requires a targeted precedence check. Table absence is not proof of source absence.
+An optional `contents` column, a clause-level map of each file, is held out of the index printout
+and fetched only for the document being checked or the lines matching a search.
 Initial import requires a row for each readable contract (blank answers are allowed), and exact
 filename matching; it never falls back automatically to full-source reading. Table claims stay
 externally reported except where a targeted source check is recorded. The main session still costs

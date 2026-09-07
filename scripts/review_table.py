@@ -22,6 +22,9 @@ from kit_common import (CARD_KEYS, INVENTORY_CSV, WORK, OUT, WORK_FILES,
 
 COLUMNS = ("document", "parties", "execution", "term", "trade_scope", "group_scope",
            "links", "precedence", "parts", "gaps")
+# Optional clause-level map of each file. Stored with the row, but kept out of --index so a
+# long map only enters the session for the document being checked or the lines that match.
+CONTENTS = "contents"
 ROOT = WORK / "review-table"
 ACTIVE = ROOT / "active.json"
 SOURCE = WORK / "review-source.json"
@@ -139,8 +142,9 @@ def match_rows(rows, inventory):
         for source in (Path(item["original_path"]), WORK_FILES / f'{doc}.{item["ext"]}'):
             if not source.is_file() or digest(source) != item["sha256"]:
                 raise ValueError(f"doc {doc}: original/copy changed or missing; rerun /prepare and review")
-        flags = [f"{column}: blank" for column in COLUMNS if not row[column].strip()]
-        flags += [f"{column}: {token}" for column in COLUMNS
+        checked = COLUMNS + ((CONTENTS,) if CONTENTS in row else ())
+        flags = [f"{column}: blank" for column in checked if not row[column].strip()]
+        flags += [f"{column}: {token}" for column in checked
                   for token in sorted(set(re.findall(r"\b(?:NOT_REVIEWED|UNREADABLE|CONFLICTING)\b",
                                                     row[column])))]
         packet = {"schema": VERSION, "doc_id": doc, "inventory": item, "answers": row,
@@ -214,6 +218,47 @@ def packet_for(doc):
     if packet is None:
         raise ValueError(f"No imported row for doc {doc}")
     return packet
+
+
+def contents_lines(packet):
+    """The stored map, one entry per line; None when the export has no contents column."""
+    text = packet["answers"].get(CONTENTS)
+    if text is None:
+        return None
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def index_view(packet, lookup=None):
+    """Answers for --index/--lookup: every column literal except the map, which is summarised.
+
+    With --lookup the matching map lines are returned so the session sees where a term occurs
+    without loading the whole map.
+    """
+    answers = dict(packet["answers"])
+    lines = contents_lines(packet)
+    if lines is None:
+        return answers
+    doc = packet["doc_id"]
+    answers[CONTENTS] = (f"{len(lines)} entries, {len(packet['answers'][CONTENTS])} characters; "
+                         f"python scripts/review_table.py --contents {doc}")
+    if lookup:
+        answers[CONTENTS + "_matches"] = [line for line in lines if lookup.casefold() in line.casefold()]
+    return answers
+
+
+def show_contents(doc):
+    packet = packet_for(doc)
+    lines = contents_lines(packet)
+    if lines is None:
+        raise ValueError("This Review_Table has no contents column; ask the export for the clause map "
+                         "or choose the location from the other cells")
+    pages = packet["inventory"].get("pages", "")
+    say(f"Contents map for doc {doc} (inventory pages: {pages or 'unknown'}; "
+        f"{len(lines)} entries; a map is the export's claim, not a source read):")
+    for line in lines:
+        say(line)
+    if not lines:
+        say("(blank)")
 
 
 def selected_ids(account=None):
@@ -369,6 +414,8 @@ def log_check(path, finish=False):
         doc = data["doc_id"]
         say(f'Read only {data["location"]}: work/files/{doc}.{packet["inventory"]["ext"]} '
             f'or the matching excerpt from work/text/{doc}.txt. Then record the outcome.')
+        if contents_lines(packet) is not None:
+            show_contents(doc)  # the locator arrives when it is needed, not on every --index
 
 
 def main():
@@ -381,6 +428,7 @@ def main():
     action.add_argument("--request-check", metavar="JSON", help="log a material doubt before targeted source access")
     action.add_argument("--finish-check", metavar="JSON", help="log actual scope and findings after source access")
     action.add_argument("--lookup", metavar="TEXT", help="search table answers and identities, without opening sources")
+    action.add_argument("--contents", metavar="DOC", help="print one document's clause map from the table")
     parser.add_argument("--sheet", help="XLSX worksheet name")
     parser.add_argument("--account", help="scope to a previously matched ERP account")
     args = parser.parse_args()
@@ -398,6 +446,11 @@ def main():
             assign(Path(args.assign), args.account)
         elif args.request_check or args.finish_check:
             log_check(Path(args.request_check or args.finish_check), finish=bool(args.finish_check))
+        elif args.contents:
+            doc = args.contents.zfill(3)
+            if doc not in selected_ids(args.account):
+                raise ValueError(f"doc {doc} is not in the index")
+            show_contents(doc)
         else:
             ids = selected_ids(args.account)
             if args.index or args.lookup:
@@ -406,7 +459,7 @@ def main():
                     if args.lookup and args.lookup.casefold() not in json.dumps(packet["answers"]).casefold():
                         continue
                     say(json.dumps({"doc_id": doc, "sha256": packet["inventory"]["sha256"],
-                                    "answers": packet["answers"], "flags": packet["flags"],
+                                    "answers": index_view(packet, args.lookup), "flags": packet["flags"],
                                     "source_checks": current_checks(doc)}, ensure_ascii=False))
             else:
                 checks = [r for r in current_checks() if r["doc_id"] in ids]

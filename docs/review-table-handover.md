@@ -12,6 +12,9 @@ The kit now requires a targeted precedence check when a governing candidate's pr
 information is missing/NOT_FOUND and another row makes a competing priority claim; it also
 dashes edges from unsure documents. An unchanged table must exercise the new trigger—do not
 repair its precedence answer first and thereby conceal the failure being tested.
+The pilot schema now carries an optional `contents` column (clause map), held out of the index
+printout and fetched per document on a check request or a lookup. The existing reconstructed
+table has no such column; do not build one from prior cards. Only a real export supplies it.
 Do not launch another paid run just because this handover changed. The sequence below is for
 the next requested test, including a real vendor export when available.
 

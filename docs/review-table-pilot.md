@@ -5,7 +5,7 @@ folders, governing relationships, bullet positions and diagrams. It opens a rele
 excerpt only when the orchestrator identifies a material doubt; most files should need no source
 read. No per-file conversion agent, sort-card rewrite or quotation-validation pass runs.
 
-The ten questions below are the current pilot schema, not a proven minimum. They keep different
+The eleven questions below are the current pilot schema, not a proven minimum. They keep different
 sort/position decisions pointed without creating a column for every subfield. First refine a
 prompt that omitted a needed fact; add a column only if an observed failure justifies it.
 
@@ -35,8 +35,12 @@ semicolons or tabs and properly quoted multiline cells.
 ## Column shape
 
 ```csv
-file_name,document,parties,execution,term,trade_scope,group_scope,links,precedence,parts,gaps
+file_name,document,parties,execution,term,trade_scope,group_scope,links,precedence,parts,gaps,contents
 ```
+
+`contents` is optional: the importer accepts a table without it. When present it is stored with
+the row but held back from the index printout, because a clause-level map of a long instrument
+would otherwise enter the session's context for every document on every run.
 
 Use exact original filenames including extensions. file_name is metadata, not a paid query.
 Optional doc_id, source_path or sha256 disambiguate repeated names; all supplied identity fields
@@ -61,7 +65,9 @@ unreadable or conflicting as appropriate; a blank is not a negative answer. Usua
 words, expanding only for material detail such as complete entity/site lists or separate parts.
 ```
 
-## Ten copyable queries
+The word guide does not apply to `contents`, which runs to the length of the file's structure.
+
+## Eleven copyable queries
 
 ### document — What function does this instrument perform?
 
@@ -74,6 +80,32 @@ Include an OWN_REFERENCE line with this instrument's reference/agreement number 
 printed, including local site/agreement identifiers, or not found. These distinguish it from
 the instruments referenced in links.
 Give the operative mechanism supporting the function; a title alone is a hint.
+```
+
+### contents — What does every part of this file contain?
+
+A locator, not a second copy of the answers. Entity and site lists stay in group_scope and
+priority wording in precedence; the map says where they are, how many entries a list has and
+which pages nobody inspected. The main session fetches one document's map only when it logs a
+source check or searches the index for a term.
+
+```text
+Map the complete file from first page to last, including material after signatures. Give one
+entry for each numbered clause, recitals or definitions section, schedule, appendix, annex,
+signature section and separately bound instrument.
+
+For each entry give: number and heading as printed; PDF page range, counting the first file page
+as page 1; and a short description of what it actually provides. Distinguish printed page
+numbers where different.
+
+Explicitly identify provisions addressing priority/conflict, adoption/accession, duration/notice,
+territorial or entity coverage, assignment and affiliate rights, even under generic headings.
+
+For lists, identify their subject, location and the number of entries. Do not reproduce their
+entries, prices or full clauses here. Preserve clause-level coverage rather than merging entries.
+
+State total pages. Mark unreadable and unreviewed ranges explicitly. Do not infer that an
+unreviewed provision is absent.
 ```
 
 ### parties — Which companies are parties or listed affiliates?
@@ -197,6 +229,13 @@ precedence clause before publishing. Reuse a current check when available. If ac
 the source remains inconclusive, report that and leave priority unresolved. A table answer of
 not found never proves that the contract has no such clause. With no competing claim, a blank
 precedence cell alone does not mandate source reading.
+
+The contents map, when supplied, is the locator for those checks. `--index` prints only its size
+and the command that fetches it; `--lookup` returns the map lines that match the search term;
+`--contents <doc>` prints one document's map; and a logged check request prints the map of the
+document about to be opened. An entry count in the map that exceeds the names listed in
+group_scope, or a flagged priority provision with a NOT_FOUND precedence cell, is a specific
+doubt of the kind that justifies a check. A map is the export's claim about the file, not a read.
 
 CSV review_* columns retain literal answers, and source_checks records the exceptions. Other
 structured card fields are labelled as not separately extracted. Position notes use labelled
