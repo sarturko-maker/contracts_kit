@@ -1,6 +1,6 @@
 ---
 name: check
-description: Preflight for the DCG intake kit. Checks Python, pypdf, the pile, the ERP record, mermaid.min.js and write access before anything else runs. Usage /check [pile path].
+description: Preflight for the DCG intake kit. Checks Python, pypdf, Poppler PDF-to-JPEG rendering, the pile, the ERP record, bundled Mermaid and write access. Usage /check [pile path].
 ---
 
 # /check [pile path]
@@ -21,3 +21,11 @@ and the ERP record); it may be empty.
    nothing else; do not go on to `/prepare`.
 4. If every line is `ok` or `skip`: say so and say what to run next: `/prepare <pile path>`.
    Without a pile path the pile and ERP checks were skipped; `/prepare` still needs the path.
+
+Poppler is an external program, installed separately from `requirements.txt`; follow the script's
+platform-specific fix and README setup. Its probe renders an invented one-page PDF in a temporary
+directory, without reading contracts or making model/network calls. A version check alone is not
+enough: the installed `pdftoppm` must support JPEG output. After installation or a PATH change,
+restart the terminal and Claude Code before retrying. If the probe passes but Claude's PDF Read
+tool still fails, report that separate tool error and stop; do not omit required image reads.
+Mermaid is already bundled in `assets/mermaid.min.js`; do not install it through npm or pip.

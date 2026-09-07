@@ -24,6 +24,28 @@ Use Python 3.10 or later and Claude Code, opened from this kit's root. Clone
 pip install -r requirements.txt
 ```
 
+Also install **Poppler** separately. Claude Code's PDF page/image reading can use its `pdftoppm`
+program; `pypdf` extracts text and does not supply that program. The kit requires `pdftoppm` on
+PATH with JPEG output support, including for visually checking signature pages.
+
+On Windows, run this in PowerShell:
+
+```powershell
+winget install --id oschwartz10612.Poppler --exact --source winget
+```
+
+This uses the [Poppler package in the WinGet repository](https://github.com/microsoft/winget-pkgs/tree/master/manifests/o/oschwartz10612/Poppler).
+On macOS use `brew install poppler`; on Debian/Ubuntu use `sudo apt install poppler-utils`.
+If WinGet is unavailable, use the [Windows Poppler builds](https://github.com/oschwartz10612/poppler-windows/releases)
+and add the extracted `Library/bin` directory to PATH. **Close and reopen the terminal and restart
+Claude Code** after installation so both see the updated PATH. `pdftoppm -v` should then print a
+version. `/check` also tests actual JPEG rendering; if that fails, check which program is selected
+(`Get-Command pdftoppm` in PowerShell) and use a build with JPEG support.
+
+**Mermaid is already bundled** at `assets/mermaid.min.js` and copied into the output reports.
+It needs no npm install, Node.js, Mermaid CLI or CDN access. `requirements.txt` installs the two
+Python libraries and documents these external/bundled dependencies in comments.
+
 Commands in this README and in the skills are written `python`; use `python3` where that is the
 installed name. Reports use the bundled diagram library and need no network. Model calls still use
 your configured Claude Code service. Paths use `pathlib`; Linux is tested, Windows and macOS are
@@ -40,8 +62,11 @@ Start with the preflight:
 /check <path to pile>
 ```
 
-It checks Python, `pypdf`, the pile, the ERP record, the bundled `mermaid.min.js` and write access,
-and stops on the first `FAIL`. Then `/prepare <path to pile>` inventories and numbers the files.
+It checks Python, `pypdf`, Poppler by rendering an invented one-page PDF to JPEG, the pile, the ERP
+record, the bundled `mermaid.min.js` and write access. The rendering probe uses a temporary folder,
+no contracts and no model calls. Any `FAIL` stops the workflow. A passing probe checks the local
+renderer; if Claude's own PDF Read tool still fails, restart Claude and resolve that error before
+analysis. Then `/prepare <path to pile>` inventories and numbers the files.
 `/sort <pile>` runs both for you. `/analyse` requires prepared inputs; run `/check` and `/prepare` first when skipping triage.
 
 Put contract files and one ERP record in a folder; subfolders are allowed. The kit copies originals

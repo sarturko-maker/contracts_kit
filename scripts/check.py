@@ -6,7 +6,10 @@ Exits 1 if any check fails, so nothing else runs on a broken setup.
 
 import argparse
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -33,6 +36,53 @@ def check_writable(folder):
         return None
     except OSError as err:
         return str(err)
+
+
+def poppler_install_hint():
+    if sys.platform == "win32":
+        return "run `winget install --id oschwartz10612.Poppler --exact --source winget`"
+    if sys.platform == "darwin":
+        return "run `brew install poppler`"
+    return "install Poppler utilities (Debian/Ubuntu: `sudo apt install poppler-utils`)"
+
+
+def check_poppler():
+    """Render an invented PDF to JPEG; do not read any corpus data. Error or None."""
+    executable = shutil.which("pdftoppm")
+    if executable is None:
+        return (f"pdftoppm not on PATH: {poppler_install_hint()}; "
+                "restart the terminal and Claude Code, then rerun /check")
+    try:
+        from pypdf import PdfWriter
+    except ImportError:
+        return "JPEG render probe needs pypdf: run `pip install -r requirements.txt`"
+
+    remedy = ("check the pdftoppm selected on PATH and use a Poppler build with JPEG support "
+              "(see README.md); restart the terminal and Claude Code, then rerun /check")
+    try:
+        with tempfile.TemporaryDirectory(prefix="contracts-kit-pdf-check-") as directory:
+            pdf = Path(directory) / "probe.pdf"
+            prefix = Path(directory) / "probe"
+            with PdfWriter() as writer:
+                writer.add_blank_page(width=72, height=72)
+                writer.write(str(pdf))
+            result = subprocess.run(
+                [executable, "-f", "1", "-l", "1", "-singlefile", "-r", "72",
+                 "-jpeg", str(pdf), str(prefix)],
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
+            )
+            if result.returncode:
+                detail = " ".join(result.stderr.split())[:240]
+                return f"JPEG render failed (exit {result.returncode}; {detail}): {remedy}"
+            jpeg = prefix.with_suffix(".jpg")
+            data = jpeg.read_bytes() if jpeg.is_file() else b""
+            if not (data.startswith(b"\xff\xd8\xff") and data.endswith(b"\xff\xd9")):
+                return f"JPEG render produced no JPEG image: {remedy}"
+    except subprocess.TimeoutExpired:
+        return f"JPEG render timed out after 15 seconds: {remedy}"
+    except OSError as err:
+        return f"JPEG render could not run ({err}): {remedy}"
+    return None
 
 
 def main():
@@ -120,7 +170,14 @@ def main():
     else:
         skip("openpyxl: only needed if the ERP record is .xlsx")
 
-    # 5. mermaid.min.js
+    # 5. Claude Code's PDF page/image reads need an external renderer, not just pypdf.
+    error = check_poppler()
+    if error:
+        fail(f"Poppler: {error}")
+    else:
+        ok("Poppler pdftoppm on PATH; invented PDF rendered to JPEG")
+
+    # 6. mermaid.min.js
     if MERMAID_JS.is_file() and MERMAID_JS.stat().st_size > 1_000_000:
         ok(f"assets/mermaid.min.js present ({MERMAID_JS.stat().st_size // 1024} KB)")
     elif MERMAID_JS.is_file():
@@ -129,7 +186,7 @@ def main():
     else:
         fail(f"assets/mermaid.min.js missing from {ASSETS}: re-download the kit")
 
-    # 6. work/ and out/ writable
+    # 7. work/ and out/ writable
     for folder in (WORK, OUT):
         err = check_writable(folder)
         if err:

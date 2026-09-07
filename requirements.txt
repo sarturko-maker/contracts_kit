@@ -1,5 +1,13 @@
-# Runtime (enterprise side). Nothing else is installed there.
+# Python runtime dependencies (enterprise side): pip install -r requirements.txt
 pypdf==6.12.2
 openpyxl==3.1.5
+# External runtime dependency, installed separately: Poppler's pdftoppm with JPEG
+# support on PATH, for Claude Code's PDF page/image reads. This is not a pip package.
+# Windows PowerShell: winget install --id oschwartz10612.Poppler --exact --source winget
+# macOS: brew install poppler
+# Debian/Ubuntu: sudo apt install poppler-utils
+# Restart the terminal and Claude Code after installation, then run /check.
+# Mermaid is bundled in assets/mermaid.min.js; no npm or pip installation is needed.
+# See README.md for setup and troubleshooting.
 # Build-time only, used by sample/make_pile.py to generate the invented sample pile.
 # Not needed to run the kit. Install with: pip install reportlab==4.4.10 Pillow==12.1.1
