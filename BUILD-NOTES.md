@@ -424,6 +424,79 @@ compare reading the entire selected contract against selected parts, nor test a 
 traversal engine. It cannot settle that narrower comparison. C's corpus answers were complete,
 but its missing commercial details show why the index should retain a route back to the sources.
 
+## Live test on the messy pile (7 September 2026)
+
+A fresh handover ran `/sort`, `/visualise` and `/deep-dive` as three separate user commands on the
+invented messy pile (33 files, six ERP rows), with the kit's own agent roles at their configured
+models and the answer key held back. The figures below are as recorded in that run's judgments.
+
+**/sort — pass with defects.** It stopped after step 6, escalated nothing to a full reader, and put
+30 of 33 documents in the expected place or an acceptable holding folder, with no confidently wrong
+match and no silent omission. Defects: the Skill tool refused every kit skill
+(`disable-model-invocation: true` on all of them), so the orchestrator followed each SKILL.md by
+hand; the filer's `maxTurns: 12` was hit by 5 of 29 first attempts on Haiku, and doc 020 never wrote
+a record in two attempts — the only unfiled readable document; matching did not carry the
+documentary link from the name-change letter (doc 012) to the older agreement (doc 011), and never
+mentioned the folder-path clue; one company split into two name groups (`Services Limited` vs
+`Svcs Ltd`); and the skills say `python` where the machine had `python3`. Cost: 33 filer invocations
+(29 first attempts plus 4 retries) for 327,508 tokens, and 140,105 orchestrator tokens over 36
+minutes — about 468k for 33 files, roughly 14k per file, with the main session 30% of the total.
+Pages read stayed within budget for every record, including 3 distinct pages of a 42-page master.
+
+**/visualise — pass.** Script-only: no agent spawned, 15 new files, every existing CSV, README and
+INDEX.md byte-identical, no CDN or font reference, holding folders correctly undiagrammed. About 17k
+orchestrator tokens in 3.5 minutes. The diagram it draws is the filing map, which is not the diagram
+the user wanted; governance diagrams need `/analyse`.
+
+**/deep-dive — pass, with the design gaps that motivated the replan.** 29/29 cards with no failure,
+29/29 valid forms with 3 self-repaired retries, 6/6 judges, and 26/26 placements matching the key or
+an acceptable alternative: every account's governing document was right, and the commercial readings
+(payment, notice, pricing) matched the key for every account. Defects: three readers reversed card
+question 2 (our entity in the customer slot) and `sort.py` dropped those documents into
+`_no-name-found`; five holding documents were read and extracted but never judged; the zero-document
+account got an Opus judge; the extractor's 40-turn cap was hit by 3 of 29 with four topics on
+(retry-with-error repaired all); `/extract` scope wording was ambiguous between the deep-dive and
+extract skills; the freight vocabulary has no "free above a threshold" reading, so exact threshold
+quotes read as `charged_basis_unspecified`; a rate limit mid-batch had no recovery path; and a
+reader skimmed doc 017's Appendix A, so the depot it names never reached the card — the mapper found
+it and recorded the conflict rather than editing another agent's note. Mapping produced 11 tree
+proposals over 5 accounts; `graph.py --all` wrote 181 nodes and 160 edges with no warnings, 27 of
+187 edge-evidence rows `exported=no`, 67 didn't-fit rows and 21 open questions. Cost: readers
+906,714 tokens (32 agents, ~28k per document), judges 296,919 (6, ~49k per account), extractors
+1,969,774 (32, ~62k per document with four topics), mappers 529,164 (9, ~106k per account) — 3.7M
+subagent tokens over 79 agents, plus ~351k cumulative orchestrator tokens for all three stages.
+Position notes ran 1,374–2,169 words: complete, and still far beyond one page.
+
+## Stage reorder
+
+The live test showed that `/sort` is not on the path to the deliverable and that `/deep-dive` was
+doing three jobs at once. The stages are now four user commands, each stopping on its own: `/sort`
+(optional triage), `/analyse` (full read, card check, match, judge, notes and diagrams — the minimum
+deliverable), `/deep-dive` (forms, families, graph; it requires `/analyse` and stops if cards or
+placements are missing or stale) and `/visualise` (the free re-render).
+`disable-model-invocation: true` now marks only those user-typed stage skills plus `/eval`, so the
+cost gates stay with the user while a stage skill can chain its components through the Skill tool.
+Each stage appends one `work/logs/cost.csv` row per spawned agent and ends with
+`scripts/cost.py --stage <stage>` plus the reminder that the main session's own tokens are visible
+only through `/cost`.
+
+Three earlier reconciliations were deliberate and the reorder does not disturb them:
+
+- **Ten corpus rows and three account rows.** The brief's acceptance counts of nine and two conflict
+  with its own all-file audit and all-ERP-row requirements. Shared documents get one corpus row per
+  document/account target so each account view stays an exact filter of the global table.
+- **No forbidden `party_to` edges.** DCG does not allow `party_to` from orders, components, shared
+  terms or evidence, so those proposals stay in `edge-evidence.csv` with `exported=no` instead of
+  becoming invalid graph edges. The brief's demand for party edges on every document cannot be met
+  without changing the standard, and the standard does not change during a run.
+- **Family on the root instrument.** The registry has no tree node type, so a family proposal sits on
+  the unambiguous root instrument and tree membership lives in `tree-proposals.csv`.
+
+Where a brief's count and a kit requirement disagree, the requirement takes precedence: every file
+gets a row, every ERP row gets a folder, and the unchanged DCG registry outranks any count or edge
+the brief asked for. A count is a check on the work; the audit rule and the fixed standard are the
+work.
+
 ## Documentation checks
 
 The existing Claude model aliases, agent frontmatter/effort settings and inherited thinking

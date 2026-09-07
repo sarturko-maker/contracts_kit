@@ -13,6 +13,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "sample"))
+sys.path.insert(0, str(ROOT / "scripts"))
+from kit_common import STATUS_FOLDERS
 from make_expected import ACCOUNT1, ACCOUNT2, NORTH, OURS, PARENT, isolated_kit
 
 
@@ -92,21 +94,29 @@ class FilingAcceptance(unittest.TestCase):
         corpus = read_csv(out / "customers/CORPUS.csv")
         self.assertEqual({r["doc_id"] for r in corpus}, {f"{n:03}" for n in range(1, 11)})
         self.assertEqual(len(corpus), 10)
-        self.assertTrue({"doc_id", "account", "title", "kind", "basis", "confidence", "sha256", "file_path"}
-                        <= set(corpus[0]))
+        self.assertTrue({"doc_id", "account", "title", "kind", "basis", "confidence", "sha256",
+                         "file_path", "filed_as"} <= set(corpus[0]))
         self.assertFalse({"folder", "tree", "status", "governing_docs", "node_id", "edge_id"} & set(corpus[0]))
         targets = {r["account"] for r in corpus}
         for target in targets:
             folder = out / "customers" / target
             self.assertEqual(read_csv(folder / "documents.csv"), [r for r in corpus if r["account"] == target])
-            self.assertIn("Identity and filing pass only", (folder / "README.md").read_text())
+            readme = (folder / "README.md").read_text()
+            self.assertIn("Identity and filing pass only", readme)
+            for row in (r for r in corpus if r["account"] == target):
+                self.assertIn(f"- {row['doc_id']} — {row['filed_as'] or '(no copy'}", readme)
+                self.assertIn(f"original: {row['original_path']}", readme)
         for row in corpus:
             if row["file_path"]:
                 copy_path = self.root / row["file_path"]
                 self.assertTrue(copy_path.is_relative_to(out))
                 self.assertEqual(hashlib.sha256(copy_path.read_bytes()).hexdigest(), row["sha256"])
+                self.assertEqual(copy_path.name, row["filed_as"])
+                self.assertTrue(re.match(rf"{row['doc_id']}[ .]", row["filed_as"]), row["filed_as"])
             elif row["doc_id"] != "010":
                 self.fail(f"Readable doc {row['doc_id']} has no audit-linked copy")
+            else:
+                self.assertEqual(row["filed_as"], "")
         files = list(out.rglob("*"))
         self.assertFalse(any(p.suffix in (".html", ".mmd", ".js") for p in files))
         self.assertFalse((out / "graph").exists())
@@ -353,8 +363,11 @@ class FilingAcceptance(unittest.TestCase):
         self.assertEqual(len(corpus), 10)
         self.assertNotIn("read_status", corpus[0])
         self.assertIn("folder", corpus[0])
-        copies = [path for path in out.rglob("*") if path.is_file() and re.match(r"T\d+-\d{3}-", path.name)]
+        copies = [path for path in out.rglob("*") if path.is_file()
+                  and path.parent.name in STATUS_FOLDERS and re.match(r"\d{3} \S", path.name)]
         self.assertEqual(len(copies), 9)
+        self.assertEqual({row["filed_as"] for row in corpus if row["doc_id"] != "010"},
+                         {path.name for path in copies})
         for name, path in {"cards": self.root / "work/cards", "forms": self.root / "work/forms",
                            "filing": self.root / "work/filing", "inputs": self.root / "inputs",
                            "sources": self.pile, "copies": self.root / "work/files"}.items():

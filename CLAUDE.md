@@ -24,8 +24,13 @@
   fit in the didn't-fit list. The user decides changes afterwards.
 - Cards, forms and filing records are the source; `out/` is generated. Hand-edit only `inputs/entity-map.csv`
   and `inputs/corrections.csv`. Never edit anything under `out/` or `work/` by hand.
-- Cost stages stop independently: `/sort` files by identity, `/visualise` renders existing reports,
-  `/deep-dive` performs full analysis. Never advance to the next stage unasked.
+- Four user commands, each stopping on its own: `/sort` files by identity (optional triage),
+  `/analyse` reads fully, matches, judges and writes the position notes and diagrams (the
+  minimum deliverable), `/deep-dive` fills the forms, proposes families and exports the graph,
+  `/visualise` re-renders existing reports for free. Only those four chain their components,
+  and only the user types them. Never advance to the next stage unasked.
+- Every stage logs one `work/logs/cost.csv` row per spawned agent and ends with its cost report
+  and the reminder to type `/cost` for the main session's own tokens.
 - Cheap `work/filing/` records are not sort cards: at most 3 pages or 20 Word paragraphs per
   document. Unclear identity stays unresolved; legal status remains unassessed.
 - Full-reading budget: read the body fully; schedules get title and first page unless needed;

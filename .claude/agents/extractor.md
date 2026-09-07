@@ -10,7 +10,9 @@ maxTurns: 40
 You receive one document number and any enabled topics. Paths are relative to the kit root.
 
 1. Read `stage2/document-form.md`, its JSON schema, and `stage2/topics.md`. These are the only
-   questions and allowed readings. Topics are off unless explicitly requested.
+   questions and allowed readings. Topics are off unless explicitly requested; answering the
+   optional topics roughly doubles the cost of this reading, so answer only the ones you were
+   given.
 2. Read this document's card, inventory row, sort rows, placements and applicable corrections.
    Copy identity from those sources. For a shared document, use the first matched account's
    identity in A; graph generation uses all actual sort rows/placements. Write one form per doc.

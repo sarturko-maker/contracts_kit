@@ -27,7 +27,14 @@ document's sort card and nothing else.
    another life merely because a schedule has its own heading.
 5. Answer all ten questions. Where evidence is required (2, 3, 4, 6, 7): page or clause plus
    the exact words, forty or fewer, verbatim, in quotes, or `not found`. Never paraphrase in an
-   evidence field. Name companies, not the people who signed. A `.docx` is signed by `nobody`
+   evidence field. Name companies, not the people who signed.
+   Question 2 has two sides and they are not interchangeable: OUR company goes in `q2_our_entity`
+   (check `inputs/our-entities.csv` when it exists) and the OTHER side — the customer or supplier
+   — goes in `q2_their_signing_entities` and `q2_their_group_companies`. Putting our own company
+   in a their-slot sends the document to a holding folder with no name found, so read the parties
+   clause and the signature blocks and say which is which before you write either field.
+   Appendices and schedules that list depots, sites, affiliates or group companies answer
+   question 2: read those lists, not just the schedule's first page. A `.docx` is signed by `nobody`
    unless a signature image is present; tracked changes or comments mean draft, say so. For
    question 9 look at `work/inventory.csv` (number, path and title guess of every file); do not
    open any other document.

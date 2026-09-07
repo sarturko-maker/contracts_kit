@@ -1,10 +1,13 @@
 ---
 name: extract
 description: Fills validated stage 2 forms with one extractor per document. Usage /extract default | all | <ids> [--force] [--topics <names>].
-disable-model-invocation: true
 ---
 
 # /extract default | all | <ids> [--force] [--topics <names>]
+
+Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
+targeted maintenance. It stops after its own step and never starts the next.
+Commands are written `python`; use `python3` where that is the installed name.
 
 Run after stage 1 review and correction. Paths are relative to the kit root.
 

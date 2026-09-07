@@ -26,7 +26,7 @@ document only to check a quote you doubt; never edit a card.
 4. Settle status after linking: an amendment takes the status of what it amends; extended,
    terminated or replaced follow the link; a layered document is filed by its live parts.
 5. Apply section B's rules in order and stop at the first that applies. Write
-   `work/placements/<account>.csv`, one row per document, with exactly these columns:
+   `work/placements/<safe_account>.csv`, one row per document, with exactly these columns:
    `doc_id,tree,folder,reason,attaches_to,attach_kind,replaces,parts_status,limit,overlap,question,what_would_change`
    `folder`: `1-governs-trade`, `2-governs-part-of-trade`, `3-live-not-trade`, `4-not-live`,
    `5-orders-drafts-duplicates`, `6-business-practice` or `unsure`. `reason` names the rule
@@ -35,7 +35,10 @@ document only to check a quote you doubt; never edit a card.
    name: dead`, the card's part names. `limit`: folder 2 only. `overlap`: `topic; with doc NNN
    <part>; winner: <doc/part or unresolved>`. `what_would_change`: folders 3, 4, 5, 6 and
    unsure. A document that belongs to another account is filed by rule 2 and named in `question`.
-6. Write `work/placements/<account>.md` with exactly four headings. `## The position`: three
+   `safe_account` is the account name with the Windows-forbidden characters `\/:*?"<>|` replaced
+   by `_` and trailing dots and spaces stripped, exactly as `kit_common.safe_folder_name` does
+   it; `place.py` reads that name, so an account written under its raw name is never found.
+6. Write `work/placements/<safe_account>.md` with exactly four headings. `## The position`: three
    to six lines, no table, every sentence a fact from a card, no hedging: what governs trade,
    since when, whose paper, signed by whom, what it covers, how it ends; the one qualification
    that matters most; what governs part of the trade; what is missing; if nothing governs, say
@@ -49,8 +52,9 @@ document only to check a quote you doubt; never edit a card.
    business`: numbered, each names a doc.
 7. Run `python scripts/place.py --account "<account>"`. If it warns, fix your placements and
    run it again. Never edit anything under `out/`.
-8. Append one line per document to `work/logs/judge.log`
-   (`<account> | doc NNN | T<n> | <folder> | <reason>`), then return exactly three lines:
+8. Write no log: `work/logs/judge.log` belongs to the main session, which appends your return
+   after the batch (concurrent judges appending the same file lose lines). Return exactly three
+   lines and nothing else:
    `governing: doc ... | part: doc ...`
    `counts: 1=..., 2=..., 3=..., 4=..., 5=..., 6=..., unsure=...`
    `open questions: <n>`

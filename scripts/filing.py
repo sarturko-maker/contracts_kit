@@ -14,17 +14,18 @@ from urllib.parse import quote
 
 from kit_common import (
     KIT, WORK, WORK_FILES, WORK_TEXT, OUT, ENTITY_MAP_CSV, SORT_LOG_CSV, SORT_LOG_COLUMNS,
-    account_folder, apply_corrections_to_card, erp_account_names, join_multi, load_all_cards,
-    load_corrections, load_entity_map, load_erp, load_inventory, load_our_entities,
-    names_from_card, norm_name, safe_folder_name, stream_map, write_csv, write_text,
+    account_folder, apply_corrections_to_card, counterparty_for, erp_account_names, filed_name,
+    join_multi, load_all_cards, load_corrections, load_entity_map, load_erp, load_inventory,
+    load_our_entities, names_from_card, norm_name, safe_folder_name, stream_map,
+    unique_filed_name, write_csv, write_text,
 )
-from sort import decide_targets
+from sort import decide_targets, group_holding_targets
 from validate_forms import PAGE_MARKER, PARAGRAPH_MARKER, _segments, _evidence_checks, load_form
 
 FILINGS = WORK / 'filing'
 COLUMNS = ['doc_id', 'original_path', 'file_type', 'pages', 'scanned_pages', 'sha256',
            'account', 'title', 'kind', 'companies_found', 'basis', 'confidence',
-           'read_status', 'file_path', 'note']
+           'read_status', 'file_path', 'filed_as', 'note']
 KEYS = {'doc_id', 'sha256', 'title', 'kind', 'their_entities', 'our_entities',
         'pages_read', 'paragraphs_read', 'note'}
 
@@ -124,7 +125,8 @@ def identities(rows):
         if doc in full and not path.exists():
             card = apply_corrections_to_card(full[doc], corrections)
             result[doc] = {'title': card['q1_title'], 'kind': card['q1_kind'],
-                           'names': names_from_card(card, ours), 'read_status': 'full_card_reused',
+                           'names': names_from_card(card, ours), 'date': card['q4_start_date'],
+                           'read_status': 'full_card_reused',
                            'note': 'Existing full reading reused for filing identity only.'}
             continue
         if not path.exists():
@@ -140,7 +142,8 @@ def identities(rows):
                 'q2_our_entity': join_multi(e['name'] for e in record['our_entities'])}
         card = apply_corrections_to_card(card, corrections)
         result[doc] = {'title': record['title'], 'kind': record['kind'],
-                      'names': names_from_card(card, ours), 'read_status': 'filing_only',
+                      'names': names_from_card(card, ours), 'date': record.get('date', ''),
+                      'read_status': 'filing_only',
                       'note': record['note'] + (' Visual identity evidence needs review.' if warnings else '')}
     return result
 
@@ -158,6 +161,8 @@ def report(rows, records):
     entities, _ = load_entity_map()
     streams = stream_map(erp, entities)
     corpus, logs = [], []
+    used_names = {}
+    holding_names = {}
     by_norm = {norm_name(a): a for a in accounts}
     # Resolve and validate everything before replacing a generated report.
     for doc, inv in sorted(rows.items()):
@@ -169,11 +174,17 @@ def report(rows, records):
             targets = [{'target': '_needs-reading', 'basis': '', 'confidence': '', 'note': 'No filing record; run /sort again.'}]
         else:
             _, targets, _ = decide_targets(names, entities, by_norm, streams)
+            targets = group_holding_targets(targets, holding_names)
         for target in targets:
             account = target['target']
             folder = target_folder(side, account)
             source = WORK_FILES / f"{doc}.{inv['ext']}"
-            dest = folder / 'files' / f"{doc}-{inv['file_name']}"
+            filed = filed_name(doc, inv['ext'], kind=identity.get('kind', ''),
+                               counterparty=counterparty_for(account, names),
+                               date=identity.get('date', ''), pages=inv.get('pages', ''),
+                               unresolved=not identity or not names)
+            copied = source.exists() and inv['readable'] == 'yes'
+            dest = folder / 'files' / unique_filed_name(filed, used_names.setdefault(folder, set())) if copied else None
             if inv['readable'] == 'yes' and not source.exists():
                 raise ValueError(f'doc {doc}: prepared source copy missing; run /prepare again')
             row = {k: inv.get(k, '') for k in COLUMNS}
@@ -181,7 +192,8 @@ def report(rows, records):
                        kind=identity.get('kind', 'not assessed'), companies_found=join_multi(names),
                        basis=target['basis'], confidence=target['confidence'],
                        read_status=identity.get('read_status', 'unreadable' if inv['readable'] != 'yes' else 'needs_reading'),
-                       file_path=str(dest.relative_to(KIT)) if source.exists() and inv['readable'] == 'yes' else '',
+                       file_path=str(dest.relative_to(KIT)) if copied else '',
+                       filed_as=filed if copied else '',
                        note='; '.join(x for x in [identity.get('note', ''), target['note']] if x))
             corpus.append(row)
             logs.append({k: row.get(k, '') for k in SORT_LOG_COLUMNS})
@@ -207,7 +219,14 @@ def report(rows, records):
             cells = [row['doc_id'], row['title'], row['kind'],
                      f"{row['basis']} / {row['confidence']}", row['note']]
             lines.append('| ' + ' | '.join(str(c).replace('|', '\\|').replace('\n', ' ') for c in cells) + ' |')
-        lines += ['', 'Source paths and hashes are in documents.csv. /visualise adds a filing diagram; /deep-dive assesses the contracts.', '']
+        lines += ['', '## Renamed copies', '']
+        for row in selected:
+            name = row['filed_as'] or f"(no copy: {row['read_status'].replace('_', ' ')})"
+            lines.append(f"- {row['doc_id']} — {name} — original: {row['original_path']}")
+        if not selected:
+            lines.append('- (no documents)')
+        lines += ['', 'Copies keep the document number; the originals and work/files/ are untouched.',
+                  'Source paths and hashes are in documents.csv. /visualise adds a filing diagram; /deep-dive assesses the contracts.', '']
         write_text(folder / 'README.md', '\n'.join(lines))
     for stream, (main, _) in streams.items():
         write_text(account_folder(side, stream) / 'README.md',

@@ -49,8 +49,8 @@ Side: customers. Accounts: 2, streams: 1
 Names that need your decision: none
 Written: work/logs/sort.csv (10 rows)
 
+copied assets/mermaid.min.js to out/assets/mermaid.min.js
 Tallowfield Industries: 5 files copied into status folders; 1=2, 2=1, 3=0, 4=1, 5=0, 6=1, unsure=0; written out/customers/Tallowfield Industries/README.md, documents.csv, position.mmd, position.html
 Pellmont Logistics Group: 4 files copied into status folders; 1=0, 2=1, 3=0, 4=0, 5=1, 6=0, unsure=2; written out/customers/Pellmont Logistics Group/README.md, documents.csv, position.mmd, position.html
-copied assets/mermaid.min.js to out/assets/mermaid.min.js
 written out/customers/CORPUS.csv (10 rows), out/customers/ACCOUNTS.csv (3 rows), out/INDEX.md, out/INDEX.html
 totals: 2 accounts judged of 2; 1 files not readable by the kit

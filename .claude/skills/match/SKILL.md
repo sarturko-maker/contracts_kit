@@ -1,10 +1,13 @@
 ---
 name: match
 description: Matches every document to an ERP account, writes the entity map, then runs sort.py to build the account folders. Usage /match [--force].
-disable-model-invocation: true
 ---
 
 # /match [--force]
+
+Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
+targeted maintenance. It stops after its own step and never starts the next.
+Commands are written `python`; use `python3` where that is the installed name.
 
 Run from the kit root. You do the matching; `scripts/sort.py` only replays what you write to
 `inputs/entity-map.csv`. These are the rules (`stage1/sorting-rules.md`, section A), followed
@@ -45,6 +48,17 @@ Steps:
    the `q2_*` fields of every `work/cards/<id>.json`, and the existing `inputs/entity-map.csv`
    (`name_as_printed,account,basis,confidence,decided_by,note`). Keep every existing row; rows with
    `decided_by` = `user` win. A name that already has a row is not re-decided unless `--force`.
+   Also read, on every card, the `q6_*`, `q7_*` and `q10_oddities` fields and the `original_path`
+   folder of that document's `work/inventory.csv` row. Names travel between documents: a card
+   saying "formerly known as", a name-change letter naming both the old and the new company, a
+   registered number shared with a company you have already matched, or a group list in a
+   schedule, all count as `in the document` for the OTHER documents that name the same company,
+   not only for the one you read it in. Carry those links across the whole pile before you decide
+   any name, and say in the note which document supplied the link (`doc 012 names Colverne as the
+   former name`). The folder a file sat in in the old repository ("Ardleigh (ex Colverne)") is a
+   clue, not a rule; if it disagrees with you, say so. One company is one name group: do not open
+   a second group for the same company written differently (`Services Limited` / `Svcs Ltd`,
+   `plc` / `PLC`, `Co` / `Company`, `&` / `and`), so the user decides once.
 2. For every company name without a row (their signing entities and group companies; skip our
    own entities, `none` and `not found`): decide `account` (an ERP row name spelled exactly, or
    `_not-on-the-list`, or `_not-sure` with the candidate in `note`), `basis`, `confidence`, `note`.
@@ -57,4 +71,4 @@ Steps:
    documents per account, holding folders, streams.
 6. List the names that need the user's decision (no row, or confidence `not sure`). Say: edit
    `inputs/entity-map.csv`, set `decided_by` = `user`, run `/match` again; nothing is asked twice.
-7. Stop after matching. `/judge` is an explicit analysis step, normally orchestrated by `/deep-dive`.
+7. Stop after matching. `/judge` is an explicit analysis step, normally orchestrated by `/analyse`.

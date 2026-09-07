@@ -1,10 +1,19 @@
 # DCG intake kit
 
-File a pile of contracts against your ERP account list, then choose how much analysis to do.
-`/sort` produces account folders, CSVs and short Markdown explainers with bounded identity reading.
-`/visualise` adds offline Mermaid HTML diagrams from the existing reports.
-`/deep-dive` reads the contracts fully, assesses what governs trade, fills the fixed forms and exports
-Distributor Contract Graph (DCG) data. **Each command stops after its own stage.**
+File a pile of contracts against your ERP account list, then choose how much analysis to pay for.
+There are four commands, and **each stops after its own stage**:
+
+| command | runs | models | delivers |
+| --- | --- | --- | --- |
+| `/sort <pile>` (optional triage) | `/check`, `/prepare`, one filer per document, name matching, filing report | Haiku filers; main session matches | account folders with renamed copies, per-folder `documents.csv` and `README.md`, global `CORPUS.csv`/`ACCOUNTS.csv`, `INDEX.md` |
+| `/analyse [all \| account "<name>"]` | `/read`, the card check, `/match --force`, `/judge` per account, `place.py --all --visuals` | Sonnet readers, Opus judges | status folders `1`–`6`/`unsure` with renamed copies, a position note per account, `documents.csv`, `CORPUS.csv`, `position.html` and `INDEX.html` |
+| `/deep-dive [--topics ...] [--force]` | prerequisite check, `/extract`, `/map`, `/report --graph` | Sonnet extractors, Opus mappers | validated forms, `TREES.md`, `out/FORM-HEALTH.md`, `out/DIDNT-FIT.md`, `out/graph/` |
+| `/visualise [all \| "account"] [--analysis]` | scripts only | none | re-rendered Mermaid HTML after corrections; free |
+
+`/analyse` is the minimum deliverable: the documents in the right folders, a short CSV and note per
+account, and the diagram beside them. `/sort` is **not** on the path to it — it is for a large or
+unfamiliar pile where you want to fix the entity map and drop junk before paying for a full read.
+`/deep-dive` never rereads cards or judgments: it requires them and stops if they are missing.
 
 ## Setup and inputs
 
@@ -15,8 +24,25 @@ Use Python 3.10 or later and Claude Code, opened from this kit's root. Clone
 pip install -r requirements.txt
 ```
 
-Reports use the bundled diagram library and need no network. Model calls still use your configured
-Claude Code service. Paths use `pathlib`; Linux is tested, Windows and macOS are intended targets.
+Commands in this README and in the skills are written `python`; use `python3` where that is the
+installed name. Reports use the bundled diagram library and need no network. Model calls still use
+your configured Claude Code service. Paths use `pathlib`; Linux is tested, Windows and macOS are
+intended targets.
+
+Run the main session on Opus (or Fable where your account has it) with effort high. The main
+session is the orchestrator: it matches company names to accounts, decides what to retry and reads
+every agent's return. In the live test it was about a third of the cheap stage's tokens, and its
+judgment is what keeps the sub-agents on their configured cheaper models.
+
+Start with the preflight:
+
+```
+/check <path to pile>
+```
+
+It checks Python, `pypdf`, the pile, the ERP record, the bundled `mermaid.min.js` and write access,
+and stops on the first `FAIL`. Then `/prepare <path to pile>` inventories and numbers the files.
+`/sort` and `/analyse` will run both for you if you give them a pile path.
 
 Put contract files and one ERP record in a folder; subfolders are allowed. The kit copies originals
 and never modifies, moves or renames them. Keep real piles outside the repository.
@@ -29,9 +55,10 @@ and never modifies, moves or renames them. Keep real piles outside the repositor
 - Optional `inputs/our-entities.csv` (`name,status,note`) helps distinguish your companies from theirs.
   Copy the shape in `inputs/our-entities.example.csv` and replace every example. Supplying your
   own names is recommended for cheap filing: otherwise ambiguous supplier names can become
-  extra holding entries. Example entity maps and corrections are formats, never decisions to import.
+  extra holding entries, and a reader is likelier to put your own company in a counterparty slot.
+  Example entity maps and corrections are formats, never decisions to import.
 
-## 1. Cheap filing: /sort
+## 1. Optional triage: /sort
 
 ```
 /sort <path to pile>
@@ -53,7 +80,7 @@ it is not a guaranteed currency cap. Actual cost on your Claude account has not 
 
 Open `out/INDEX.md`, then `out/<side>/CORPUS.csv`. Each account folder contains:
 
-- `files/`: numbered document copies.
+- `files/`: renamed document copies (see "Renamed copies" below).
 - `documents.csv`: identity, preliminary kind, account, match basis/confidence, original path/hash,
   reading status and uncertainty. It is the account's exact slice of the global table.
 - `README.md`: a short list of what is filed there and what remains unclear.
@@ -71,53 +98,98 @@ Fix matches in `inputs/entity-map.csv`, set `decided_by` to `user`, then rerun `
 win. Rerunning cheap filing archives the old generated `out/` under `work/history/` and produces a
 fresh filing report. Existing full cards, forms and judgments remain available for later reuse.
 
-## 2. Diagrams: /visualise
+## 2. The deliverable: /analyse
 
 ```
-/visualise
+/analyse
+/analyse account "Exact ERP Account"
 ```
 
-This runs a local script against the existing CSVs and Markdown. It does not start readers,
-extractors or mappers. Open `out/INDEX.html` and an account's `position.html`; the Mermaid source is
-beside it as `position.mmd`. The bundled renderer works offline.
+This is the stage that answers "what governs trade with this account". It needs `/prepare`; it does
+not need `/sort`. It reads every readable document in full (or only the named account's documents),
+checks the cards, matches identities from those full cards, judges each account and writes the
+account folders, notes and diagrams. It does not fill forms and does not touch the graph.
 
-The initial chart shows **account → filed documents**. Its arrows mean “filed under”; legal links
-and governing status have not been assessed. `/visualise "Exact ERP Account"` renders one account.
-After a deep dive, `/visualise --analysis` renders the richer document/part relationships and status
-from the completed judgments. It refuses to combine old placements with a newer filing table.
-Existing CSVs, Markdown and source files are unchanged by visualisation.
+Readers inspect the full body and open the signature pages as pictures. Schedules initially get title
+and first page, expanding when a question needs them; appendices that list depots, sites or group
+companies are read, because they answer the parties question. DOCX signature images, tracked changes
+and comments inform the execution/draft assessment. Cheap filing records never substitute for a
+full card.
+
+After the readers return, `python scripts/check_cards.py --all` prints card warnings — most
+importantly `question 2 may be reversed`, which is your own company written into a counterparty slot
+and the reason a document lands in `_no-name-found`. `/analyse` reruns that one reader with the
+warning quoted, never with the answer. Warnings it cannot fix (evidence over forty words, suspected
+paraphrase) are reported, not silently repaired.
+
+Judging covers ERP accounts that have documents; an account with no documents gets its empty folder
+and README from the script, not from a judge. Documents in the holding folders keep their card facts
+in `CORPUS.csv` and stay `unassessed (no account)` until you map the name; `INDEX.md` lists them
+under what needs a decision. Nothing is invented and nothing is dropped.
+
+The result puts copies into status folders — `1-governs-trade`, `2-governs-part-of-trade`,
+`3-live-not-trade`, `4-not-live`, `5-orders-drafts-duplicates`, `6-business-practice`, `unsure` —
+and turns each account README into a position note: what governs, execution and version uncertainty,
+limited scopes, overlaps and conflicts with both sets of exact words, what is missing, and the
+questions for the business. Its target is concise; one printed page is not currently enforced (the
+live-test notes ran 1,374–2,169 words).
+
+`/analyse` stops here and mentions `/deep-dive`. Rerun `/visualise --analysis` for free after
+corrections.
 
 ## 3. Full analysis: /deep-dive
 
 ```
 /deep-dive
+/deep-dive --topics off
 ```
 
-This explicitly authorises full analysis of every readable document in the prepared pile, including
-holding files. It fills the unchanged sort card, matches full identities, judges account trees and
-status, then fills validated DCG forms and maps them. By default it includes the four defined
-commercial topics: freight, pricing, payment terms and termination for convenience.
-`/deep-dive --topics off` omits those optional questions; `--topics <names>` selects a subset using
-the names in `stage2/topics.md`. Existing compatible readings are reused; `--force` replaces them.
+This is the deepest stage and it explicitly authorises the second full reading pass. It starts with
+a prerequisite check: every readable document has a card, every account with documents has
+placements, and `work/logs/sort.csv` is not older than the cards. If anything is missing or stale it
+names it and tells you to run `/analyse`; it never reads, matches or judges itself.
 
-Readers inspect the full body and signatures as pictures. Schedules initially get title and first
-page, expanding when a question needs them. DOCX signature images, tracked changes and comments
-inform the full execution/draft assessment. Cheap filing records never substitute for full cards.
+It then fills the fixed stage 2 form for every readable document, including holding files. By
+default it includes the four defined commercial topics: freight, pricing, payment terms and
+termination for convenience. `--topics off` omits those optional questions; `--topics <names>`
+selects a subset using the names in `stage2/topics.md`. **Topics on roughly doubles extractor cost**
+(about 62k tokens per document with all four in the live test). Existing compatible forms are
+reused; `--force` replaces them.
 
-The previous filing report is archived under `work/history/` when full matching begins.
-The result replaces filing lists with full analysis columns and puts copies into status folders:
-`1-governs-trade`, `2-governs-part-of-trade`, `3-live-not-trade`, `4-not-live`,
-`5-orders-drafts-duplicates`, `6-business-practice`, `unsure`. The account README becomes a position
-note: what governs, execution/version uncertainty, limited scopes, missing documents and questions.
-Its target is concise; one printed page is not currently enforced.
-
+Invalid forms block mapping. Mappers then propose a DCG family per tree and record what did not fit.
 Graph outputs appear in `out/graph/`: `nodes.csv`, `edges.csv` in the fixed DCG headers, plus companion
 properties, evidence, entity/account links and family proposals. Review each account's `TREES.md`,
 `out/FORM-HEALTH.md` and `out/DIDNT-FIT.md`. Unsupported links are marked `exported=no` rather than
 inventing DCG edge types. Account filing alone does not prove corporate ownership or legal coverage.
 The card, form and DCG registries never change during a run; gaps are reported for later decisions.
 
-Deep dive stops after the analysis reports. Use `/visualise --analysis` when you want refreshed HTMLs.
+Deep dive stops after the analysis reports. Use `/visualise --analysis` for refreshed HTMLs.
+
+## Renamed copies
+
+Copies the kit generates are named so that a folder listing reads like an index:
+
+```
+<doc_id> <kind> <counterparty> <date>[ <status>].<ext>
+```
+
+```
+017 master-agreement Sturmore-Rail-Group 2021-02-22.pdf
+013 master-agreement Sturmore-Rail-Group 2016-07-18 not-live.pdf
+002 duplicate-of-015.pdf
+022 unidentified 42pp.pdf
+```
+
+After `/sort` the name comes from the filing record (kind, first counterparty entity, date if found);
+after `/analyse` it comes from the card (kind, first signing entity, start date) and the placement
+(status folder, "duplicate of"). Spaces become hyphens, path-hostile characters and trailing dots are
+stripped, the name is ASCII and capped at 120 characters, and it is Windows-safe. No agent ever
+chooses a filename: the scripts build it.
+
+Every row in `documents.csv` and `CORPUS.csv` carries a `filed_as` column with that name, and the
+account README lists both: `017 — 017 master-agreement Sturmore-Rail-Group 2021-02-22.pdf —
+original: Customers/Sturmore Rail/MSA 2021/signed master.pdf`. **Your originals and the numbered
+copies in `work/files/` are untouched**; renaming happens only in the generated `out/` copies.
 
 ## Review and reruns
 
@@ -126,32 +198,78 @@ After analysis, legal and sales can filter `CORPUS.csv` or an account's `documen
 and `comment`. Put agreed corrections in `inputs/corrections.csv` (`doc_id,field,value,reason`),
 then rerun the affected full workflow. Cite document numbers, never ambiguous filenames.
 
+`/visualise` is the free re-render: a script-only pass over the existing CSVs and Markdown that
+starts no reader, extractor or mapper and rewrites no CSV, Markdown or graph row. Open
+`out/INDEX.html` and an account's `position.html`; the Mermaid source is beside it as `position.mmd`
+and the bundled renderer works offline. After `/sort` alone the diagram shows **account → filed
+documents**, with arrows meaning "filed under" and nothing about legal status. After `/analyse`,
+`/visualise --analysis` draws the document and part relationships and the status folders. It refuses
+to combine old placements with a newer filing table. `/visualise "Exact ERP Account"` renders one
+account.
+
 Run `/prepare <pile>` when sources change. Numbers stay stable, new files get new numbers, removed
 files retain an audit row. Changed sources archive stale filing records, cards, forms and dependent
-judgments under `work/history/`. Then choose `/sort` or `/deep-dive`; stages never advance unasked.
+judgments under `work/history/`. Then choose `/sort` or `/analyse`; stages never advance unasked.
 Never hand-edit generated `out/` or model-owned `work/` artifacts.
 
-For targeted maintenance, the component commands remain available:
+For targeted maintenance, the component commands remain available. Each stops after its own step:
 
 | Command | Scope |
 | --- | --- |
-| `/read all` or `/read <ids> [--force]` | full sort cards, Sonnet readers |
-| `/match` | matches full-card names and replays the entity map |
-| `/judge all` or `/judge "account"` | full-card account judgments, Opus judges |
+| `/check [pile]` | preflight only |
+| `/prepare <pile> [--erp <file>]` | inventory, numbering, native text, ERP record |
+| `/read all` or `/read <ids>` or `/read account "<name>"` `[--force]` | full sort cards, Sonnet readers |
+| `/match [--force]` | matches full-card names and replays the entity map |
+| `/judge all` or `/judge "account"` | full-card account judgments, Opus judges; accounts with no documents are skipped |
 | `/extract default` or `/extract all [--topics names] [--force]` | validated forms, Sonnet extractors; topics off unless supplied |
 | `/map all [--force]` | Opus family mapping and graph export; requires complete valid forms |
 | `/report` | rebuild current CSV/Markdown reports only |
 | `/report --graph` | explicitly rebuild analysis CSV/Markdown and graph outputs |
+| `/visualise [all \| "account"] [--analysis]` | offline Mermaid HTML from existing reports |
 
 If corrections change names, rerun `/match` before judgments. Re-extract affected forms with
 `--force` after factual corrections, then `/map all --force` and `/report --graph`. Do not run
 `/sort` inside this advanced analysis sequence: it deliberately returns the visible report to filing.
 
+## The cost report and /cost
+
+Every stage keeps a ledger: one row per spawned agent, retries included, in `work/logs/cost.csv`
+(`stage,role,model,target,attempt,outcome,tokens,duration_ms,units_read`). The stage's last step is
+
+```
+python scripts/cost.py --stage analyse
+python scripts/cost.py --stage analyse --extrapolate 200
+```
+
+which prints agents, retries, total tokens, tokens per document, tokens per page and wall clock, per
+role and for the stage; `--extrapolate N` scales the per-document figures to a pile of N documents at
+the same mix of roles and retry rate, and shows the per-page figure separately so a pile of longer
+documents can be scaled by pages instead. There is no currency anywhere: token counts only, so you
+apply your own rates.
+
+**The main session's own tokens never reach that ledger.** Type `/cost` after each stage, while it is
+fresh, and note all four figures — input, output, cache write, cache read — then add them to the
+stage total. In the live test the orchestrator was about a third of the cheap stage.
+
+Measured on the invented messy pile (33 files, six ERP accounts, 7 September 2026): filing 33 Haiku
+filers for 327k subagent tokens; full reading 32 Sonnet readers at about 28k per document and 6 Opus
+judges at about 49k per account; extraction 32 Sonnet extractors at about 62k per document with all
+four topics, and 9 Opus mappers at about 106k per account. About 4.5M subagent tokens plus 0.35M
+orchestrator tokens for the whole pile, all stages. Those are invented documents on one run; treat
+them as an order of magnitude, not a quote.
+
 ## Reading policy and cost
 
 The main cost is model reading, extraction and judgment. Generating CSV or Mermaid HTML is local
 script work; separating HTML alone would save little model work. Cheap filing defers the expensive
-questions. Full reading may require both a card and a form, so run it only when that analysis is useful.
+questions. Full reading may require both a card and a form, so run `/deep-dive` only when that
+analysis is useful.
+
+A page read as a picture costs several times a page read as text, so a scanned pile costs several
+times what the same words cost as native text; `/prepare` prints the scanned-page count on its own
+line for exactly that reason. And at forty files the questions matter more than the model: the fixed
+card and form, and the rule that a question the paper cannot answer gets "not found", do more for
+the result than a model upgrade would.
 
 For substantive answers, use the map to locate the relevant contract, then read its full body and
 operative amendments, plus schedules needed for scope or precedence. Definitions, exceptions and
@@ -183,7 +301,7 @@ invented fixtures belong in commits. Reports stay local; no external sharing is 
 | Path | Purpose |
 | --- | --- |
 | `CLAUDE.md`, `.claude/skills/`, `.claude/agents/` | runtime rules, commands and agent roles |
-| `scripts/` | preparation, cheap filing, full matching/reporting, visualisation, validation and export |
+| `scripts/` | preparation, cheap filing, full matching/reporting, visualisation, validation, cost and export |
 | `stage1/`, `stage2/` | fixed card/rules and fixed form/topics |
 | `dcg/` | unchanged registries, pinned version in `VERSION.md` |
 | `inputs/` | editable operator decisions; only examples committed |
@@ -192,5 +310,9 @@ invented fixtures belong in commits. Reports stay local; no external sharing is 
 | `BUILD-NOTES.md` | acceptance evidence, decisions and outstanding limits |
 
 For a scripted/API reader, preserve the existing card/form JSON contracts and validation gate. The
-cheap filing record is deliberately separate. Entity-map basis/confidence remains the account
-association layer; graph companion tables retain information outside DCG's fixed headers.
+Claude API takes a PDF directly as a `document` content block — base64 inline or by `file_id` from
+the Files API, up to 32 MB and 600 pages per request — and each page arrives as extracted text plus a
+page image, which is why a scanned page costs several times a text page there too; a scripted reader
+therefore needs no local extraction step, but the same page budgets still apply. The cheap filing
+record is deliberately separate. Entity-map basis/confidence remains the account association layer;
+graph companion tables retain information outside DCG's fixed headers.

@@ -1,10 +1,13 @@
 ---
 name: check
 description: Preflight for the DCG intake kit. Checks Python, pypdf, the pile, the ERP record, mermaid.min.js and write access before anything else runs. Usage /check [pile path].
-disable-model-invocation: true
 ---
 
 # /check [pile path]
+
+Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
+targeted maintenance. It stops after its own step and never starts the next.
+Commands are written `python`; use `python3` where that is the installed name.
 
 Run from the kit root. `$ARGUMENTS` is the pile path (the folder holding the contract files
 and the ERP record); it may be empty.

@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # /eval
 
+Commands are written `python`; use `python3` where that is the installed name.
+
 1. Read `eval/README.md`. Run `python eval/run.py prepare`; use the printed isolated kit path.
    Run `/prepare pile`, `/read all`, `/match`, `/judge all`, then `/extract --all`, `/map all`,
    `/report --graph`. Topics remain off. Never

@@ -1,10 +1,13 @@
 ---
 name: read
 description: Spawns one reader sub-agent per document to fill the sort cards. Usage /read all | <ids> | account "<name>" [--force].
-disable-model-invocation: true
 ---
 
 # /read all | <ids> | account "<name>" [--force]
+
+Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
+targeted maintenance. It stops after its own step and never starts the next.
+Commands are written `python`; use `python3` where that is the installed name.
 
 Run from the kit root. `$ARGUMENTS` says which documents. Build the list of doc ids first:
 
@@ -26,4 +29,5 @@ skipped. Print the list before starting. Then, in batches of five:
 Never fill a card yourself; never edit a card a reader wrote.
 
 When every batch is done, print the counts: cards written, cards skipped (already present),
-failures (with their ids). Say what to run next: `/match`. Stop; do not start it automatically.
+failures (with their ids). Say what to run next: `python scripts/check_cards.py --all` to see
+which cards look wrong, then `/match`. Stop; do not start either automatically.

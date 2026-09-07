@@ -10,6 +10,9 @@ ERP record, the inventory and the sort cards, then:
 - writes work/logs/sort.csv, one row per (document, target),
 - prints what needs the user's decision.
 
+Copies are named by kit_common.filed_name() from the card and the target folder; the originals
+and work/files/<id>.<ext> keep their own names.
+
 Copy, never move. Re-runs are deterministic: stale copies from an earlier run are removed.
 """
 
@@ -23,9 +26,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from kit_common import (  # noqa: E402
     CONFIDENCE_RANK, HOLDING_FOLDERS, OUT, SORT_LOG_COLUMNS, SORT_LOG_CSV, TO_JUDGE, WORK, WORK_FILES,
     _header_of,
-    account_folder, apply_corrections_to_card, load_corrections, doc_label, erp_account_names, fail, join_multi, load_all_cards, load_entity_map,
-    load_erp, load_inventory, load_our_entities, names_from_card, norm_name, rel, safe_folder_name,
-    say, stream_map, warn, write_csv, write_text,
+    account_folder, apply_corrections_to_card, counterparty_for, load_corrections, doc_label,
+    entity_row_for, erp_account_names, fail, filed_name, group_key, join_multi, load_all_cards, load_entity_map,
+    load_erp, load_inventory, load_our_entities, names_from_card, naming_from_card, norm_name, rel,
+    safe_folder_name, say, stream_map, unique_filed_name, warn, write_csv, write_text,
 )
 
 
@@ -104,7 +108,7 @@ def decide_targets(names, entity_by_name, erp_names_by_norm, streams):
     not_listed = []    # (name, row or None)
     undecided = []
     for name in names:
-        row = entity_by_name.get(norm_name(name))
+        row = entity_row_for(entity_by_name, name)
         if row is None:
             not_listed.append((name, None))
             undecided.append(name)
@@ -186,6 +190,32 @@ def decide_targets(names, entity_by_name, erp_names_by_norm, streams):
     return "_not-on-the-list", targets, undecided
 
 
+def group_holding_targets(targets, holding_names):
+    """One holding folder per company, however the name is abbreviated.
+
+    'Brenlow Dockyard Svcs Ltd' and 'Brenlow Dockyard Services Limited' share a group key, so
+    the second spelling is filed under the first one seen and the user decides the name once.
+    Duplicate targets inside one document are dropped, so a document is copied only once.
+    """
+    result = []
+    seen = set()
+    for target in targets:
+        name = target["target"]
+        if "/" in name and name.split("/", 1)[0] in HOLDING_FOLDERS:
+            folder, printed = name.split("/", 1)
+            display = holding_names.setdefault(group_key(printed), printed)
+            if display != printed:
+                target = {**target, "target": f"{folder}/{display}",
+                          "note": (target.get("note", "") + f"; printed as {printed!r}").lstrip("; ")}
+            else:
+                target = {**target, "target": f"{folder}/{display}"}
+        if target["target"] in seen:
+            continue
+        seen.add(target["target"])
+        result.append(target)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description="Replay inputs/entity-map.csv into account folders.")
     parser.add_argument("--force", action="store_true", help="copy again even if the copy exists")
@@ -229,10 +259,12 @@ def main():
 
     # 4. every document
     produced = set()
+    used_names = {}
     log_rows = []
     per_account_docs = {a: [] for a in main_accounts}
     holding = {h: {} for h in HOLDING_FOLDERS}  # holding folder -> {name: [doc ids]}
     undecided_names = {}
+    holding_names = {}  # group key -> the printed name that names the holding folder
     no_card = []
     unreadable = []
 
@@ -241,7 +273,6 @@ def main():
         if doc_id == "erp":
             continue
         original = row.get("original_path", "")
-        file_name = row.get("file_name", "")
         if row.get("readable") != "yes":
             unreadable.append(doc_id)
             log_rows.append({"doc_id": doc_id, "original_path": original, "companies_found": "",
@@ -258,9 +289,11 @@ def main():
         if not source.exists():
             warn(f"doc {doc_id}: {rel(source)} is missing; run /prepare again")
         names = names_from_card(card, our_names)
+        naming = naming_from_card(card)
         kind, targets, undecided = decide_targets(names, entity_by_name, erp_names_by_norm, streams)
+        targets = group_holding_targets(targets, holding_names)
         for name in undecided:
-            undecided_names.setdefault(name, []).append(doc_id)
+            undecided_names.setdefault(holding_names.setdefault(group_key(name), name), []).append(doc_id)
         account_targets = [t["target"] for t in targets] if kind == "account" else []
         for t in targets:
             note = t["note"]
@@ -269,14 +302,17 @@ def main():
                 if others:
                     note = f"shared with: {', '.join(others)}; " + note
                 per_account_docs[t["target"]].append(doc_id)
-                target_path = account_folder(side, t["target"]) / TO_JUDGE / f"{doc_id}-{file_name}"
+                folder_path = account_folder(side, t["target"]) / TO_JUDGE
             elif kind == "_no-name-found":
                 holding["_no-name-found"].setdefault("(no name)", []).append(doc_id)
-                target_path = OUT / side / "_no-name-found" / f"{doc_id}-{file_name}"
+                folder_path = OUT / side / "_no-name-found"
             else:
                 folder, name = t["target"].split("/", 1)
                 holding[folder].setdefault(name, []).append(doc_id)
-                target_path = OUT / side / folder / safe_folder_name(name) / f"{doc_id}-{file_name}"
+                folder_path = OUT / side / folder / safe_folder_name(name)
+            filed = filed_name(doc_id, row.get("ext", ""), counterparty=counterparty_for(t["target"], names),
+                               pages=row.get("pages", ""), unresolved=kind == "_no-name-found", **naming)
+            target_path = folder_path / unique_filed_name(filed, used_names.setdefault(folder_path, set()))
             if source.exists():
                 copy_if_needed(source, target_path, produced, args.force)
             log_rows.append({"doc_id": doc_id, "original_path": original, "companies_found": join_multi(names),
@@ -310,7 +346,7 @@ def main():
     if undecided_names:
         say("Names that need your decision (add or edit a row in inputs/entity-map.csv with decided_by = user, then run /match again):")
         for name, docs in undecided_names.items():
-            row = entity_by_name.get(norm_name(name))
+            row = entity_row_for(entity_by_name, name)
             why = "no entity-map row" if row is None else f"mapped to {row.get('account', '')!r} with confidence {row.get('confidence', '')!r}"
             say(f"  - {name}  ({why}; in " + ", ".join(doc_label(d) for d in docs) + ")")
     else:

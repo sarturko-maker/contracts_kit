@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # /sort [pile] [--force]
 
+Commands are written `python`; use `python3` where that is the installed name.
+
 This is the cheap first stage. It stops after filing. Do not call full readers, judges,
 extractors, mappers, graph generation or visualisation. Do not determine what governs trade.
 
@@ -29,4 +31,26 @@ extractors, mappers, graph generation or visualisation. Do not determine what go
    It writes files, per-folder documents.csv/README.md, global CORPUS.csv/ACCOUNTS.csv and INDEX.md.
    An older generated out/ report is retained under work/history; model source records survive.
 6. Report counts, unresolved identities and source paths needing attention. Legal/live/signed
-   status remains unassessed. Mention `/visualise` and `/deep-dive` as options, then STOP.
+   status remains unassessed.
+
+7. Cost report. As each filer returns, append one ledger row per spawned agent — including every
+   retry as its own row:
+
+   ```
+   python scripts/cost.py --append --stage sort --role filer --model haiku \
+       --target 017 --attempt 1 --outcome ok --tokens 9800 --duration-ms 41000 --units-read 3
+   ```
+
+   `--target` is the doc id, `--attempt` 1 for the first try and 2 for a retry, `--outcome` `ok`
+   or `failed`, `--tokens` and `--duration-ms` the figures the completion reported (`unknown` if
+   the harness did not report them), `--units-read` the `pages:` figure from the filer's return
+   line, or its record's `pages_read` count, or `unknown`.
+
+   Then run `python scripts/cost.py --stage sort` and put its table in the reply, followed by
+   exactly this line: "main session tokens are not visible to the model; type `/cost` for this
+   session's own usage and add it to the stage total". Tell the user to run `/cost` now, while
+   the stage is fresh, and to note all four figures (input, output, cache write, cache read):
+   the main session was about a third of this stage's tokens in the live test.
+
+8. Mention `/analyse` (the full read, the deliverable) and `/visualise` (a free filing diagram)
+   as the options, then STOP.

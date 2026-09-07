@@ -5,11 +5,22 @@
     python scripts/place.py --index              CORPUS.csv, ACCOUNTS.csv, INDEX.md
     python scripts/place.py --all                every account with a placements file, then --index
     python scripts/place.py --all --visuals      also build the original analysis diagrams/HTML
+    python scripts/place.py --accounts-with-documents
+                                                 the ERP accounts a document was sorted to, one
+                                                 per line, so /judge skips the empty ones
 
 Sources: work/placements/<account>.csv and .md (the judge), work/cards/<id>.json (the readers),
 work/inventory.csv and work/erp.json (prepare.py), work/logs/sort.csv (sort.py),
 inputs/entity-map.csv and inputs/corrections.csv. Nothing under out/ is edited by hand; run this
 again after any input changes.
+
+Copies in the status folders are named by kit_common.filed_name() from the card and the
+placement, and that name is the `filed_as` column of documents.csv and CORPUS.csv.
+
+An ERP account with no documents needs no judge: its folder, its README saying nothing is filed
+and its empty diagram are written here. A document in a holding folder (no ERP account) has no
+judge either: it keeps its card facts in CORPUS.csv as `unassessed (no account)` and is listed
+under "Needs a decision" in INDEX.md.
 """
 
 import argparse
@@ -23,11 +34,11 @@ sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from kit_common import (  # noqa: E402
     ACCOUNTS_COLUMNS, CORPUS_COLUMNS, HOLDING_FOLDERS, MERMAID_JS, NOTE_TEMPLATE, NOT_FOUND, OUT,
     PLACEMENT_COLUMNS, REVIEWER_COLUMNS, STATUS_FOLDERS, TO_JUDGE, WORK_FILES, WORK_PLACEMENTS,
-    account_folder, apply_corrections_to_card, apply_corrections_to_placement, doc_label,
-    erp_account_names, fail, is_empty_answer, join_multi, load_all_cards, load_corrections,
-    load_entity_map, load_erp, load_inventory, load_our_entities, load_sort_log, names_from_card,
-    norm_name, read_csv, rel, safe_folder_name, say, split_multi, stream_map, strip_role, truncate,
-    warn, write_csv, write_text,
+    account_folder, apply_corrections_to_card, apply_corrections_to_placement, counterparty_for,
+    doc_label, entity_row_for, erp_account_names, fail, filed_name, is_empty_answer, join_multi, load_all_cards,
+    load_corrections, load_entity_map, load_erp, load_inventory, load_our_entities, load_sort_log,
+    names_from_card, naming_from_card, norm_name, read_csv, rel, safe_folder_name, say, split_multi,
+    stream_map, strip_role, truncate, unique_filed_name, warn, write_csv, write_text,
 )
 
 FOLDER_WORDS = {
@@ -64,6 +75,10 @@ PROSE_HEADINGS = {
 }
 NOTHING = "(the judge wrote nothing here)"
 NOT_JUDGED = "not judged"
+# A document in a holding folder has been read but has no ERP account, so no judge ever sees it.
+# It keeps its card facts and says plainly that its status was not assessed.
+UNASSESSED = "unassessed (no account)"
+NO_ACCOUNT_REASON = "no ERP account for this name yet; decide it in inputs/entity-map.csv"
 UNREADABLE = "not readable by the kit"
 NO_CARD = "no card yet"
 
@@ -78,6 +93,13 @@ def load_context():
     sort_rows = load_sort_log()
     if not sort_rows:
         fail("work/logs/sort.csv is missing or empty. Run /match first.")
+    # A CSV cell loses its leading and trailing spaces, so an ERP name written with one would
+    # never match its own sort rows. Snap each row back to the ERP spelling.
+    by_norm = {norm_name(a): a for a in erp_account_names(erp)}
+    for row in sort_rows:
+        exact = by_norm.get(norm_name(row.get("account", "")))
+        if exact and exact != row.get("account"):
+            row["account"] = exact
     entity_by_name, _ = load_entity_map()
     corrections = load_corrections()
     cards = load_all_cards()
@@ -119,10 +141,29 @@ def parse_prose(text):
     return {k: "\n".join(v).strip() for k, v in sections.items() if k}
 
 
+def placements_path(account):
+    """work/placements/<safe name>.csv, or the raw account name when only that exists.
+
+    The judge is told to use safe_folder_name(account); an ERP name with a slash, a colon or a
+    trailing space written raw is still read, with a warning, so nothing is silently missed.
+    """
+    safe = WORK_PLACEMENTS / f"{safe_folder_name(account)}.csv"
+    if safe.exists():
+        return safe
+    if not WORK_PLACEMENTS.exists():
+        return None
+    for path in sorted(WORK_PLACEMENTS.glob("*.csv")):
+        if path.name == f"{account}.csv":
+            warn(f"{account}: placements found as {rel(path)}; the judge should write "
+                 f"{safe.name} (the folder-safe name). Read anyway.")
+            return path
+    return None
+
+
 def load_placements(ctx, account):
     """The judge's placements for one account: ({doc_id: row}, prose dict), or None when absent."""
-    csv_path = WORK_PLACEMENTS / f"{safe_folder_name(account)}.csv"
-    if not csv_path.exists():
+    csv_path = placements_path(account)
+    if csv_path is None:
         return None
     rows = read_csv(csv_path, required_columns=PLACEMENT_COLUMNS)
     by_doc = {}
@@ -231,6 +272,23 @@ def parts_of(card, placement):
     return parts
 
 
+def holding_folder_of(account):
+    """'_not-on-the-list/Brenlow Ltd' -> that path; '' when the target is not a holding folder."""
+    account = (account or "").strip()
+    for holding in HOLDING_FOLDERS:
+        if account == holding or account.startswith(holding + "/"):
+            return account
+    return ""
+
+
+def holding_name_of(account):
+    """The company name a holding row is grouped under; '(no name)' for _no-name-found."""
+    holding = holding_folder_of(account)
+    if not holding:
+        return ""
+    return holding.split("/", 1)[1].strip() if "/" in holding else "(no name)"
+
+
 def corpus_row(ctx, sort_row, placement, judged):
     """One CORPUS.csv row for a (document, target) pair."""
     doc_id = sort_row["doc_id"]
@@ -285,6 +343,12 @@ def corpus_row(ctx, sort_row, placement, judged):
             row[col] = card.get(key, "")
         row["parts"] = merge_parts(card.get("q5_parts_detail", ""), placement.get("parts_status", "") if placement else "")
 
+    row["filed_as"] = filed_name(
+        doc_id, inv.get("ext", ""),
+        counterparty=counterparty_for(sort_row.get("account", ""), split_multi(sort_row.get("companies_found", ""))),
+        pages=inv.get("pages", ""), unresolved=card is None,
+        **naming_from_card(card, placement if judged else None))
+
     if judged and placement is not None:
         row.update({
             "tree": placement.get("tree", ""),
@@ -296,6 +360,13 @@ def corpus_row(ctx, sort_row, placement, judged):
     else:
         for col in ("tree", "folder", "placement_reason", "overlap_or_conflict", "question_for_business"):
             row[col] = NOT_JUDGED
+        holding = holding_folder_of(sort_row.get("account", ""))
+        if holding and card is not None:
+            # Read, but no ERP account, so no judge: the card facts stay and the folder is the
+            # holding folder the copy is in. Nothing is dropped from the list.
+            row["folder"] = holding
+            row["status"] = UNASSESSED
+            row["placement_reason"] = NO_ACCOUNT_REASON
 
     for col in CORPUS_COLUMNS:
         if col not in REVIEWER_COLUMNS and row[col] == "":
@@ -364,7 +435,7 @@ def account_block(ctx, account, settled):
     lines.append("- Our entities found: " + (join_multi(ours) if ours else NOT_FOUND))
     lines.append("- Their entities found:" if theirs else "- Their entities found: " + NOT_FOUND)
     for name in theirs:
-        row = ctx["entity_by_name"].get(norm_name(name))
+        row = entity_row_for(ctx["entity_by_name"], name)
         if row is None:
             lines.append(f"  - {name} — no entity-map row yet")
             continue
@@ -377,11 +448,11 @@ def account_block(ctx, account, settled):
     return "\n".join(lines)
 
 
-def table_rows(ctx, settled, folder, with_limit):
+def table_rows(ctx, settled, folder, with_limit, filed=None):
     """Markdown table for folder 1 (or folder 2 with a limit column)."""
-    header = ["tree", "doc", "title", "kind", "companies", "start / end / status", "scope", "why"]
+    header = ["tree", "doc", "filed as", "title", "kind", "companies", "start / end / status", "scope", "why"]
     if with_limit:
-        header.insert(7, "limit")
+        header.insert(8, "limit")
     docs = [(p["tree"], d) for d, p in settled.items() if p.get("folder") == folder]
     if not docs:
         return "(none)"
@@ -391,7 +462,8 @@ def table_rows(ctx, settled, folder, with_limit):
         p = settled[doc_id]
         card = ctx["cards"].get(doc_id, {})
         cells = [
-            tree, doc_label(doc_id), card.get("q1_title", NOT_FOUND), card.get("q1_kind", NOT_FOUND),
+            tree, doc_label(doc_id), (filed or {}).get(doc_id, NOT_FOUND),
+            card.get("q1_title", NOT_FOUND), card.get("q1_kind", NOT_FOUND),
             signing_names(card),
             f"{card.get('q4_start_date', NOT_FOUND)} / {card.get('q4_end', NOT_FOUND)} / {card.get('q4_status', NOT_FOUND)}",
             card.get("q7_trade_scope", NOT_FOUND),
@@ -403,7 +475,7 @@ def table_rows(ctx, settled, folder, with_limit):
     return "\n".join(lines)
 
 
-def everything_else(ctx, settled):
+def everything_else(ctx, settled, filed=None):
     """Section 5: one bullet per doc outside folders 1 and 2, ordered by folder then doc."""
     order = {f: i for i, f in enumerate(STATUS_FOLDERS)}
     docs = [d for d, p in settled.items() if p.get("folder") not in ("1-governs-trade", "2-governs-part-of-trade")]
@@ -415,6 +487,7 @@ def everything_else(ctx, settled):
         p = settled[doc_id]
         card = ctx["cards"].get(doc_id, {})
         bits = [f"{doc_label(doc_id)} — {card.get('q1_kind', NOT_FOUND)} \"{card.get('q1_title', NOT_FOUND)}\"",
+                f"filed as `{(filed or {}).get(doc_id, NOT_FOUND)}`",
                 p["folder"], p.get("reason", "") or NOT_FOUND]
         if p.get("what_would_change", "").strip():
             bits.append(p["what_would_change"].strip())
@@ -449,7 +522,7 @@ def couldnt_section(ctx, settled, prose):
         if card.get("q4_end", "").lower().startswith("rolling") and p.get("folder") == "unsure":
             bullets.append(f"- {doc_label(doc_id)}: rolling terms recorded; no evidence of current trading under this text")
         for name in names_from_card(card, ctx["our_names"]):
-            row = ctx["entity_by_name"].get(norm_name(name))
+            row = entity_row_for(ctx["entity_by_name"], name)
             if row and row.get("basis", "").strip().lower() == "known group" and norm_name(name) not in known_group_seen:
                 known_group_seen.add(norm_name(name))
                 bullets.append(f"- {name} matched to {row.get('account', '')} on `known group` only "
@@ -458,7 +531,7 @@ def couldnt_section(ctx, settled, prose):
     return "\n".join(bullets + [text]) if bullets else text
 
 
-def build_note(ctx, account, settled, prose):
+def build_note(ctx, account, settled, prose, filed=None):
     """Fill stage1/position-note.md for this account."""
     if not NOTE_TEMPLATE.exists():
         fail(f"{rel(NOTE_TEMPLATE)} is missing; the kit is incomplete.")
@@ -469,9 +542,9 @@ def build_note(ctx, account, settled, prose):
         "side": ctx["side"],
         "account_block": account_block(ctx, account, settled),
         "position": prose.get("position", "").strip() or NOTHING,
-        "governs_table": table_rows(ctx, settled, "1-governs-trade", with_limit=False),
-        "part_table": table_rows(ctx, settled, "2-governs-part-of-trade", with_limit=True),
-        "everything_else": everything_else(ctx, settled),
+        "governs_table": table_rows(ctx, settled, "1-governs-trade", with_limit=False, filed=filed),
+        "part_table": table_rows(ctx, settled, "2-governs-part-of-trade", with_limit=True, filed=filed),
+        "everything_else": everything_else(ctx, settled, filed=filed),
         "practice_line": practice_line(ctx, settled),
         "overlaps": prose.get("overlaps", "").strip() or NOTHING,
         "couldnt": couldnt_section(ctx, settled, prose),
@@ -747,20 +820,26 @@ def write_account(ctx, account, settled, prose, all_rows, visuals=False):
     for name in STATUS_FOLDERS:
         (folder / name).mkdir()
 
+    rows = [r for r in all_rows if r["account"] == account]
+    filed = {r["doc_id"]: r["filed_as"] for r in rows}
+
     copied = 0
+    used_names = {}
     for doc_id, p in settled.items():
         inv = ctx["inventory"].get(doc_id, {})
         source = WORK_FILES / f"{doc_id}.{inv.get('ext', '')}"
         if not source.exists():
             warn(f"{account}: {rel(source)} is missing (run /prepare again); doc {doc_id} not copied")
             continue
-        target = folder / p["folder"] / f"{p['tree']}-{doc_id}-{inv.get('file_name', source.name)}"
+        status_folder = folder / p["folder"]
+        name = filed.get(doc_id) or filed_name(doc_id, inv.get("ext", ""), unresolved=True,
+                                               pages=inv.get("pages", ""))
+        target = status_folder / unique_filed_name(name, used_names.setdefault(status_folder, set()))
         shutil.copyfile(source, target)
         copied += 1
 
-    rows = [r for r in all_rows if r["account"] == account]
     write_csv(folder / "documents.csv", rows, CORPUS_COLUMNS)
-    note = build_note(ctx, account, settled, prose)
+    note = build_note(ctx, account, settled, prose, filed=filed)
     write_text(folder / "README.md", note)
     if visuals:
         ensure_visual_assets()
@@ -775,6 +854,37 @@ def write_account(ctx, account, settled, prose, all_rows, visuals=False):
         + ", ".join(f"{f.split('-')[0]}={n}" for f, n in counts.items())
         + f"; written {rel(folder)}/README.md, documents.csv"
         + (", position.mmd, position.html" if visuals else ""))
+
+
+EMPTY_ACCOUNT_POSITION = ("Nothing is filed to this account. No document in the pile was matched "
+                          "to this ERP row, so nothing was read or judged for it.")
+
+
+def accounts_with_documents(ctx):
+    """ERP accounts (not streams) that at least one document was sorted to, in ERP order."""
+    return [a for a in ctx["accounts"] if a not in ctx["streams"] and docs_sorted_to(ctx, a)]
+
+
+def empty_accounts(ctx, settled_by_account):
+    """ERP accounts with no documents at all. They need no judge: place.py writes them itself."""
+    return [a for a in ctx["accounts"]
+            if a not in ctx["streams"] and a not in settled_by_account and not docs_sorted_to(ctx, a)]
+
+
+def add_empty_accounts(ctx, settled_by_account):
+    """Give every zero-document account an empty placement set, so it is written like the rest.
+
+    No judge is spent on an account with nothing in it: the folder, the README that says
+    nothing is filed and the empty diagram are written here. Returns the accounts added, and
+    leaves settled_by_account in ERP order.
+    """
+    added = empty_accounts(ctx, settled_by_account)
+    for account in added:
+        settled_by_account[account] = ({}, {"position": EMPTY_ACCOUNT_POSITION})
+    ordered = {a: settled_by_account[a] for a in ctx["accounts"] if a in settled_by_account}
+    settled_by_account.clear()
+    settled_by_account.update(ordered)
+    return added
 
 
 def settled_for_all_accounts(ctx):
@@ -854,7 +964,7 @@ def sort_log_summary(ctx):
     undecided = {}
     for doc_id, card in ctx["cards"].items():
         for name in names_from_card(card, ctx["our_names"]):
-            row = ctx["entity_by_name"].get(norm_name(name))
+            row = entity_row_for(ctx["entity_by_name"], name)
             if row is None or row.get("account") == "_not-sure" or row.get("confidence", "").lower() == "not sure":
                 undecided.setdefault(name, []).append(doc_id)
     if undecided:
@@ -864,6 +974,31 @@ def sort_log_summary(ctx):
         lines.append("- names that need a decision: none")
     for stream, (main, _) in ctx["streams"].items():
         lines.append(f'- stream: ERP row "{stream}" treated as one with "{main}"')
+    return lines
+
+
+def needs_a_decision(all_rows):
+    """Read documents in a holding folder, grouped by the name that needs the user's decision.
+
+    One markdown bullet per name. These have cards but no ERP account, so no judge saw them;
+    they are in CORPUS.csv as `unassessed (no account)` and are listed here so the user can map
+    the name in inputs/entity-map.csv and run /analyse for that account.
+    """
+    groups = {}
+    for row in all_rows:
+        if row.get("status") != UNASSESSED:
+            continue
+        holding = holding_folder_of(row.get("account", ""))
+        if not holding:
+            continue
+        key = (holding.split("/", 1)[0], holding_name_of(row.get("account", "")))
+        groups.setdefault(key, []).append(row["doc_id"])
+    if not groups:
+        return ["- none"]
+    lines = []
+    for (folder, name), docs in sorted(groups.items()):
+        lines.append(f"- {name} (`{folder}`): " + ", ".join(doc_label(d) for d in sorted(docs))
+                     + " — map the name in `inputs/entity-map.csv`, then run /analyse for that account")
     return lines
 
 
@@ -913,6 +1048,9 @@ def write_index(ctx, settled_by_account, all_rows, visuals=False):
         html_rows.append("<tr>" + "".join(f"<td>{html.escape(x)}</td>" for x in
                                           [account, row["governing_docs"] or ("not judged" if not judged else "none")] + counts
                                           + [row["n_documents"], row["open_questions"]]) + f"<td>{link_html}</td></tr>")
+    md += ["", "## Needs a decision", "",
+           "Read, but no ERP account: their status is not assessed until the name is mapped.", ""]
+    md += needs_a_decision(all_rows)
     md += ["", "## Files not readable by the kit", ""]
     md += [f"- doc {d}: `{p}` ({n})" for d, p, n in unreadable] or ["- none"]
     md += ["", "## Sort log summary", ""] + sort_log_summary(ctx)
@@ -934,6 +1072,8 @@ def write_index(ctx, settled_by_account, all_rows, visuals=False):
 <tbody>
 {chr(10).join(html_rows)}
 </tbody></table>
+<h2>Needs a decision</h2>
+{md_to_html(chr(10).join(needs_a_decision(all_rows)))}
 <h2>Files not readable by the kit</h2>
 {md_to_html(chr(10).join([f"- doc {d}: `{p}` ({n})" for d, p, n in unreadable] or ["- none"]))}
 <h2>Sort log summary</h2>
@@ -956,11 +1096,20 @@ def main():
     group.add_argument("--account", help="rebuild one account (name exactly as the ERP row)")
     group.add_argument("--index", action="store_true", help="rebuild CORPUS.csv, ACCOUNTS.csv, INDEX.md")
     group.add_argument("--all", action="store_true", help="rebuild every judged account, then the index")
+    group.add_argument("--accounts-with-documents", action="store_true",
+                       help="list the ERP accounts a document was sorted to, one per line "
+                            "(the accounts a judge is worth spending on)")
     parser.add_argument("--visuals", action="store_true", help="also build analysis diagrams, HTML and offline assets")
     args = parser.parse_args()
 
     ctx = load_context()
+    if args.accounts_with_documents:
+        for account in accounts_with_documents(ctx):
+            print(account)
+        return 0
+
     settled_by_account = settled_for_all_accounts(ctx)
+    empties = add_empty_accounts(ctx, settled_by_account)
     all_rows = build_all_rows(ctx, {a: s for a, (s, _) in settled_by_account.items()})
 
     if args.account:
@@ -980,6 +1129,12 @@ def main():
             write_account(ctx, account, settled, prose, all_rows, visuals=args.visuals)
         if not settled_by_account:
             warn("no account has a placements file yet; run /judge first. Writing the index anyway.")
+    else:
+        # An account with no documents has no judge and no placements file, so --index is the
+        # only run that would ever write it. Write it here rather than leave a dead link.
+        for account in empties:
+            settled, prose = settled_by_account[account]
+            write_account(ctx, account, settled, prose, all_rows, visuals=args.visuals)
     write_index(ctx, settled_by_account, all_rows, visuals=args.visuals)
     return 0
 

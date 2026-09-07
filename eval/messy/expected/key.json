@@ -1,0 +1,1196 @@
+{
+  "corpus": {
+    "name": "messy invented contract pile",
+    "review_date": "2026-09-07",
+    "our_side": "Halbrook Electrical Distribution Ltd - an invented UK electrical and industrial distributor (formerly Halbrook Cable & Fixings Ltd)",
+    "everything_invented": true,
+    "files_in_pile": 34,
+    "documents": 33,
+    "erp_rows": 6,
+    "accounts": 5,
+    "generator": "make_messy_pile.py (deterministic)",
+    "note": "The brief's '5 ERP account rows' is resolved as five ACCOUNTS across six rows: four accounts with documents (one of them carrying a second, stream row) plus one account row with no documents."
+  },
+  "erp_rows": [
+    {
+      "account_number": "HAL-40118",
+      "customer_account": "Sturmore Rail Group",
+      "country": "United Kingdom",
+      "site": "",
+      "documents": 9
+    },
+    {
+      "account_number": "HAL-40119",
+      "customer_account": "Sturmore Rail Group - Northern Depot",
+      "country": "United Kingdom",
+      "site": "Northern Depot",
+      "documents": "stream row of HAL-40118; named by PO 88231 and by Appendix A of the 2021 master"
+    },
+    {
+      "account_number": "HAL-40204",
+      "customer_account": "Wexbury Utilities plc",
+      "country": "United Kingdom",
+      "site": "",
+      "documents": 6
+    },
+    {
+      "account_number": "HAL-40311",
+      "customer_account": "Ardleigh Marine Systems Limited",
+      "country": "United Kingdom",
+      "site": "",
+      "documents": "6 directly, plus 2 Brenlow documents that are only a known-group candidate"
+    },
+    {
+      "account_number": "HAL-40390",
+      "customer_account": "Trentmoor Housing Partnership",
+      "country": "United Kingdom",
+      "site": "",
+      "documents": "5, plus the shared Kellerby letter"
+    },
+    {
+      "account_number": "HAL-40566",
+      "customer_account": "Ravenhead Grid Services Ltd",
+      "country": "United Kingdom",
+      "site": "",
+      "documents": 0
+    }
+  ],
+  "our_entities": [
+    {
+      "name": "Halbrook Electrical Distribution Ltd",
+      "status": "current",
+      "note": "company number 04118276"
+    },
+    {
+      "name": "Halbrook Cable & Fixings Ltd",
+      "status": "former",
+      "note": "same company, renamed 3 June 2019; signs the 2016 Sturmore conditions"
+    },
+    {
+      "name": "Halbrook Electrical Distribution (Scotland) Ltd",
+      "status": "current",
+      "note": "subsidiary; appears in no document in this pile"
+    }
+  ],
+  "holding_folders_expected": {
+    "_no-name-found": [
+      "Customers/Trentmoor/THP master agreement 2023 FULL.pdf (cheap filing only)"
+    ],
+    "_not-sure": [
+      "Customers/Ardleigh (ex Colverne)/Brenlow/Brenlow master 2020.pdf",
+      "Customers/Ardleigh (ex Colverne)/Brenlow/fax 24-03-26.pdf",
+      "Customers/Wexbury/rebate 2026.pdf (if the trading name is not accepted)"
+    ],
+    "_not-on-the-list": [
+      "Misc/Fenwold master.pdf",
+      "Misc/Cadmere framework (we buy).pdf"
+    ],
+    "_unreadable": [
+      "00 TO FILE/RE_ RE_ amendment.msg",
+      "Customers/Trentmoor/Schedule 2 price matrix 2026.xlsx"
+    ],
+    "_needs-reading": [
+      "00 TO FILE/new doc 2.pdf",
+      "00 TO FILE/contract notes.pdf"
+    ]
+  },
+  "documents": [
+    {
+      "path": "erp_extract_2026-09-01.csv",
+      "sha256": "199bef3524205a4ca0d85e9ece673979915a1b8f8b135da4fecbcaf7c1b54552",
+      "kind": "erp_record",
+      "printed_names": [],
+      "account": "n/a",
+      "basis": "n/a",
+      "confidence": "n/a",
+      "execution": "n/a",
+      "key_dates": {
+        "extracted": "2026-09-01"
+      },
+      "relationships": [],
+      "status_folder": "n/a",
+      "live_dead_parts": "n/a",
+      "trap": "Six rows, five accounts: one account has two rows (a stream/site row) and one account has no documents at all. The extra 'site' column must not be mistaken for an account name column."
+    },
+    {
+      "path": "Customers/Sturmore Rail/2016 old agreement/Sturmore supply agreement 2016 SIGNED.pdf",
+      "sha256": "f6e9fc5f7a86648e08cdf87fe5e3ec5238c97993cd7951e445c2ddfe081f552e",
+      "kind": "master or framework (supplier paper - ours)",
+      "printed_names": [
+        "Halbrook Cable & Fixings Ltd (company number 04118276) - our former name",
+        "Sturmore Rail Group Limited (company number 03996120)"
+      ],
+      "account": "Sturmore Rail Group",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "signed both - scanned signature page (p.3), R. Aldbury 18 July 2016 and T. Vessey 18 July 2016",
+      "key_dates": {
+        "made": "2016-07-18",
+        "start": "2016-07-18 (stated, cl.2.1)",
+        "end": "rolling until three months' notice (cl.2.2)",
+        "ceased": "2021-03-01 (replaced)"
+      },
+      "relationships": [
+        "replaced by the Master Supply Agreement dated 22 February 2021 (that document's cl.3.1)"
+      ],
+      "status_folder": "4-not-live",
+      "live_dead_parts": "whole document dead from 1 March 2021",
+      "trap": "Our own signing entity is printed under our FORMER name, Halbrook Cable & Fixings Ltd. A filer without inputs-our-entities.csv can read it as a third company and open a holding entry. The customer is 'Limited' where the ERP says 'Sturmore Rail Group'. Its payment (30 days) and carriage (GBP 350 / GBP 15.00) terms are dead and must never be reported as current."
+    },
+    {
+      "path": "Customers/Sturmore Rail/MSA 2021/Sturmore MSA 2021 executed.pdf",
+      "sha256": "ce6dbfe8768046c2201a9551b17ffe891921c8d5931fff2eb19c933cb7ec5dc7",
+      "kind": "master or framework (customer paper)",
+      "printed_names": [
+        "Sturmore Rail Group Ltd (company number 03996120)",
+        "Halbrook Electrical Distribution Ltd",
+        "Sturmore Rail Group - Northern Depot (Appendix A)",
+        "Sturmore Rail Group - Central Stores (Appendix A)"
+      ],
+      "account": "Sturmore Rail Group (the stream row HAL-40119 is named in Appendix A and shares the main folder)",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "signed both - scanned signature page (p.4), T. Vessey 22 February 2021 and P. Nettlefold 24 February 2021",
+      "key_dates": {
+        "dated": "2021-02-22",
+        "start": "2021-03-01 (stated, cl.1.1)",
+        "initial_term_end": "2024-02-29, then year to year",
+        "end": "rolling until six months' notice (cl.2.2)"
+      },
+      "relationships": [
+        "supersedes the 2016 conditions (cl.3.1)",
+        "amended by Amendment No. 1 dated 6 June 2023",
+        "an unsigned Amendment No. 2 draft exists",
+        "PO 88231 is placed under it",
+        "carriage varied for one site only by the Kellerby Interchange joint letter"
+      ],
+      "status_folder": "1-governs-trade",
+      "live_dead_parts": "no separately-lived parts; Appendix A has no separate expiry (A4)",
+      "trap": "The payment term printed in this master (45 days, cl.7.1) is NOT the current term - Amendment No. 1 replaced it with 60 days. Answering payment from the master alone is wrong. Appendix A is the only paper that names the stream ERP row."
+    },
+    {
+      "path": "Customers/Sturmore Rail/MSA 2021/Amendment 1 signed.pdf",
+      "sha256": "cad5020ee6a59a538e5f79cf2775af612f8f19b1feda46ab9d8a429834230ad4",
+      "kind": "amendment or side letter",
+      "printed_names": [
+        "Sturmore Rail Group Ltd",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Sturmore Rail Group",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "signed both - drawn signatures on the single page, both dated 6 June 2023",
+      "key_dates": {
+        "dated": "2023-06-06",
+        "effective": "2023-07-01",
+        "end": "for as long as the Agreement continues (cl.1.3)"
+      },
+      "relationships": [
+        "amends the Master Supply Agreement dated 22 February 2021 (cl.1.1)",
+        "exact duplicate: 00 TO FILE/FINAL FINAL signed (2).pdf",
+        "scanned copy: 00 TO FILE/scan0007.pdf"
+      ],
+      "status_folder": "1-governs-trade (with the master it amends)",
+      "live_dead_parts": "live",
+      "best_copy": "yes - this is the best copy (native text, in the account folder)",
+      "trap": "Three copies of one instrument sit in the pile under three different names. Only one document should be counted as the amendment; the other two are duplicates."
+    },
+    {
+      "path": "00 TO FILE/FINAL FINAL signed (2).pdf",
+      "sha256": "cad5020ee6a59a538e5f79cf2775af612f8f19b1feda46ab9d8a429834230ad4",
+      "kind": "amendment or side letter (duplicate)",
+      "printed_names": [
+        "Sturmore Rail Group Ltd",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Sturmore Rail Group",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "signed both (identical bytes to Amendment 1 signed.pdf)",
+      "key_dates": {
+        "dated": "2023-06-06",
+        "effective": "2023-07-01"
+      },
+      "relationships": [
+        "byte-for-byte duplicate of Customers/Sturmore Rail/MSA 2021/Amendment 1 signed.pdf (identical sha256)"
+      ],
+      "status_folder": "5-orders-drafts-duplicates",
+      "live_dead_parts": "n/a - duplicate",
+      "best_copy": "no",
+      "trap": "A filename that shouts FINAL FINAL signed on a document that is neither final nor a master - it is a duplicate of a payment-terms amendment. The sha256 is identical, so the duplicate can be proved, not guessed."
+    },
+    {
+      "path": "00 TO FILE/scan0007.pdf",
+      "sha256": "17c6e43e32d1596a3fb6ae7f063bdfd76af61f997ae701d1c1c402e4cf56cc33",
+      "kind": "amendment or side letter (scanned copy)",
+      "printed_names": [
+        "Sturmore Rail Group Ltd",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Sturmore Rail Group",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "signed both - two drawn signatures, visible only as a picture",
+      "key_dates": {
+        "dated": "2023-06-06",
+        "effective": "2023-07-01"
+      },
+      "relationships": [
+        "scanned copy of Amendment No. 1 dated 6 June 2023"
+      ],
+      "status_folder": "5-orders-drafts-duplicates",
+      "live_dead_parts": "n/a - copy",
+      "best_copy": "no",
+      "trap": "Rotated 90 degrees, image-only, no native text at all. It must be opened as a picture; it must be recognised as the SAME instrument as Amendment No. 1 and not filed as a second, separate amendment."
+    },
+    {
+      "path": "Customers/Sturmore Rail/MSA 2021/Amendment 2 - tracked - DO NOT SEND.docx",
+      "sha256": "918a43ffc8b4be432604866f588266249a288a3fc194d30e70eab8a6e5ff397b",
+      "kind": "amendment or side letter - unsigned draft",
+      "printed_names": [
+        "Sturmore Rail Group Ltd",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Sturmore Rail Group",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "nobody - blank signature blocks, two tracked changes and two comments (a .docx with no signature image is unsigned)",
+      "key_dates": {
+        "circulated": "2026-07-14",
+        "effective": "none - not agreed"
+      },
+      "relationships": [
+        "would amend the Master Supply Agreement dated 22 February 2021 as already amended by Amendment No. 1"
+      ],
+      "status_folder": "unsure (unsigned draft with no signed version of Amendment No. 2 in the pile)",
+      "live_dead_parts": "nothing live",
+      "trap": "Its numbers look like terms: carriage free at GBP 500 and payment at 75 days. Both are proposals only. The tracked deletions also carry GBP 400 and 90 days - four wrong numbers on one page. Clause 2.1 says in terms that it binds nobody until signed."
+    },
+    {
+      "path": "Customers/Sturmore Rail/PO's/PO88231 northern depot.pdf",
+      "sha256": "eccd3420ead7712e18049829e3e65ea2839b2f162b0834c17c90e3be02f9f561",
+      "kind": "purchase order or quote (two pages: face and reverse conditions)",
+      "printed_names": [
+        "Sturmore Rail Group - Northern Depot",
+        "Sturmore Rail Group Ltd",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Sturmore Rail Group - Northern Depot (HAL-40119) named on the face; filed in the main account folder under rule A1 with the stream noted",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "no signature required; unsigned by design",
+      "key_dates": {
+        "order": "2026-08-19",
+        "delivery": "2026-08-26"
+      },
+      "relationships": [
+        "placed under the Master Supply Agreement dated 22 February 2021"
+      ],
+      "status_folder": "5-orders-drafts-duplicates (a single transaction)",
+      "live_dead_parts": "n/a",
+      "trap": "Reverse-side condition 14 claims to prevail over 'any master agreement, framework agreement or standard conditions of the Supplier, however and whenever agreed'. It must NOT change what governs: the sort card question 7 and form section G both say to ignore precedence-over-orders wording. It is also the document that tests the stream row convention."
+    },
+    {
+      "path": "Customers/Sturmore Rail/Account notes (internal).docx",
+      "sha256": "1a7e411710ed9c77ec8fcbc84935b009796324e10eccddaee68402f3d907fe52",
+      "kind": "internal playbook or guidance",
+      "printed_names": [
+        "Sturmore Rail Group",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Sturmore Rail Group",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "nobody - internal, no customer signature; one comment",
+      "key_dates": {
+        "version_dated": "2026-03-03"
+      },
+      "relationships": [
+        "refers to the master's clause 6.2 review and to the Amendment No. 2 draft"
+      ],
+      "status_folder": "6-business-practice",
+      "live_dead_parts": "n/a - not a contract",
+      "trap": "It is full of commercial numbers (17.5 per cent margin, list less 20 per cent ad hoc, 'do not chase before day 65') that are our internal practice, not agreed terms. It correctly recites the 60-day payment term, which can tempt a reader into citing an internal memo as evidence of a contractual term."
+    },
+    {
+      "path": "00 TO FILE/RE_ RE_ amendment.msg",
+      "sha256": "e2da9ff52e70b88926dcd30a46e95641eacf643588cd3178c9d0a7338aff2b1f",
+      "kind": "letter or email - unreadable format",
+      "printed_names": [
+        "(not extractable)"
+      ],
+      "account": "unresolved at filing",
+      "basis": "n/a",
+      "confidence": "n/a",
+      "execution": "n/a",
+      "key_dates": {
+        "referred_to": "2026-07-14"
+      },
+      "relationships": [
+        "forwards the Amendment No. 2 draft as an attachment"
+      ],
+      "status_folder": "_unreadable (holding) with an inventory row",
+      "live_dead_parts": "n/a",
+      "trap": "The kit lists .msg as unreadable. It must still get an inventory row and a report row - nothing is skipped silently. Its readable fragments mention the 75-day ask, which must not leak into the account's terms."
+    },
+    {
+      "path": "Customers/Wexbury/Framework 12-05-2022.pdf",
+      "sha256": "e8da27fac84730a80c02a3bf38aad07ae89dce3e97506080317479fc272b2b5b",
+      "kind": "master or framework (customer paper)",
+      "printed_names": [
+        "Wexbury Utilities plc (company number 05512443)",
+        "Halbrook Electrical Distribution Ltd (company number 04118276)"
+      ],
+      "account": "Wexbury Utilities plc",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "them only - E. Padstow signed 12 May 2022; our block on the scanned signature page (p.3) is blank, with empty Name/Title/Date rules",
+      "key_dates": {
+        "dated": "2022-05-12",
+        "start": "2022-06-01 (stated, cl.2.1)",
+        "end": "rolling until six months' notice (cl.3.2); notice served 14 August 2026, ends 2027-02-14"
+      },
+      "relationships": [
+        "confirmed by the Wexbury letter of 4 September 2024",
+        "terminated with future effect by our notice of 14 August 2026",
+        "an unsigned DRAFT of it is filed as 'Signed final.pdf'"
+      ],
+      "status_folder": "1-governs-trade, with the one-sided execution recorded in the note (unsure is defensible only if the note explains why)",
+      "live_dead_parts": "live today, ends 14 February 2027",
+      "trap": "The status is genuinely arguable: never signed by us, but confirmed in writing by the customer and treated as binding by our own notice. The wrong answers are (a) recording it as signed by both and (b) dropping it because our block is blank. Form field B4 has no DCG value for one-sided execution - a didn't-fit entry is expected."
+    },
+    {
+      "path": "Customers/Wexbury/Signed final.pdf",
+      "sha256": "123cbd67bc82a9d79acece781086b009c23d23d0a1d96591edd033523b46b32f",
+      "kind": "master or framework - unsigned draft",
+      "printed_names": [
+        "Wexbury Utilities plc",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Wexbury Utilities plc",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "nobody - DRAFT watermark on every page, blank signature blocks",
+      "key_dates": {
+        "draft_dated": "2022-03-03",
+        "comments_due": "2022-03-18"
+      },
+      "relationships": [
+        "earlier draft (v0.4) of the Framework Agreement dated 12 May 2022"
+      ],
+      "status_folder": "5-orders-drafts-duplicates (unsigned draft where a signed version of the same document is in the pile)",
+      "live_dead_parts": "nothing live",
+      "trap": "The filename lies outright. The draft also carries DIFFERENT terms from the executed version - 90 days' payment and twelve months' notice against the real 60 days and six months - so a reader who trusts the filename gets both the execution status and the commercial terms wrong."
+    },
+    {
+      "path": "Customers/Wexbury/letter from WU Sept 24.pdf",
+      "sha256": "7757126a573e58489348b2df990c84af1ce346af1e598bbfb10fd326dbb38341",
+      "kind": "letter or email",
+      "printed_names": [
+        "Wexbury Utilities plc",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Wexbury Utilities plc",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "them only - signed by J. Cottrill, Category Manager, 4 September 2024",
+      "key_dates": {
+        "dated": "2024-09-04"
+      },
+      "relationships": [
+        "confirms trading under the Framework Agreement dated 12 May 2022; expressly not a variation"
+      ],
+      "status_folder": "1-governs-trade as a member of the framework's tree (3-live-not-trade is acceptable if reasoned)",
+      "live_dead_parts": "live",
+      "trap": "This is the only paper that cures the missing signature on the framework. Miss it and the framework looks like an unexecuted draft; over-read it and it becomes a variation, which its last line denies."
+    },
+    {
+      "path": "Customers/Wexbury/rebate 2026.pdf",
+      "sha256": "1d576c0289d84e0e3012c7a39615d1251dc38144a88ffe9460deb1021a0c6daa",
+      "kind": "pricing or rebate letter",
+      "printed_names": [
+        "Wexbury Power Networks (a trading name, not the ERP name)",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Wexbury Utilities plc",
+      "basis": "known group (trading name; nothing in this document links it to the ERP name)",
+      "confidence": "fairly sure (never better than fairly sure on a known-group basis); _not-sure is an acceptable cheap-filing outcome",
+      "execution": "us only - A. Whitcombe, 12 January 2026; accepted separately by the customer (IMG_2291.jpg)",
+      "key_dates": {
+        "dated": "2026-01-12",
+        "period": "2026-01-01 to 2026-12-31",
+        "credit_note_by": "2027-02-28"
+      },
+      "relationships": [
+        "accepted by the letter photographed in IMG_2291.jpg",
+        "expressly does not vary any other trading term (para 4)"
+      ],
+      "status_folder": "2-governs-part-of-trade (a period only)",
+      "live_dead_parts": "live to 31 December 2026, then dead",
+      "trap": "Two traps in one. (1) The addressee is a trading name that is on no ERP row, so the match needs a basis and a capped confidence. (2) Section B rule 6 says in terms that a pricing or rebate letter setting only a period does not qualify for 1-governs-trade."
+    },
+    {
+      "path": "Customers/Wexbury/IMG_2291.jpg",
+      "sha256": "c8f8701ce1439cb92d9912d5c9bd4ea97cc7d62e16a49cc989d82173ac6e9469",
+      "kind": "letter or email (photograph of a signed one-page letter)",
+      "printed_names": [
+        "Wexbury Utilities plc",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Wexbury Utilities plc",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "them only - J. Cottrill, 21 January 2026, drawn signature visible in the photograph",
+      "key_dates": {
+        "dated": "2026-01-21"
+      },
+      "relationships": [
+        "accepts the rebate letter of 12 January 2026",
+        "confirms the Framework Agreement dated 12 May 2022 is unchanged"
+      ],
+      "status_folder": "2-governs-part-of-trade (with the rebate letter)",
+      "live_dead_parts": "live to 31 December 2026",
+      "trap": "A phone photograph on a desk, off square, unevenly lit, with a .jpg camera filename. It is also the bridge that ties the trading name 'Wexbury Power Networks' back to the ERP name, so skipping it as 'just a photo' weakens the rebate letter's match."
+    },
+    {
+      "path": "Customers/Wexbury/notice served 14-08-26.pdf",
+      "sha256": "d681f99d02a4b33d22157e9988e33549d1520ddb6a8b7f2297c9d0505d41a83b",
+      "kind": "letter or email (notice of termination)",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd",
+        "Wexbury Utilities plc"
+      ],
+      "account": "Wexbury Utilities plc",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "us only - P. Nettlefold, 14 August 2026",
+      "key_dates": {
+        "dated": "2026-08-14",
+        "agreement_ends": "2027-02-14"
+      },
+      "relationships": [
+        "terminates the Framework Agreement dated 12 May 2022 with effect from 14 February 2027"
+      ],
+      "status_folder": "1-governs-trade (with the framework, which is still live today)",
+      "live_dead_parts": "the framework is live until 14 February 2027",
+      "trap": "A termination letter that does NOT make its target dead: the end date is in the future as at 7 September 2026. Filing the framework as 4-not-live because a termination letter exists is the error this document is here to catch. It also proves both parties treat the one-sided framework as binding."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/old files/Colverne supply agreement 2019.pdf",
+      "sha256": "8ce7f8787846c291eba0921d8a531183d39f98be1df0b1b84bc4d99160b79d1a",
+      "kind": "master or framework (supplier paper - ours)",
+      "printed_names": [
+        "Colverne Marine Engineering Limited (company number 06421889) - the OLD name",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Ardleigh Marine Systems Limited",
+      "basis": "in the document (the same company number 06421889 and the same address appear on the name-change letter, which names both companies); on this document alone the honest basis is known group",
+      "confidence": "sure once the name-change letter is in hand; not sure on this document alone",
+      "execution": "signed both - scanned signature page (p.3), R. Aldbury and D. Marrable, both 9 April 2019",
+      "key_dates": {
+        "made": "2019-04-09",
+        "start": "2019-04-09 (stated, cl.2.1)",
+        "end": "rolling until three months' notice (cl.2.2)",
+        "ceased": "2025-10-01 (replaced)"
+      },
+      "relationships": [
+        "replaced by the Master Supply Agreement dated 15 September 2025 (that document's cl.2.2)",
+        "carried into the new name by the letter of 2 February 2021"
+      ],
+      "status_folder": "4-not-live",
+      "live_dead_parts": "whole document dead from 1 October 2025",
+      "trap": "The counterparty name on the paper is not on the ERP at all - the ERP holds the company's new name. The match must be evidenced (company number, or the name-change letter), not assumed. Its 30-day payment and carriage-at-cost terms are dead."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/old files/name change letter.pdf",
+      "sha256": "fb1a71cd885b9439d2c4d0fcd2fcda78805ae5fc6591b08906889dd7d28383ca",
+      "kind": "letter or email (change of name)",
+      "printed_names": [
+        "Ardleigh Marine Systems Limited",
+        "Colverne Marine Engineering Limited",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Ardleigh Marine Systems Limited",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "them only - H. Sculthorpe, Company Secretary, 2 February 2021",
+      "key_dates": {
+        "dated": "2021-02-02",
+        "name_changed": "2021-01-25",
+        "resolution": "2021-01-21"
+      },
+      "relationships": [
+        "links the 2019 Supply Agreement to the ERP name; expressly not a novation or transfer"
+      ],
+      "status_folder": "3-live-not-trade (4-not-live is acceptable if judged as part of the superseded tree); what matters is that the entity link is recorded with its evidence",
+      "live_dead_parts": "n/a",
+      "trap": "It reads like a novation but is a change of name only - same legal person, same company number. Recording it as a transfer to a new entity would create a second entity node and a wrong family."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/MSA drafts/MSA v3.docx",
+      "sha256": "21c83932c7ca60dedd2636879c819113c61ac421dc14c077b3f14db4d5be4253",
+      "kind": "master or framework - unsigned draft",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd",
+        "Ardleigh Marine Systems Ltd"
+      ],
+      "account": "Ardleigh Marine Systems Limited",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "nobody - blank signature blocks, no tracked changes, no comments",
+      "key_dates": {
+        "draft_dated": "2025-06-12",
+        "proposed_start": "2025-10-01"
+      },
+      "relationships": [
+        "earlier version of the Master Supply Agreement executed on 15 September 2025"
+      ],
+      "status_folder": "5-orders-drafts-duplicates",
+      "live_dead_parts": "nothing live",
+      "trap": "Version chaos, part 1. v3 carries 30 days, six months' notice and GBP 250 / GBP 24.00 carriage - none of which survived into the executed version. A clean-looking .docx with no tracked changes still means unsigned."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/MSA drafts/Copy of MSA v4 clean.docx",
+      "sha256": "47255b1092a4cf7687be48fb37d729695ad4f918ffd59c12df40691938c631c5",
+      "kind": "master or framework - unsigned draft",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd",
+        "Ardleigh Marine Systems Ltd"
+      ],
+      "account": "Ardleigh Marine Systems Limited",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "nobody - blank signature blocks, no tracked changes, no comments",
+      "key_dates": {
+        "draft_dated": "2025-07-28",
+        "proposed_start": "2025-10-01"
+      },
+      "relationships": [
+        "the text of this draft is the text that was executed on 15 September 2025"
+      ],
+      "status_folder": "5-orders-drafts-duplicates",
+      "live_dead_parts": "nothing live",
+      "trap": "Version chaos, part 2, and the subtlest of the three. Its terms are identical to the executed PDF, which tempts a reader to treat it as the agreement. It is still an unsigned .docx and the executed PDF is the better copy."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/MSA drafts/MSA v4 redline.docx",
+      "sha256": "41914946696d502fe5744d837e5d103c75c3a80a6dfd09f35686f1b706d16afd",
+      "kind": "master or framework - unsigned draft with tracked changes",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd",
+        "Ardleigh Marine Systems Ltd"
+      ],
+      "account": "Ardleigh Marine Systems Limited",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "nobody - three tracked changes (payment, carriage, notice) and two comments",
+      "key_dates": {
+        "draft_dated": "2025-07-28"
+      },
+      "relationships": [
+        "redline of v3 producing v4; the accepted text equals 'Copy of MSA v4 clean.docx'"
+      ],
+      "status_folder": "5-orders-drafts-duplicates",
+      "live_dead_parts": "nothing live",
+      "trap": "Version chaos, part 3. The kit renders deletions as {-...-} and insertions as {+...+}, so the paragraph contains BOTH the old and the new figure. Quoting the deleted half as a term is the trap; tracked changes and comments also mean draft, whatever the file is called."
+    },
+    {
+      "path": "Signed 2025/Ardleigh MSA signed 15-09-25.pdf",
+      "sha256": "a27926fb9393aa1bf110939b232b75c3185aa7b9888f329e0e75454b99009da6",
+      "kind": "master or framework (supplier paper - ours)",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd (company number 04118276)",
+        "Ardleigh Marine Systems Ltd (company number 06421889) - 'Ltd' where the ERP says 'Limited'"
+      ],
+      "account": "Ardleigh Marine Systems Limited",
+      "basis": "same name",
+      "confidence": "sure",
+      "execution": "signed both - scanned signature page (p.3), P. Nettlefold and D. Marrable, both 15 September 2025",
+      "key_dates": {
+        "dated": "2025-09-15",
+        "start": "2025-10-01 (stated, cl.1.1)",
+        "end": "rolling until twelve months' notice (cl.12.1)"
+      },
+      "relationships": [
+        "supersedes the Supply Agreement dated 9 April 2019 (cl.2.2)",
+        "executed version of MSA v4; v3, v4 clean and v4 redline are drafts of it"
+      ],
+      "status_folder": "1-governs-trade",
+      "live_dead_parts": "live, no separately-lived parts",
+      "trap": "It is stored in a completely different top-level folder from its own drafts, so folder position is no guide to the family. 'Ltd' against the ERP's 'Limited' is the suffix variant."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/Brenlow/Brenlow master 2020.pdf",
+      "sha256": "d68359bab6399541112641a0bdab015891bbfb8b71d7a3bbc9e7baf2896bc59d",
+      "kind": "master or framework (supplier paper - ours)",
+      "printed_names": [
+        "Brenlow Dockyard Services Limited (company number 07733914)",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "_not-sure, grouped under 'Brenlow Dockyard Services Limited' - or Ardleigh Marine Systems Limited on a 'known group' basis, never better than fairly sure",
+      "basis": "known group (nothing in the document mentions any group, parent or affiliate; cl.1.2 says the opposite)",
+      "confidence": "fairly sure at best",
+      "execution": "signed both - scanned signature page (p.3), R. Aldbury and G. Ravenscar, both 3 November 2020",
+      "key_dates": {
+        "made": "2020-11-03",
+        "start": "2020-11-03 (stated, cl.2.1)",
+        "end": "rolling until one month's notice (cl.12.1)",
+        "ended": "2026-04-30 (terminated)"
+      },
+      "relationships": [
+        "terminated by the fax of 24 March 2026"
+      ],
+      "status_folder": "4-not-live",
+      "live_dead_parts": "whole document dead from 30 April 2026",
+      "trap": "A sister company of the Ardleigh group where NOTHING in the document says so - it shares only the Marn Quay locality, and clause 1.2 expressly excludes group companies. This is the 'known group' versus 'in the document' test: a confident 'same name' or 'sure' match is wrong, and a new account folder must never be created from the printed name."
+    },
+    {
+      "path": "Customers/Ardleigh (ex Colverne)/Brenlow/fax 24-03-26.pdf",
+      "sha256": "4b4b8f3115efc04f9c812b6f9634f5a45ae1ae36b30d6fc273ca133cd011430c",
+      "kind": "letter or email (notice of termination, faxed scan)",
+      "printed_names": [
+        "Brenlow Dockyard Svcs Ltd (abbreviated)",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "follows Brenlow Dockyard Services Limited (_not-sure, or Ardleigh on a known-group basis)",
+      "basis": "known group",
+      "confidence": "fairly sure at best",
+      "execution": "them only - G. Ravenscar, 24 March 2026",
+      "key_dates": {
+        "dated": "2026-03-24",
+        "agreement_ends": "2026-04-30"
+      },
+      "relationships": [
+        "terminates the Master Supply Agreement dated 3 November 2020"
+      ],
+      "status_folder": "4-not-live (with the master it terminates)",
+      "live_dead_parts": "the master is dead from 30 April 2026",
+      "trap": "Image only, with a fax transmission header, scanner grain and a coffee ring across the lower right. The company name is abbreviated to 'Svcs'. The end date is in the PAST, which is the mirror image of the Wexbury notice."
+    },
+    {
+      "path": "Customers/Trentmoor/THP master agreement 2023 FULL.pdf",
+      "sha256": "f5fe4853e446addc5529c7b7cdd8eecc706c619339b7d6ea15b07e4443d79e21",
+      "kind": "master or framework (customer paper), 42 pages",
+      "printed_names": [
+        "The Housing Partnership (Trentmoor) Limited (company number 08217640) - word order differs from the ERP's 'Trentmoor Housing Partnership'",
+        "Halbrook Electrical Distribution Ltd (company number 04118276)"
+      ],
+      "account": "Trentmoor Housing Partnership",
+      "basis": "known group / same name once the word-order variant is accepted; corroborated by the Larkhall site agreement, scan0012 and the Kellerby joint letter",
+      "confidence": "fairly sure (sure once corroborated); at cheap filing the honest answer is no name at all",
+      "execution": "signed both - scanned signature page (p.41), M. Elverstone 5 September 2023 and P. Nettlefold 7 September 2023",
+      "key_dates": {
+        "issued": "2023-09-05",
+        "start": "2023-10-01 (stated, cl.3.1)",
+        "initial_term_end": "2026-09-30",
+        "end": "rolling until twelve months' notice (cl.22.1)"
+      },
+      "relationships": [
+        "Schedule 2 is issued separately as the .xlsx price matrix (cl.8.2)",
+        "expressly preserves the Supply Agreement (Meter Cabinets) dated 4 July 2022 (cl.26.2)",
+        "the Larkhall Court site agreement prevails over it for those Works",
+        "carriage varied for the Kellerby site by the joint letter"
+      ],
+      "status_folder": "1-governs-trade",
+      "live_dead_parts": "Conditions, Schedule 1, Schedule 3 and the Annexes run for the term (no separate expiry). Schedule 2 (Price Matrix 2026) is a separately-lived part: live to 31 December 2026, then dead, and its expiry does not end the agreement (cl.4.4, S2.7). On expiry clause 8.4 puts prices at list less 22 per cent.",
+      "trap": "THE THREE-PAGE TRAP. Page 1 is a cover sheet, page 2 a table of contents and page 3 a definitions page where 'the Customer' and 'the Supplier' are defined by cross-reference to the signature page. No company name in full appears until page 4, and the signature page is page 41. Within the cheap filing ceiling of three pages this document CANNOT be identified. It should land in _no-name-found (or _not-sure) and stay unresolved - guessing the account from the 'THP/2023/ELEC-11' reference or the 'THP-LEGAL' document control string is exactly the behaviour this file is built to catch. A second trap: 42 pages must be read in ranges, and the layered Schedule 2 must be found before the dates are answered."
+    },
+    {
+      "path": "Customers/Trentmoor/Schedule 2 price matrix 2026.xlsx",
+      "sha256": "9d08682a5233bc50f37678fbfeb5f0bd67020a4945ede68afbbf4106df501180",
+      "kind": "schedule or annex (pricing)",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd",
+        "The Housing Partnership (Trentmoor) Limited"
+      ],
+      "account": "Trentmoor Housing Partnership",
+      "basis": "in the document (it names the master and its date)",
+      "confidence": "fairly sure",
+      "execution": "not signed - issued under clause 8.2 of the master",
+      "key_dates": {
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31"
+      },
+      "relationships": [
+        "forms part of the Master Supply Agreement dated 5 September 2023 as Schedule 2",
+        "replaces the Schedule 2 for 2025"
+      ],
+      "status_folder": "2-governs-part-of-trade (a period), filed with the master's tree",
+      "live_dead_parts": "live to 31 December 2026, then dead; the master runs on",
+      "trap": "An .xlsx is not a readable type for the kit, so the pricing schedule that the 42-page master depends on will sit in _unreadable with only an inventory row. The account's live/dead-part story therefore cannot be completed from the kit's own reading, and the note must say so rather than treating the master as unlayered."
+    },
+    {
+      "path": "Customers/Trentmoor/Larkhall Court site agreement.pdf",
+      "sha256": "6fec59f1ec70fd1ac45335b94dcd70d26321fb6038b28e82c53b7d4342e31598",
+      "kind": "project or programme agreement (site agreement), 5 of 6 pages",
+      "printed_names": [
+        "The Housing Partnership (Trentmoor) Limited",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Trentmoor Housing Partnership",
+      "basis": "same name (word-order variant)",
+      "confidence": "fairly sure",
+      "execution": "can't tell - the signature page is missing from the file; page 5 ends '[SIGNATURE PAGE FOLLOWS]'. It is in the pile as scans to file/scan0031.pdf",
+      "key_dates": {
+        "dated": "2026-03-11",
+        "start": "2026-03-11 (stated, cl.2.1)",
+        "end": "practical completion or 2027-12-31, whichever is earlier (cl.2.2)"
+      },
+      "relationships": [
+        "prevails over the Master Supply Agreement for the Works (cl.6.2)",
+        "its signature page is scans to file/scan0031.pdf"
+      ],
+      "status_folder": "2-governs-part-of-trade once the detached signature page is matched to it; unsure if it is read alone (signature page missing so signing is unknown)",
+      "live_dead_parts": "live for the Larkhall Court Works only",
+      "trap": "A complete-looking agreement whose execution cannot be established from the file itself. It also carries a real precedence flip: for these Works payment is 30 days from month end and carriage is free at any value, against the master's 60 days and GBP 200 threshold. Answering the account's payment term without noticing the site agreement gives the wrong answer for Larkhall Court."
+    },
+    {
+      "path": "scans to file/scan0031.pdf",
+      "sha256": "deca0b88ccff1b82d08db5bbe101e86e6ad16d5b6b6c8a12f90a1b4543b04fc2",
+      "kind": "schedule or annex / detached signature page",
+      "printed_names": [
+        "The Housing Partnership (Trentmoor) Limited",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Trentmoor Housing Partnership",
+      "basis": "same name (word-order variant)",
+      "confidence": "fairly sure",
+      "execution": "signed both - M. Elverstone 11 March 2026 and P. Nettlefold 13 March 2026",
+      "key_dates": {
+        "last_signature": "2026-03-13"
+      },
+      "relationships": [
+        "signature page (page 6 of 6) of the Larkhall Court Site Services Agreement, reference THP/2026/SITE-04"
+      ],
+      "status_folder": "filed with the Larkhall Court site agreement's tree; the link matters more than the folder (5-orders-drafts-duplicates is acceptable for an incomplete copy)",
+      "live_dead_parts": "n/a",
+      "trap": "A washed-out, noisy, skewed image-only scan in a folder of its own, three directories away from the body it belongs to. Sort card question 9 requires the reader to say which document it belongs to; the shared contract reference THP/2026/SITE-04 is the evidence. It also carries the date of last signature, which the body does not."
+    },
+    {
+      "path": "Customers/Trentmoor/scan0012.pdf",
+      "sha256": "4eda95b821d3ce76f1758d03166ee5559655a0046864632abbd9980d0c9a6fba",
+      "kind": "TWO documents in one file: an NDA (pp.1-2, scanned) and a supply agreement (pp.3-5, native text)",
+      "printed_names": [
+        "The Housing Partnership (Trentmoor) Limited",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "Trentmoor Housing Partnership",
+      "basis": "same name (word-order variant)",
+      "confidence": "fairly sure",
+      "execution": "both agreements signed both sides - NDA 14 June 2022 (scanned signatures), meter cabinet agreement 4 July 2022 (drawn signatures on p.4)",
+      "key_dates": {
+        "nda": "2022-06-14 to 2027-06-13 (five years)",
+        "meter_cabinets_dated": "2022-07-04",
+        "meter_cabinets_start": "2022-08-01",
+        "meter_cabinets_end": "rolling until six months' notice"
+      },
+      "relationships": [
+        "the meter cabinet agreement is expressly preserved by clause 26.2 of the 42-page master",
+        "excluded from the master's Schedule 1 by S1.13"
+      ],
+      "status_folder": "2-governs-part-of-trade for the meter cabinet agreement (a defined product set that is plainly not everything); the NDA part is 3-live-not-trade and must be recorded separately in the note and the didn't-fit list",
+      "live_dead_parts": "NDA live to 13 June 2027, does not govern trade. Meter cabinet agreement live, governs meter cabinets and enclosures only, payment 45 days from invoice date, carriage included.",
+      "trap": "One file, two unrelated agreements, and the kit's unit of work is the file. Every card and form field is single-valued, so the reader must record the conflict in question 10 and the extractor in section K rather than silently answering for one of the two. Mixed mode as well: pages 1-2 are pictures with no native text, pages 3-5 are native. The filename says scan0012 but three of its five pages are not scans."
+    },
+    {
+      "path": "Misc/Kellerby Interchange joint letter.pdf",
+      "sha256": "beb4f7eab5111852456e5ee749eddb1aeb9939bb8fd0a99ad39011cd7d16a23b",
+      "kind": "amendment or side letter (three-party site arrangement)",
+      "printed_names": [
+        "Halbrook Electrical Distribution Ltd",
+        "Sturmore Rail Group Ltd",
+        "The Housing Partnership (Trentmoor) Limited"
+      ],
+      "account": "SHARED: Sturmore Rail Group AND Trentmoor Housing Partnership - copied into both folders, marked shared, two rows in the global CSV for one original",
+      "basis": "same name (both)",
+      "confidence": "sure (Sturmore); fairly sure (Trentmoor word-order variant)",
+      "execution": "signed by all three - P. Nettlefold and T. Vessey 20 April 2026, M. Elverstone 22 April 2026",
+      "key_dates": {
+        "dated": "2026-04-20",
+        "start": "2026-04-20",
+        "end": "practical completion of the Kellerby Interchange works, programmed 2027-06-30"
+      },
+      "relationships": [
+        "varies carriage under both the 2021 Sturmore master and the 2023 Trentmoor master, for one site only",
+        "clause 6 expressly leaves both masters otherwise unchanged"
+      ],
+      "status_folder": "2-governs-part-of-trade in both accounts",
+      "live_dead_parts": "live until practical completion",
+      "trap": "One document, two accounts. The global corpus table must carry a row per document/account pair, not one row per original. It also varies the freight answer for both accounts at a single site without touching either master's payment terms - a partial variation that is easy to over- or under-read."
+    },
+    {
+      "path": "Misc/Fenwold master.pdf",
+      "sha256": "06f422cf4d03b7faf79a913bb34a5b92dc6c91a1e9a2b89a9c64ba8dc1941ae3",
+      "kind": "master or framework (supplier paper - ours)",
+      "printed_names": [
+        "Fenwold Aggregates Limited (company number 09918233)",
+        "Halbrook Electrical Distribution Ltd"
+      ],
+      "account": "_not-on-the-list, grouped under 'Fenwold Aggregates Limited'",
+      "basis": "no match to any ERP row",
+      "confidence": "n/a",
+      "execution": "signed both - scanned signature page (p.3), R. Aldbury 17 January 2024 and K. Ollerton 19 January 2024",
+      "key_dates": {
+        "made": "2024-01-17",
+        "start": "2024-02-01 (stated, cl.2.1)",
+        "end": "rolling until six months' notice"
+      },
+      "relationships": [],
+      "status_folder": "holding folder only; no status is assessed for an unmatched document at cheap filing",
+      "live_dead_parts": "live on its face",
+      "trap": "A live, properly executed, all-purchases master for a company that is on NO ERP row. The temptation is to force it into the nearest account or to invent a folder from the printed name. Rule A1 forbids both: only ERP rows become folders, and this one belongs in _not-on-the-list until the user decides."
+    },
+    {
+      "path": "Misc/Cadmere framework (we buy).pdf",
+      "sha256": "320bd5b01be745a28c9cf9af4d642d6747248f3af3199d59573cc861dd9f2c3d",
+      "kind": "master or framework - SUPPLIER-side paper (we are the customer)",
+      "printed_names": [
+        "Cadmere Cable Works Limited (company number 03771205) - 'the Supplier'",
+        "Halbrook Electrical Distribution Ltd (company number 04118276) - 'the Customer'"
+      ],
+      "account": "_not-on-the-list; the ERP extract is a customer list and there is no supplier row. The side is supplier, not customer, and the main session should put the side question to the user.",
+      "basis": "no match to any customer row",
+      "confidence": "n/a",
+      "execution": "signed both - S. Bemrose 1 February 2024 and A. Whitcombe 5 February 2024",
+      "key_dates": {
+        "dated": "2024-02-01",
+        "start": "2024-02-01",
+        "end": "rolling until six months' notice"
+      },
+      "relationships": [],
+      "status_folder": "holding folder only",
+      "live_dead_parts": "live on its face",
+      "trap": "The sides are reversed: OUR company is 'the Customer' and we are buying cable for resale. A filer that keys on the word 'Customer', or that sees a familiar-looking framework in a customer pile, will file Cadmere as a customer account. Our own entity list is what makes the reversal visible."
+    },
+    {
+      "path": "00 TO FILE/new doc 2.pdf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "unreadable - zero bytes",
+      "printed_names": [],
+      "account": "unresolved",
+      "basis": "n/a",
+      "confidence": "n/a",
+      "execution": "n/a",
+      "key_dates": {},
+      "relationships": [],
+      "status_folder": "_needs-reading (failed or missing read), with an inventory row",
+      "live_dead_parts": "n/a",
+      "trap": "Zero bytes with a .pdf extension. It must not crash preparation and must not be dropped: every file in the pile gets a row somewhere."
+    },
+    {
+      "path": "00 TO FILE/contract notes.pdf",
+      "sha256": "f1fb227d7953a3fbae9c5f83141a0c2af28e9bebfa07819701ef1839a8d4f47f",
+      "kind": "unreadable - plain text saved with a .pdf extension",
+      "printed_names": [
+        "(the text mentions Sturmore, Wexbury, Ardleigh, Trentmoor, Brenlow and Fenwold)"
+      ],
+      "account": "unresolved",
+      "basis": "n/a",
+      "confidence": "n/a",
+      "execution": "n/a",
+      "key_dates": {},
+      "relationships": [],
+      "status_folder": "_needs-reading (PDF parsing fails), with an inventory row",
+      "live_dead_parts": "n/a",
+      "trap": "The extension lies about the format. If anything does manage to read it, its contents are somebody's unsourced scribbles - it names six companies and five dates and must never be used as evidence for a match or a term."
+    }
+  ],
+  "accounts": {
+    "Sturmore Rail Group": {
+      "erp_rows": [
+        "HAL-40118 Sturmore Rail Group",
+        "HAL-40119 Sturmore Rail Group - Northern Depot (stream)"
+      ],
+      "what_governs_today": "The Master Supply Agreement dated 22 February 2021 (SRG/PROC/2021/114), as amended by Amendment No. 1 dated 6 June 2023. Commenced 1 March 2021; initial three-year term, then year to year; no notice served, so live at 7 September 2026.",
+      "payment_terms": "60 days from the end of the month in which the invoice is dated.",
+      "freight_terms": "Free of carriage on orders with a net value of GBP 250 or more; below that a GBP 22.50 carriage charge. Exception: deliveries to the Kellerby Interchange site compound are free of carriage whatever the order value, until practical completion (programmed 30 June 2027).",
+      "notice_period": "Six months' written notice, expiring at any time (cl.2.2).",
+      "questions": [
+        {
+          "q": "What payment term applies to an invoice dated today?",
+          "a": "60 days from the end of the month of invoice, not the 45 days printed in the master.",
+          "evidence": "Amendment No. 1, cl.1.1: \"The Supplier shall be paid within 60 days from the end of the month in which the invoice is dated.\""
+        },
+        {
+          "q": "Does condition 14 on the back of PO 88231 displace the master?",
+          "a": "No. It is boilerplate precedence wording on a single order; the master is signed by both parties and clause 11.1 orders the same conflict the other way. The card and the form both direct the reader to ignore prevails-over-orders wording.",
+          "evidence": "PO 88231 reverse, cl.14: \"These Conditions apply to the exclusion of all other terms and prevail over any master agreement\"; master cl.11.1: \"this Agreement prevails, then the Order, then the Supplier's conditions of sale\"."
+        },
+        {
+          "q": "Is the carriage-free threshold GBP 250 or GBP 500?",
+          "a": "GBP 250. The GBP 500 figure exists only in an unsigned draft amendment.",
+          "evidence": "Master cl.8.1: \"Delivery is free of carriage on Orders with a net value of GBP 250 or more\"; Amendment No. 2 draft, cl.2.1: \"This draft has not been agreed and creates no obligation unless and until it is signed by both parties.\""
+        }
+      ]
+    },
+    "Wexbury Utilities plc": {
+      "erp_rows": [
+        "HAL-40204 Wexbury Utilities plc"
+      ],
+      "what_governs_today": "The Framework Agreement dated 12 May 2022 (WU/2022/EL-07). It was signed by Wexbury alone, but Wexbury confirmed in writing on 4 September 2024 that it trades under it and we served notice under its clause 3.2 on 14 August 2026. Live at 7 September 2026 and ending 14 February 2027. The 2026 rebate letter runs alongside it for that calendar year only.",
+      "payment_terms": "60 days from the end of the month in which the invoice is dated (cl.6.1). The 90 days in 'Signed final.pdf' is a draft figure and is not the term.",
+      "freight_terms": "Delivery included in the price for call offs with a net value of GBP 150 or more; below that carriage at our published rate (cl.7.1).",
+      "notice_period": "Six months for convenience (cl.3.2) - already served, expiring 14 February 2027.",
+      "questions": [
+        {
+          "q": "Is the framework executed?",
+          "a": "By Wexbury only. Our execution block on the signature page is blank - no name, no title, no date. The gap is bridged by conduct and by the customer's own written confirmation, not by a signature.",
+          "evidence": "Wexbury letter, 4 September 2024: \"We confirm that we are trading under the terms of the Framework Agreement dated 12 May 2022\"."
+        },
+        {
+          "q": "When does trading under the framework end?",
+          "a": "14 February 2027. It is live today; the termination letter is prospective.",
+          "evidence": "Notice of 14 August 2026: \"The six month notice period runs from the date of this letter and the Agreement will therefore end on 14 February 2027.\""
+        },
+        {
+          "q": "Does the 2026 rebate letter set the trading terms?",
+          "a": "No. It sets 1.75 per cent above GBP 400,000 for the 2026 calendar year and nothing else; section B rule 6 keeps a period-only letter out of 1-governs-trade.",
+          "evidence": "Rebate letter, para 4: \"This letter sets the rebate for the 2026 calendar year only. It does not vary the prices, the payment term, the carriage arrangement or any other trading term\"."
+        }
+      ]
+    },
+    "Ardleigh Marine Systems Limited": {
+      "erp_rows": [
+        "HAL-40311 Ardleigh Marine Systems Limited"
+      ],
+      "what_governs_today": "The Master Supply Agreement dated 15 September 2025 (AMS/2025/MSA), commenced 1 October 2025, rolling, live. It replaced the 2019 Supply Agreement made in the customer's former name, Colverne Marine Engineering Limited. Brenlow Dockyard Services Limited is a separate counterparty whose own master died on 30 April 2026.",
+      "payment_terms": "45 days from the date of the invoice (cl.6.1).",
+      "freight_terms": "Free of carriage on orders with a net value of GBP 300 or more; below that a GBP 28.00 carriage charge (cl.7.1).",
+      "notice_period": "Twelve months' written notice for convenience (cl.12.1).",
+      "questions": [
+        {
+          "q": "Is the ERP counterparty the same legal person as the 2019 counterparty?",
+          "a": "Yes - a change of name only, same company number 06421889, no transfer of business.",
+          "evidence": "Name change letter, 2 February 2021: \"changed its name from Colverne Marine Engineering Limited to Ardleigh Marine Systems Limited with effect from 25 January 2021\"."
+        },
+        {
+          "q": "Which document governs, and from when?",
+          "a": "The 2025 master, from 1 October 2025. The 2019 agreement is dead from that date.",
+          "evidence": "Executed MSA cl.2.2: \"This Agreement supersedes and replaces the Supply Agreement dated 9 April 2019 between the parties with effect from the Commencement Date\"."
+        },
+        {
+          "q": "Is anything live for Brenlow Dockyard Services?",
+          "a": "No. Its master was terminated for convenience with effect from 30 April 2026, and nothing in any document puts Brenlow inside the Ardleigh group.",
+          "evidence": "Fax of 24 March 2026: \"In accordance with clause 12.1 the Agreement will end on 30 April 2026\"; Brenlow master cl.1.2: \"No parent, subsidiary or associated company of the Customer may order under it.\""
+        }
+      ]
+    },
+    "Trentmoor Housing Partnership": {
+      "erp_rows": [
+        "HAL-40390 Trentmoor Housing Partnership"
+      ],
+      "what_governs_today": "The Master Supply Agreement dated 5 September 2023 (THP/2023/ELEC-11), commenced 1 October 2023; the three-year initial term runs to 30 September 2026 and it then continues until twelve months' notice. Live. Three live overlays sit alongside it: the Supply Agreement (Meter Cabinets) dated 4 July 2022 for that product set, the Larkhall Court Site Services Agreement dated 11 March 2026 for those Works, and the Kellerby Interchange joint letter for that site's carriage. The 2022 NDA is live but does not govern trade.",
+      "payment_terms": "60 days from the end of the month of invoice (cl.9.1). For Larkhall Court Works invoices, 30 days from the end of the month (site agreement cl.4.2, which prevails for the Works). For meter cabinets, 45 days from the date of invoice.",
+      "freight_terms": "Free of carriage to the Schedule 3 sites on orders of GBP 200 net or more; otherwise carriage at cost (cl.7.3). Free at any value to the Larkhall Court compound and to the Kellerby Interchange compound. Carriage is included in the meter cabinet prices.",
+      "notice_period": "Twelve months' written notice after the initial term (cl.22.1). The site agreement runs on thirty days' notice; the meter cabinet agreement on six months'.",
+      "questions": [
+        {
+          "q": "What price applies to an order placed on 5 January 2027 if no new Schedule 2 has been issued?",
+          "a": "List price less 22 per cent. Schedule 2 expires on 31 December 2026 and its expiry does not end the agreement.",
+          "evidence": "Master cl.8.4: \"If no Schedule 2 is in force, prices are the Supplier's published list price less 22 per cent until a replacement Schedule 2 is agreed.\""
+        },
+        {
+          "q": "What payment term applies to a Larkhall Court invoice?",
+          "a": "30 days from the end of the month, not the master's 60.",
+          "evidence": "Site agreement cl.6.2: \"this Agreement prevails in respect of the Works, and the Master Agreement prevails for everything else\"."
+        },
+        {
+          "q": "Are meter cabinets bought under the 2023 master?",
+          "a": "No. They are carved out and run under the 2022 agreement inside scan0012.pdf.",
+          "evidence": "Master cl.26.2: \"This Agreement does not affect the Supply Agreement (Meter Cabinets) dated 4 July 2022 between the parties, which continues in force\"."
+        }
+      ]
+    },
+    "Ravenhead Grid Services Ltd": {
+      "erp_rows": [
+        "HAL-40566 Ravenhead Grid Services Ltd"
+      ],
+      "what_governs_today": "Nothing. There is no document in the pile for this account.",
+      "payment_terms": "not found",
+      "freight_terms": "not found",
+      "notice_period": "not found",
+      "questions": [
+        {
+          "q": "What should the kit produce for this account?",
+          "a": "An account folder named exactly as the ERP row, empty of documents, with a README saying nothing is filed there. The row must appear in the account register and in INDEX.md.",
+          "evidence": "n/a - absence of evidence is the answer."
+        },
+        {
+          "q": "What would be wrong?",
+          "a": "Omitting the row because it has no files, or letting the unmatched Fenwold or Brenlow paper drift into it to make the folder look populated.",
+          "evidence": "n/a"
+        }
+      ]
+    }
+  },
+  "traps": [
+    {
+      "id": "T01",
+      "where": "Customers/Trentmoor/THP master agreement 2023 FULL.pdf",
+      "trap": "42-page master whose first three pages are a cover sheet, a contents page and a definitions page with no party names in full; the parties appear on page 4 and page 41.",
+      "expected": "It must NOT be resolvable inside the cheap 3-page / 20-paragraph budget. It should land in _no-name-found (or _not-sure) with the identity left unresolved, and must not trigger a full reader. Guessing the account from the 'THP/2023/ELEC-11' reference or the 'THP-LEGAL-2023-11' document control string is the failure. Full analysis resolves it from page 4 and the signature page."
+    },
+    {
+      "id": "T02",
+      "where": "Amendment 1 signed.pdf / FINAL FINAL signed (2).pdf / scan0007.pdf",
+      "trap": "One amendment in three files: two byte-identical PDFs in different folders under different names, plus a rotated image-only scan.",
+      "expected": "One instrument, one best copy (the native PDF in the account folder). The other two go to 5-orders-drafts-duplicates marked 'duplicate of'. The identical sha256 proves the first duplicate; the scan must be recognised by its content, not treated as a second amendment."
+    },
+    {
+      "id": "T03",
+      "where": "00 TO FILE/scan0007.pdf",
+      "trap": "A page rotated 90 degrees with no native text.",
+      "expected": "Opened and read as a picture; a rotated page is still one page against the reading budget; the content is identified despite the orientation."
+    },
+    {
+      "id": "T04",
+      "where": "Customers/Wexbury/Signed final.pdf",
+      "trap": "A filename that lies: an unsigned DRAFT-watermarked document called 'Signed final.pdf', carrying different commercial terms from the executed version.",
+      "expected": "Execution read from the page, not the filename: unsigned. Filed 5-orders-drafts-duplicates. Its 90-day payment and twelve-month notice must never appear as the account's terms."
+    },
+    {
+      "id": "T05",
+      "where": "Customers/Wexbury/Framework 12-05-2022.pdf",
+      "trap": "A master signed by one party only - our execution block is blank - with a later customer letter confirming trade under it and our own notice terminating it.",
+      "expected": "q3/B4 = them only, with the blank block quoted as evidence. The status is argued, not assumed: 1-governs-trade with the execution doubt recorded, or unsure with a stated reason. A DCG didn't-fit entry for one-sided execution (missing_allowed_value) is expected."
+    },
+    {
+      "id": "T06",
+      "where": "MSA v3.docx / Copy of MSA v4 clean.docx / MSA v4 redline.docx / Ardleigh MSA signed 15-09-25.pdf",
+      "trap": "Version chaos: three unsigned drafts, only one with tracked changes, and the executed PDF filed in an unrelated top-level folder.",
+      "expected": "All three .docx files are unsigned (no signature image) and go to 5-orders-drafts-duplicates; the redline is additionally a draft by its tracked changes and comments. The executed PDF is the document that governs. Deleted {-...-} text must never be quoted as a term."
+    },
+    {
+      "id": "T07",
+      "where": "Customers/Ardleigh (ex Colverne)/Brenlow/",
+      "trap": "A master for a sister company where nothing in the document says it belongs to the account's group - clause 1.2 says the opposite.",
+      "expected": "Basis 'known group' and confidence no better than fairly sure, or the holding folder _not-sure grouped under the printed name. Never 'same name', never 'sure', and never a new folder invented from the document."
+    },
+    {
+      "id": "T08",
+      "where": "Customers/Ardleigh (ex Colverne)/old files/",
+      "trap": "The counterparty renamed itself; the ERP holds the new name and the 2019 master holds the old one.",
+      "expected": "Matched with basis 'in the document' on the strength of the shared company number 06421889 and the name-change letter, not on a hunch. Recorded as a change of name, not a novation or a transfer to a new entity."
+    },
+    {
+      "id": "T09",
+      "where": "Customers/Trentmoor/scan0012.pdf",
+      "trap": "One PDF containing two unrelated agreements - an NDA and a supply agreement - with mixed scanned and native pages.",
+      "expected": "The conflict is recorded (card question 10, form section K) rather than resolved silently in favour of one of them. The live meter-cabinet agreement drives the folder; the live NDA is reported separately in the position note."
+    },
+    {
+      "id": "T10",
+      "where": "Larkhall Court site agreement.pdf + scans to file/scan0031.pdf",
+      "trap": "A five-page agreement whose signature page is missing, and a matching detached signature page scanned on its own three folders away.",
+      "expected": "The body reads q3 = can't tell (signature page missing). Card question 9 on the loose page names the document it belongs to, on the evidence of the shared reference THP/2026/SITE-04. Once linked, the site agreement is 2-governs-part-of-trade; read alone it is unsure."
+    },
+    {
+      "id": "T11",
+      "where": "Customers/Ardleigh (ex Colverne)/Brenlow/fax 24-03-26.pdf",
+      "trap": "A degraded scan: fax transmission header, grain, blur and a coffee ring across the page.",
+      "expected": "Read as a picture and identified in spite of the damage; the abbreviated 'Brenlow Dockyard Svcs Ltd' is matched to the full name on the master."
+    },
+    {
+      "id": "T12",
+      "where": "scans to file/scan0031.pdf",
+      "trap": "A low-contrast, noisy scan.",
+      "expected": "Still read as a picture; the signatures and both dates (11 and 13 March 2026) are recovered, since the date of last signature is not in the body document."
+    },
+    {
+      "id": "T13",
+      "where": "Customers/Trentmoor/Schedule 2 price matrix 2026.xlsx",
+      "trap": "The master's Schedule 2 is a spreadsheet - a file type the kit cannot read.",
+      "expected": "An inventory row and _unreadable, never a silent omission. The position note must say the pricing schedule could not be read and that its 31 December 2026 expiry is the account's separately-lived part."
+    },
+    {
+      "id": "T14",
+      "where": "00 TO FILE/RE_ RE_ amendment.msg",
+      "trap": "An .msg email forwarding an amendment.",
+      "expected": "Listed as unreadable with an inventory and report row. Its fragments must not be used as evidence for anything."
+    },
+    {
+      "id": "T15",
+      "where": "Customers/Sturmore Rail/PO's/PO88231 northern depot.pdf",
+      "trap": "A purchase order whose reverse-side conditions claim to prevail over any master agreement, for an account that has one.",
+      "expected": "Filed 5-orders-drafts-duplicates as a single transaction. The precedence wording is expressly ignored for the purposes of what governs trade."
+    },
+    {
+      "id": "T16",
+      "where": "fax 24-03-26.pdf (past) and notice served 14-08-26.pdf (future)",
+      "trap": "Two termination letters: one whose end date has passed, one whose end date has not.",
+      "expected": "The Brenlow master is 4-not-live from 30 April 2026. The Wexbury framework stays live and in 1-governs-trade, with the 14 February 2027 end date recorded. Treating any terminated-by letter as instantly fatal is the error."
+    },
+    {
+      "id": "T17",
+      "where": "across the pile",
+      "trap": "Printed names that differ from the ERP spelling: 'Sturmore Rail Group Limited' vs 'Ltd' vs the ERP's bare name; 'Ardleigh Marine Systems Ltd' vs the ERP's 'Limited'; 'Brenlow Dockyard Svcs Ltd' abbreviated; 'Wexbury Power Networks' as a trading name; 'The Housing Partnership (Trentmoor) Limited' in a different word order from 'Trentmoor Housing Partnership'.",
+      "expected": "Each variant gets a basis and a confidence, and each new name-to-account decision is appended to inputs/entity-map.csv for the user. Suffix and word-order variants may be 'same name'; a trading name that appears nowhere else in the document is 'known group' at best."
+    },
+    {
+      "id": "T18",
+      "where": "erp_extract_2026-09-01.csv rows HAL-40118 and HAL-40119",
+      "trap": "Two ERP rows differing only by a suffix: 'Sturmore Rail Group' and 'Sturmore Rail Group - Northern Depot'.",
+      "expected": "The stream row shares the main account's folder and gets a README pointing to it, unless a document names the stream - PO 88231 and Appendix A of the 2021 master both do. The run must say which rows were treated as one."
+    },
+    {
+      "id": "T19",
+      "where": "00 TO FILE/new doc 2.pdf and 00 TO FILE/contract notes.pdf",
+      "trap": "A zero-byte PDF and a plain text file with a .pdf extension.",
+      "expected": "Neither crashes preparation; both get inventory rows and land in _needs-reading. Neither is used as evidence."
+    },
+    {
+      "id": "T20",
+      "where": "Customers/Sturmore Rail/Account notes (internal).docx",
+      "trap": "An internal playbook about an account, full of numbers that look like terms.",
+      "expected": "6-business-practice, shown apart in the position note, never cited as evidence of a contractual term."
+    },
+    {
+      "id": "T21",
+      "where": "Customers/Wexbury/rebate 2026.pdf",
+      "trap": "A rebate letter covering a calendar year only.",
+      "expected": "2-governs-part-of-trade. Section B rule 6 excludes a period-only pricing or rebate letter from 1-governs-trade even though it is live and commercial."
+    },
+    {
+      "id": "T22",
+      "where": "Misc/Kellerby Interchange joint letter.pdf",
+      "trap": "One signed document naming companies from two different accounts.",
+      "expected": "Copied into both account folders and marked shared; one row per document/account pair in the global CSV, so the corpus has more rows than originals."
+    },
+    {
+      "id": "T23",
+      "where": "Customers/Wexbury/IMG_2291.jpg",
+      "trap": "A phone photograph of a signed one-page letter, taken at an angle under uneven light.",
+      "expected": "Read as a picture, identified as a signed acceptance letter, and used as the link between the trading name on the rebate letter and the ERP account name."
+    },
+    {
+      "id": "T24",
+      "where": "Misc/Fenwold master.pdf",
+      "trap": "A live, fully executed, all-purchases master for a company on no ERP row.",
+      "expected": "_not-on-the-list, grouped under 'Fenwold Aggregates Limited', with the name flagged for the user's decision. No folder is ever created from a name found in a document."
+    },
+    {
+      "id": "T25",
+      "where": "Misc/Cadmere framework (we buy).pdf",
+      "trap": "Supplier-side paper in a customer pile: our own company is 'the Customer'.",
+      "expected": "Recognised as the wrong side. It matches no customer row, so _not-on-the-list, and the ambiguous side is put to the user before filing. Our own entity list is what makes the reversal detectable."
+    },
+    {
+      "id": "T26",
+      "where": "2016 Sturmore agreement and our-entities",
+      "trap": "Our own former name, Halbrook Cable & Fixings Ltd, is the signatory on the 2016 master.",
+      "expected": "Recognised as ours from inputs-our-entities.csv rather than becoming a third company or a holding entry. The 2021 master's clause 3.1 names the same former entity when it supersedes the 2016 conditions."
+    },
+    {
+      "id": "T27",
+      "where": "Amendment 2 draft, MSA v4 redline, Signed final.pdf",
+      "trap": "Three different documents each carrying plausible but non-binding numbers (75/90 days, GBP 400/500 carriage, 30 days, six months, GBP 250/24.00).",
+      "expected": "None of these figures reaches an account's current terms. Every reported term traces to a signed, live instrument."
+    },
+    {
+      "id": "T28",
+      "where": "HAL-40566 Ravenhead Grid Services Ltd",
+      "trap": "An ERP account row with no documents at all.",
+      "expected": "The folder exists, named exactly as the row, and its README says nothing is filed there. The row is not dropped, and unmatched paper is not swept into it."
+    }
+  ]
+}

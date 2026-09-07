@@ -17,15 +17,15 @@ Nothing establishes the general terms governing trade. Doc 004 is a draft; signe
 
 ## 4. Governs part of the trade
 
-| tree | doc | title | kind | companies | start / end / status | scope | limit | why |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| T2 | doc 006 | 2026 Rebate Letter | pricing or rebate letter | Pellmont Logistics Group | 2026-01-01 / fixed: 2026-12-31 / live | period | 1 January to 31 December 2026 rebate | Current year rebate only; no general trading terms. |
+| tree | doc | filed as | title | kind | companies | start / end / status | scope | limit | why |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| T2 | doc 006 | 006 rebate-letter Pellmont-Logistics-Group 2026-01-01.pdf | 2026 Rebate Letter | pricing or rebate letter | Pellmont Logistics Group | 2026-01-01 / fixed: 2026-12-31 / live | period | 1 January to 31 December 2026 rebate | Current year rebate only; no general trading terms. |
 
 ## 5. Everything else
 
-- doc 005 — purchase order or quote "Purchase Order PL-2026-042" — 5-orders-drafts-duplicates — Single purchase with no standard terms.
-- doc 004 — master or framework "Master Services Agreement - draft dated 15 January 2026" — unsure — draft; signed signature page found separately (doc 007) — Signed body matching the detached page would establish the governing text.
-- doc 007 — other "Master Services Agreement - Signature Page" — unsure — Signed signature page of doc 004; final body absent.
+- doc 005 — purchase order or quote "Purchase Order PL-2026-042" — filed as `005 order Pellmont-Logistics-Group 2026-04-06.pdf` — 5-orders-drafts-duplicates — Single purchase with no standard terms.
+- doc 004 — master or framework "Master Services Agreement - draft dated 15 January 2026" — filed as `004 draft-master Pellmont-Logistics-Group unsure.docx` — unsure — draft; signed signature page found separately (doc 007) — Signed body matching the detached page would establish the governing text.
+- doc 007 — other "Master Services Agreement - Signature Page" — filed as `007 other Pellmont-Logistics-Group unsure.jpg` — unsure — Signed signature page of doc 004; final body absent.
 
 ## 6. How we trade in practice
 

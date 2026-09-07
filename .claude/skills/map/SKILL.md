@@ -1,10 +1,13 @@
 ---
 name: map
 description: Proposes a DCG family per tree and generates stage 2 graph outputs. Usage /map all | "<account>" [--force].
-disable-model-invocation: true
 ---
 
 # /map all | "<account>" [--force]
+
+Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
+targeted maintenance. It stops after its own step and never starts the next.
+Commands are written `python`; use `python3` where that is the installed name.
 
 1. Run `python scripts/validate_forms.py --all`; stop on any failure. Read `work/erp.json`,
    the entity map, placements and sort log. Skip stream rows mapped into another ERP account.

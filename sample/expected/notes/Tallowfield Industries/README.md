@@ -19,21 +19,21 @@ Doc 003's NDA expired on 30 April 2022. Doc 009 is the internal practice guide.
 
 ## 3. Governs trade
 
-| tree | doc | title | kind | companies | start / end / status | scope | why |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| T1 | doc 001 | Supply Agreement - General Terms | master or framework | Tallowfield Industries (North) Limited | 2019-03-14 / rolling until notice (twelve months) / live | all purchases | General Terms govern all purchases, as amended by doc 002; current trade confirmed there. |
-| T1 | doc 002 | Amendment 1 to Supply Agreement | amendment or side letter | Tallowfield Industries (North) Limited | 2026-02-01 / rolling until notice (six months; life of General Terms) / live | all purchases | Amends General Terms: six months' notice; takes the status of doc 001. |
+| tree | doc | filed as | title | kind | companies | start / end / status | scope | why |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| T1 | doc 001 | 001 master-agreement Tallowfield-Industries 2019-03-14.pdf | Supply Agreement - General Terms | master or framework | Tallowfield Industries (North) Limited | 2019-03-14 / rolling until notice (twelve months) / live | all purchases | General Terms govern all purchases, as amended by doc 002; current trade confirmed there. |
+| T1 | doc 002 | 002 amendment Tallowfield-Industries 2026-02-01.pdf | Amendment 1 to Supply Agreement | amendment or side letter | Tallowfield Industries (North) Limited | 2026-02-01 / rolling until notice (six months; life of General Terms) / live | all purchases | Amends General Terms: six months' notice; takes the status of doc 001. |
 
 ## 4. Governs part of the trade
 
-| tree | doc | title | kind | companies | start / end / status | scope | limit | why |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| T2 | doc 008 | Hexley Works Site Agreement | project or programme agreement | Tallowfield Industries (North) Limited | 2026-03-01 / fixed: 2027-03-31 / live | project, site or programme | Hexley Works site in the United Kingdom | Live separate agreement for Hexley Works site; other purchases use doc 001. |
+| tree | doc | filed as | title | kind | companies | start / end / status | scope | limit | why |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| T2 | doc 008 | 008 site-agreement Tallowfield-Industries 2026-03-01.pdf | Hexley Works Site Agreement | project or programme agreement | Tallowfield Industries (North) Limited | 2026-03-01 / fixed: 2027-03-31 / live | project, site or programme | Hexley Works site in the United Kingdom | Live separate agreement for Hexley Works site; other purchases use doc 001. |
 
 ## 5. Everything else
 
-- doc 003 — NDA "Mutual Non-Disclosure Agreement" — 4-not-live — NDA expired 2022-04-30; no renewal or surviving obligation.
-- doc 009 — internal playbook or guidance "Internal Account Playbook - Tallowfield Industries" — 6-business-practice — Internal margin, market basket and ad hoc delivery guidance; not a contract.
+- doc 003 — NDA "Mutual Non-Disclosure Agreement" — filed as `003 nda Tallowfield-Industries 2019-05-01 not-live.pdf` — 4-not-live — NDA expired 2022-04-30; no renewal or surviving obligation.
+- doc 009 — internal playbook or guidance "Internal Account Playbook - Tallowfield Industries" — filed as `009 internal-notes Tallowfield-Industries 2026-02-01.docx` — 6-business-practice — Internal margin, market basket and ad hoc delivery guidance; not a contract.
 
 ## 6. How we trade in practice
 

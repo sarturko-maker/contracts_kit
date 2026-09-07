@@ -23,7 +23,7 @@ from kit_common import (  # noqa: E402
 )
 from place import (  # noqa: E402
     PAGE_CSS, build_html, build_mermaid, ensure_visual_assets, load_context,
-    md_to_html, mm_label, settled_for_all_accounts,
+    add_empty_accounts, md_to_html, mm_label, settled_for_all_accounts,
 )
 
 
@@ -130,6 +130,7 @@ def main(argv=None):
     if args.analysis:
         ctx = load_context()
         settled = settled_for_all_accounts(ctx)
+        add_empty_accounts(ctx, settled)  # a zero-document account has no judge and an empty diagram
     built = 0
     for account in selected:
         folder = account_folder(side, account)

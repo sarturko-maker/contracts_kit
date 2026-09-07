@@ -1,10 +1,13 @@
 ---
 name: prepare
 description: Inventories the pile, copies the ERP record, numbers every file and pulls the native text. Usage /prepare <pile path> [--erp <file>].
-disable-model-invocation: true
 ---
 
 # /prepare <pile path> [--erp <file>]
+
+Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
+targeted maintenance. It stops after its own step and never starts the next.
+Commands are written `python`; use `python3` where that is the installed name.
 
 Run from the kit root. `$ARGUMENTS` is the pile path, optionally followed by `--erp <file>`
 (name the ERP record when its file name does not contain "erp", or when several files do).
