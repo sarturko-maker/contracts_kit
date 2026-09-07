@@ -1,0 +1,165 @@
+{
+  "A": {
+    "doc_id": "007",
+    "source_path": "sample/pile/07 scan_0032.jpg",
+    "file_type": "image",
+    "sha256": "78840c32d387b920d5054e76353d4f1a962160d16fc5b693bacc9017637f1ce9",
+    "pages": "1",
+    "text_or_scan": "s",
+    "language_guess": "not found",
+    "docx_author": "n/a",
+    "docx_dates": "n/a | n/a",
+    "docx_tracked_changes": "n/a",
+    "side": "customers",
+    "account": "Pellmont Logistics Group",
+    "match_basis": "same name",
+    "match_confidence": "sure",
+    "tree": "T1",
+    "folder": "unsure"
+  },
+  "B": {
+    "B1_cover_title": "Master Services Agreement - Signature Page",
+    "B1_evidence": {
+      "ref": "p.1",
+      "words": "Master Services Agreement - Signature Page"
+    },
+    "B2_document_kind": "other",
+    "B2_evidence": {
+      "ref": "p.1",
+      "words": "Master Services Agreement - Signature Page"
+    },
+    "B3_whose_paper": "not_found",
+    "B3_evidence": null,
+    "B4_signed_status": "both",
+    "B4_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "Signed for Pellmont Logistics Group: D. Moor. Date: 16 January 2026."
+    },
+    "B5_complete": "no",
+    "B5_missing": "complete execution text",
+    "B5_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "The text pages of the execution version are not attached to this page."
+    },
+    "B6_duplicate_or_draft_of": "none",
+    "B6_evidence": null,
+    "B6a_best_copy": "yes",
+    "B7_language": "en",
+    "B9_layered": "no",
+    "B9_evidence": {
+      "ref": "p.1",
+      "words": "Master Services Agreement - Signature Page"
+    }
+  },
+  "C": {
+    "C1_their_entities": [
+      {
+        "name_as_printed": "Pellmont Logistics Group",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C1_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "Signed for Pellmont Logistics Group: D. Moor. Date: 16 January 2026."
+    },
+    "C2_our_entities": [
+      {
+        "name_as_printed": "Marrowgate Supply Ltd",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C2_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "Signed for Marrowgate Supply Ltd: A. Wren. Date: 16 January 2026."
+    },
+    "C4_signature_dates_seen": "Both: 16 January 2026",
+    "C4_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "Date: 16 January 2026."
+    }
+  },
+  "D": {
+    "D1_start_date": "not_found",
+    "D1a_basis": "not_found",
+    "D1_evidence": null,
+    "D2_end_type": "not_found",
+    "D2_detail": "",
+    "D2_evidence": null,
+    "D3_ended_evidence": "none_found",
+    "D3_detail": "",
+    "D3_evidence": null,
+    "D4_status_as_read": "unknown",
+    "D4_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "The text pages of the execution version are not attached to this page."
+    }
+  },
+  "E": {
+    "E1_products_services": "not_found",
+    "E1_evidence": null,
+    "E2_territory": "not_found",
+    "E2_detail": "",
+    "E2_evidence": null,
+    "E3_entities_covered": "not_found",
+    "E3_evidence": null,
+    "E4_trade_scope": "not_found",
+    "E4_evidence": null
+  },
+  "F": [],
+  "G": {
+    "G1_governs_orders": "not_found",
+    "G1_detail": "signature evidence only; agreed text missing",
+    "G1_evidence": null,
+    "G2_commitment_or_status": "none",
+    "G2_detail": "",
+    "G2_evidence": null
+  },
+  "H": {
+    "H1_attaches_to": [
+      {
+        "as_printed": "Master Services Agreement dated 15 January 2026",
+        "doc_id": "004",
+        "relation": "forms_part_of"
+      }
+    ],
+    "H1_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "Signature page for Master Services Agreement dated 15 January 2026."
+    },
+    "H2_replaces": "none",
+    "H2_evidence": null,
+    "H3_refers_to_missing": [
+      {
+        "as_printed": "text pages of the execution version",
+        "where": "image p.1"
+      }
+    ],
+    "H3_evidence": {
+      "ref": "image p.1 (picture inspected)",
+      "words": "The text pages of the execution version are not attached to this page."
+    }
+  },
+  "I": [],
+  "J": {
+    "notes": "Signature picture inspected. This is separate evidence linked by title/date to doc 004; forms_part_of records the document connection but does not authenticate the draft body. Signature date alone does not prove when unknown final terms take effect."
+  },
+  "K": [
+    {
+      "type": "missing_field",
+      "description": "Execution status needs a separate property from lifecycle status; DCG status cannot preserve both answers at once.",
+      "page": "image p.1 (picture inspected)"
+    },
+    {
+      "type": "missing_allowed_value",
+      "description": "A detached signature page is evidence about execution, not a complete contract; kind other needs its signature-page function retained.",
+      "page": "image p.1"
+    }
+  ],
+  "L": {
+    "return_line": "doc 007 | other | unknown | layered: n | flags: 2 | work/forms/007.json"
+  }
+}

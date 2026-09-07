@@ -1,0 +1,151 @@
+{
+  "A": {
+    "doc_id": "009",
+    "source_path": "sample/pile/09 Internal Account Playbook.docx",
+    "file_type": "docx",
+    "sha256": "e5e31699b198a16a83b870aad0c74ba5f7df8448dc141c8d5b08a3a0de8503bd",
+    "pages": "not_found",
+    "text_or_scan": "",
+    "language_guess": "en",
+    "docx_author": "Fictional Account Manager",
+    "docx_dates": "2026-01-14T09:00:00Z | 2026-01-15T11:00:00Z",
+    "docx_tracked_changes": "yes (2)",
+    "side": "customers",
+    "account": "Tallowfield Industries",
+    "match_basis": "same name",
+    "match_confidence": "sure",
+    "tree": "T4",
+    "folder": "6-business-practice"
+  },
+  "B": {
+    "B1_cover_title": "Internal Account Playbook - Tallowfield Industries",
+    "B1_evidence": {
+      "ref": "¶ 1",
+      "words": "Internal Account Playbook - Tallowfield Industries"
+    },
+    "B2_document_kind": "internal_playbook",
+    "B2_evidence": {
+      "ref": "¶ 1",
+      "words": "Internal Account Playbook - Tallowfield Industries"
+    },
+    "B3_whose_paper": "not_found",
+    "B3_evidence": null,
+    "B4_signed_status": "unsigned",
+    "B4_evidence": {
+      "ref": "¶ 2",
+      "words": "no customer signature."
+    },
+    "B5_complete": "yes",
+    "B5_missing": "",
+    "B5_evidence": null,
+    "B6_duplicate_or_draft_of": "none",
+    "B6_evidence": null,
+    "B6a_best_copy": "yes",
+    "B7_language": "en",
+    "B9_layered": "no",
+    "B9_evidence": {
+      "ref": "¶ 1",
+      "words": "Internal Account Playbook - Tallowfield Industries"
+    }
+  },
+  "C": {
+    "C1_their_entities": [
+      {
+        "name_as_printed": "Tallowfield Industries",
+        "address_or_registration_if_printed": "not_found",
+        "role": "other",
+        "page": "¶ 1"
+      }
+    ],
+    "C1_evidence": {
+      "ref": "¶ 2",
+      "words": "INTERNAL ONLY. Account: Tallowfield Industries. Maintained by Marrowgate Supply Ltd; no customer signature."
+    },
+    "C2_our_entities": [
+      {
+        "name_as_printed": "Marrowgate Supply Ltd",
+        "address_or_registration_if_printed": "not_found",
+        "role": "other",
+        "page": "¶ 1"
+      }
+    ],
+    "C2_evidence": {
+      "ref": "¶ 2",
+      "words": "INTERNAL ONLY. Account: Tallowfield Industries. Maintained by Marrowgate Supply Ltd; no customer signature."
+    },
+    "C4_signature_dates_seen": "not_found",
+    "C4_evidence": null
+  },
+  "D": {
+    "D1_start_date": "2026-02-01",
+    "D1a_basis": "stated",
+    "D1_evidence": {
+      "ref": "¶ 3",
+      "words": "Working guidance from 1 February 2026 until replaced. This is not a contract."
+    },
+    "D2_end_type": "not_found",
+    "D2_detail": "",
+    "D2_evidence": null,
+    "D3_ended_evidence": "none_found",
+    "D3_detail": "",
+    "D3_evidence": null,
+    "D4_status_as_read": "live_rolling_presumed",
+    "D4_evidence": {
+      "ref": "¶ 3",
+      "words": "Working guidance from 1 February 2026 until replaced. This is not a contract."
+    }
+  },
+  "E": {
+    "E1_products_services": "not_found",
+    "E1_evidence": null,
+    "E2_territory": "single_country",
+    "E2_detail": "United Kingdom",
+    "E2_evidence": {
+      "ref": "¶ 8",
+      "words": "Coverage: United Kingdom account team only."
+    },
+    "E3_entities_covered": "not_found",
+    "E3_evidence": null,
+    "E4_trade_scope": "none",
+    "E4_evidence": null
+  },
+  "F": [],
+  "G": {
+    "G1_governs_orders": "no",
+    "G1_detail": "internal business practice, not a contract",
+    "G1_evidence": {
+      "ref": "¶ 3",
+      "words": "This is not a contract."
+    },
+    "G2_commitment_or_status": "none",
+    "G2_detail": "",
+    "G2_evidence": null
+  },
+  "H": {
+    "H1_attaches_to": "none",
+    "H1_evidence": null,
+    "H2_replaces": "none",
+    "H2_evidence": null,
+    "H3_refers_to_missing": "none",
+    "H3_evidence": null
+  },
+  "I": [],
+  "J": {
+    "notes": "Internal working guidance, not a contract. End type not_found because 'until replaced' has no matching fixed answer. Tracked revisions and one comment remain drafting evidence; the printed guidance says it is current. No signature image."
+  },
+  "K": [
+    {
+      "type": "missing_field",
+      "description": "Execution status needs a separate property from lifecycle status; DCG status cannot preserve both answers at once.",
+      "page": "¶ 2"
+    },
+    {
+      "type": "missing_allowed_value",
+      "description": "internal_playbook has no DCG contract node type; retained in its form and corpus with a gap, not a governing instrument.",
+      "page": "¶ 1-3"
+    }
+  ],
+  "L": {
+    "return_line": "doc 009 | internal_playbook | live_rolling_presumed | layered: n | flags: 2 | work/forms/009.json"
+  }
+}

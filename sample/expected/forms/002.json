@@ -1,0 +1,169 @@
+{
+  "A": {
+    "doc_id": "002",
+    "source_path": "sample/pile/02 Amendment 1.pdf",
+    "file_type": "pdf",
+    "sha256": "0ce84c3b6a12041080245a19d73e1c5149189c0101383707a9cef70cc21718d3",
+    "pages": "1",
+    "text_or_scan": "t",
+    "language_guess": "en",
+    "docx_author": "n/a",
+    "docx_dates": "n/a | n/a",
+    "docx_tracked_changes": "n/a",
+    "side": "customers",
+    "account": "Tallowfield Industries",
+    "match_basis": "in the document",
+    "match_confidence": "sure",
+    "tree": "T1",
+    "folder": "1-governs-trade"
+  },
+  "B": {
+    "B1_cover_title": "Amendment 1 to Supply Agreement",
+    "B1_evidence": {
+      "ref": "p.1",
+      "words": "Amendment 1 to Supply Agreement"
+    },
+    "B2_document_kind": "amendment_or_side_letter",
+    "B2_evidence": {
+      "ref": "p.1",
+      "words": "Amendment 1 to Supply Agreement"
+    },
+    "B3_whose_paper": "ours",
+    "B3_evidence": {
+      "ref": "p.1 cl.6",
+      "words": "Prepared on Marrowgate Supply Ltd paper."
+    },
+    "B4_signed_status": "both",
+    "B4_evidence": {
+      "ref": "p.1 signature blocks (picture inspected)",
+      "words": "Signed for Marrowgate Supply Ltd: A. Wren. Date: 1 February 2026."
+    },
+    "B5_complete": "yes",
+    "B5_missing": "",
+    "B5_evidence": null,
+    "B6_duplicate_or_draft_of": "none",
+    "B6_evidence": null,
+    "B6a_best_copy": "yes",
+    "B7_language": "en",
+    "B9_layered": "no",
+    "B9_evidence": {
+      "ref": "p.1",
+      "words": "Amendment 1 to Supply Agreement"
+    }
+  },
+  "C": {
+    "C1_their_entities": [
+      {
+        "name_as_printed": "Tallowfield Industries (North) Limited",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C1_evidence": {
+      "ref": "p.1 cl.1",
+      "words": "Parties: Marrowgate Supply Ltd and Tallowfield Industries (North) Limited."
+    },
+    "C2_our_entities": [
+      {
+        "name_as_printed": "Marrowgate Supply Ltd",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C2_evidence": {
+      "ref": "p.1 cl.1",
+      "words": "Parties: Marrowgate Supply Ltd and Tallowfield Industries (North) Limited."
+    },
+    "C4_signature_dates_seen": "Both: 1 February 2026",
+    "C4_evidence": {
+      "ref": "p.1 signature blocks (picture inspected)",
+      "words": "Signed for Marrowgate Supply Ltd: A. Wren. Date: 1 February 2026."
+    }
+  },
+  "D": {
+    "D1_start_date": "2026-02-01",
+    "D1a_basis": "stated",
+    "D1_evidence": {
+      "ref": "p.1 cl.3",
+      "words": "Effective 1 February 2026, the notice period in clause 3 of the General Terms is six months."
+    },
+    "D2_end_type": "rolling_until_notice",
+    "D2_detail": "six months; life of General Terms",
+    "D2_evidence": {
+      "ref": "p.1 cl.3",
+      "words": "Effective 1 February 2026, the notice period in clause 3 of the General Terms is six months."
+    },
+    "D3_ended_evidence": "none_found",
+    "D3_detail": "",
+    "D3_evidence": null,
+    "D4_status_as_read": "live_rolling_presumed",
+    "D4_evidence": {
+      "ref": "p.1 cl.4",
+      "words": "The parties confirm that all their current purchases continue under the General Terms of that Agreement."
+    }
+  },
+  "E": {
+    "E1_products_services": "not_found",
+    "E1_evidence": null,
+    "E2_territory": "not_found",
+    "E2_detail": "",
+    "E2_evidence": null,
+    "E3_entities_covered": "not_found",
+    "E3_evidence": null,
+    "E4_trade_scope": "all_purchases",
+    "E4_evidence": {
+      "ref": "p.1 cl.4",
+      "words": "The parties confirm that all their current purchases continue under the General Terms of that Agreement."
+    }
+  },
+  "F": [],
+  "G": {
+    "G1_governs_orders": "yes",
+    "G1_detail": "amends governing General Terms; confirms all current purchases continue under them",
+    "G1_evidence": {
+      "ref": "p.1 cl.4",
+      "words": "The parties confirm that all their current purchases continue under the General Terms of that Agreement."
+    },
+    "G2_commitment_or_status": "none",
+    "G2_detail": "",
+    "G2_evidence": null
+  },
+  "H": {
+    "H1_attaches_to": [
+      {
+        "as_printed": "Supply Agreement dated 14 March 2019",
+        "doc_id": "001",
+        "relation": "amends"
+      }
+    ],
+    "H1_evidence": {
+      "ref": "p.1 cl.2",
+      "words": "This amends the Supply Agreement dated 14 March 2019 between the parties."
+    },
+    "H2_replaces": "none",
+    "H2_evidence": null,
+    "H3_refers_to_missing": "none",
+    "H3_evidence": null
+  },
+  "I": [],
+  "J": {
+    "notes": ""
+  },
+  "K": [
+    {
+      "type": "missing_field",
+      "description": "Execution status needs a separate property from lifecycle status; DCG status cannot preserve both answers at once.",
+      "page": "p.1 signature blocks (picture inspected)"
+    },
+    {
+      "type": "missing_field",
+      "description": "A rolling termination notice period has no dedicated release-1 DCG property.",
+      "page": "p.1 cl.3"
+    }
+  ],
+  "L": {
+    "return_line": "doc 002 | amendment_or_side_letter | live_rolling_presumed | layered: n | flags: 2 | work/forms/002.json"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "account": "Pellmont Logistics Group",
+  "trees": [
+    {
+      "tree": "T1",
+      "family": "C0",
+      "confidence": "not_sure",
+      "doc_ids": [
+        "004",
+        "007"
+      ],
+      "structural_evidence": "Unsigned proposed master with separate signature evidence linked by title/date. The execution body is missing; an agreed governing structure cannot be established.",
+      "overlays": []
+    },
+    {
+      "tree": "T2",
+      "family": "C13",
+      "confidence": "sure",
+      "doc_ids": [
+        "006"
+      ],
+      "structural_evidence": "Standalone annual rebate change instrument, limited to 2026; references no governing master. This is the time-limited commercial-letter structure in C13.",
+      "overlays": []
+    },
+    {
+      "tree": "T3",
+      "family": "C4",
+      "confidence": "fairly_sure",
+      "doc_ids": [
+        "005"
+      ],
+      "structural_evidence": "Single order with no negotiated master or standard terms in the order. C4's no-anchor transaction structure is the nearest family; no battle-of-forms outcome is asserted.",
+      "overlays": []
+    }
+  ]
+}

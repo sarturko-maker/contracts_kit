@@ -1,0 +1,40 @@
+doc 001: valid; evidence needs review
+  REVIEW: B.B4_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C4_evidence: scanned page; exact quote requires visual review
+  REVIEW: D.D1_evidence: scanned page; exact quote requires visual review
+  REVIEW: F[1].F4_D.D1_evidence: scanned page; exact quote requires visual review
+doc 002: valid
+doc 003: valid; evidence needs review
+  REVIEW: B.B1_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B2_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B4_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B9_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C1_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C2_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C4_evidence: scanned page; exact quote requires visual review
+  REVIEW: D.D1_evidence: scanned page; exact quote requires visual review
+  REVIEW: D.D2_evidence: scanned page; exact quote requires visual review
+  REVIEW: D.D3_evidence: scanned page; exact quote requires visual review
+  REVIEW: D.D4_evidence: scanned page; exact quote requires visual review
+  REVIEW: E.E3_evidence: scanned page; exact quote requires visual review
+  REVIEW: G.G1_evidence: scanned page; exact quote requires visual review
+doc 004: valid
+doc 005: valid
+doc 006: valid
+doc 007: valid; evidence needs review
+  REVIEW: B.B1_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B2_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B4_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B5_evidence: scanned page; exact quote requires visual review
+  REVIEW: B.B9_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C1_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C2_evidence: scanned page; exact quote requires visual review
+  REVIEW: C.C4_evidence: scanned page; exact quote requires visual review
+  REVIEW: D.D4_evidence: scanned page; exact quote requires visual review
+  REVIEW: H.H1_evidence: scanned page; exact quote requires visual review
+  REVIEW: H.H3_evidence: scanned page; exact quote requires visual review
+doc 008: valid
+doc 009: valid
+9 forms checked; 0 invalid; 28 evidence checks need review.
+
+Graph: 19 nodes, 17 edges; 9 validated forms. Written out/graph/, TREES.md, CORPUS.csv, FORM-HEALTH.md and DIDNT-FIT.md.

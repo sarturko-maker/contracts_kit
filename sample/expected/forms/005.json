@@ -1,0 +1,152 @@
+{
+  "A": {
+    "doc_id": "005",
+    "source_path": "sample/pile/05 Purchase Order.pdf",
+    "file_type": "pdf",
+    "sha256": "213a4023805fa2c302fbbdb32e59cdd5fee5806b1523dfeee34fc44b63e4fa00",
+    "pages": "1",
+    "text_or_scan": "t",
+    "language_guess": "en",
+    "docx_author": "n/a",
+    "docx_dates": "n/a | n/a",
+    "docx_tracked_changes": "n/a",
+    "side": "customers",
+    "account": "Pellmont Logistics Group",
+    "match_basis": "same name",
+    "match_confidence": "sure",
+    "tree": "T3",
+    "folder": "5-orders-drafts-duplicates"
+  },
+  "B": {
+    "B1_cover_title": "Purchase Order PL-2026-042",
+    "B1_evidence": {
+      "ref": "p.1",
+      "words": "Purchase Order PL-2026-042"
+    },
+    "B2_document_kind": "order_or_quote",
+    "B2_evidence": {
+      "ref": "p.1",
+      "words": "Purchase Order PL-2026-042"
+    },
+    "B3_whose_paper": "not_found",
+    "B3_evidence": null,
+    "B4_signed_status": "unsigned",
+    "B4_evidence": {
+      "ref": "p.1 (picture inspected)",
+      "words": "No signature is required for this purchase order."
+    },
+    "B5_complete": "yes",
+    "B5_missing": "",
+    "B5_evidence": null,
+    "B6_duplicate_or_draft_of": "none",
+    "B6_evidence": null,
+    "B6a_best_copy": "yes",
+    "B7_language": "en",
+    "B9_layered": "no",
+    "B9_evidence": {
+      "ref": "p.1",
+      "words": "Purchase Order PL-2026-042"
+    }
+  },
+  "C": {
+    "C1_their_entities": [
+      {
+        "name_as_printed": "Pellmont Logistics Group",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C1_evidence": {
+      "ref": "p.1",
+      "words": "Buyer: Pellmont Logistics Group. Seller: Marrowgate Supply Ltd."
+    },
+    "C2_our_entities": [
+      {
+        "name_as_printed": "Marrowgate Supply Ltd",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C2_evidence": {
+      "ref": "p.1",
+      "words": "Buyer: Pellmont Logistics Group. Seller: Marrowgate Supply Ltd."
+    },
+    "C4_signature_dates_seen": "not_found",
+    "C4_evidence": null
+  },
+  "D": {
+    "D1_start_date": "2026-04-06",
+    "D1a_basis": "stated",
+    "D1_evidence": {
+      "ref": "p.1",
+      "words": "Order date: 6 April 2026. Deliver by 13 April 2026."
+    },
+    "D2_end_type": "not_found",
+    "D2_detail": "",
+    "D2_evidence": null,
+    "D3_ended_evidence": "none_found",
+    "D3_detail": "",
+    "D3_evidence": null,
+    "D4_status_as_read": "unknown",
+    "D4_evidence": {
+      "ref": "p.1",
+      "words": "Order date: 6 April 2026. Deliver by 13 April 2026."
+    }
+  },
+  "E": {
+    "E1_products_services": "20 invented transit trays",
+    "E1_evidence": {
+      "ref": "p.1",
+      "words": "One purchase only: 20 invented transit trays, GBP 400 total, for a United Kingdom site."
+    },
+    "E2_territory": "single_country",
+    "E2_detail": "United Kingdom",
+    "E2_evidence": {
+      "ref": "p.1",
+      "words": "One purchase only: 20 invented transit trays, GBP 400 total, for a United Kingdom site."
+    },
+    "E3_entities_covered": "signatories_only",
+    "E3_evidence": {
+      "ref": "p.1",
+      "words": "Buyer: Pellmont Logistics Group. Seller: Marrowgate Supply Ltd."
+    },
+    "E4_trade_scope": "none",
+    "E4_evidence": null
+  },
+  "F": [],
+  "G": {
+    "G1_governs_orders": "no",
+    "G1_detail": "one purchase only; no standard terms or continuing trade terms",
+    "G1_evidence": {
+      "ref": "p.1",
+      "words": "This purchase order contains no standard terms and establishes no terms for other purchases."
+    },
+    "G2_commitment_or_status": "none",
+    "G2_detail": "",
+    "G2_evidence": null
+  },
+  "H": {
+    "H1_attaches_to": "none",
+    "H1_evidence": null,
+    "H2_replaces": "none",
+    "H2_evidence": null,
+    "H3_refers_to_missing": "none",
+    "H3_evidence": null
+  },
+  "I": [],
+  "J": {
+    "notes": "Delivery due date is not treated as an expiry; performance is not found. This is a single purchase, not standard terms."
+  },
+  "K": [
+    {
+      "type": "missing_field",
+      "description": "Execution status needs a separate property from lifecycle status; DCG status cannot preserve both answers at once.",
+      "page": "p.1 (picture inspected)"
+    }
+  ],
+  "L": {
+    "return_line": "doc 005 | order_or_quote | unknown | layered: n | flags: 1 | work/forms/005.json"
+  }
+}

@@ -1,0 +1,56 @@
+Pile: sample/pile (11 files)
+ERP record: sample/pile/ERP_record.csv
+  copied to inputs/erp-record.csv with columns: account_number, customer_account, country
+  account column: customer_account
+  side: customers
+  account number column: account_number; country column: country
+  accounts (3):
+    - Tallowfield Industries (INV-100, United Kingdom)
+    - Pellmont Logistics Group (INV-200, United Kingdom)
+    - Tallowfield Industries Data Centres (INV-101, United Kingdom)
+  stream candidates (rows that look like streams of another row; /sort decides):
+    - 'Tallowfield Industries Data Centres' looks like a stream of 'Tallowfield Industries'
+  confirmed: True
+
+Numbering 10 files ...
+
+id   | file                                             | type  | pages | scanned | note
+----------------------------------------------------------------------------------------------------
+erp  | ERP_record.csv                                   | csv   |       |         | ERP record; copied to inputs/erp-record.csv
+001  | 01 Supply Agreement.pdf                          | pdf   |     4 |       1 | scanned pages: 4
+002  | 02 Amendment 1.pdf                               | pdf   |     1 |       0 |
+003  | 03 NDA scan.pdf                                  | pdf   |     2 |       2 | every page is a scan
+004  | 04 MSA draft.docx                                | docx  |       |       0 | tracked changes present; 2 comments
+005  | 05 Purchase Order.pdf                            | pdf   |     1 |       0 |
+006  | 06 Rebate Letter.pdf                             | pdf   |     1 |       0 |
+007  | 07 scan_0032.jpg                                 | image |     1 |       1 | page image; read as a picture
+008  | 08 Hexley Works Site Agreement.pdf               | pdf   |     1 |       0 |
+009  | 09 Internal Account Playbook.docx                | docx  |       |       0 | tracked changes present; 1 comments
+010  | 10 old email.msg                                 | other |       |         | not readable by the kit
+
+Totals
+  files by type: docx 2, image 1, other 1, pdf 6
+  readable by the kit: 9; not readable: 1
+  pages (pdf and images): 11
+  scanned pages, read as pictures: 4  (a page read as a picture costs several times a page read as text)
+  docx files with tracked changes: 2 (doc 004, doc 009)
+
+Files not readable by the kit (listed, not skipped):
+  doc 010: sample/pile/10 old email.msg  (not readable by the kit)
+
+Written: work/inventory.csv, work/erp.json, inputs/erp-record.csv, work/text/, work/files/, work/logs/prepare.log
+
+Side: customers. Accounts: 2, streams: 1
+  Tallowfield Industries: doc 001, doc 002, doc 003, doc 008, doc 009
+  Pellmont Logistics Group: doc 004, doc 005, doc 006, doc 007
+  stream: 'Tallowfield Industries Data Centres' treated as one with 'Tallowfield Industries' (README only)
+  not readable by the kit: doc 010
+
+Names that need your decision: none
+Written: work/logs/sort.csv (10 rows)
+
+Tallowfield Industries: 5 files copied into status folders; 1=2, 2=1, 3=0, 4=1, 5=0, 6=1, unsure=0; written out/customers/Tallowfield Industries/README.md, documents.csv, position.mmd, position.html
+Pellmont Logistics Group: 4 files copied into status folders; 1=0, 2=1, 3=0, 4=0, 5=1, 6=0, unsure=2; written out/customers/Pellmont Logistics Group/README.md, documents.csv, position.mmd, position.html
+copied assets/mermaid.min.js to out/assets/mermaid.min.js
+written out/customers/CORPUS.csv (10 rows), out/customers/ACCOUNTS.csv (3 rows), out/INDEX.md, out/INDEX.html
+totals: 2 accounts judged of 2; 1 files not readable by the kit

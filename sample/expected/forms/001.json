@@ -1,0 +1,276 @@
+{
+  "A": {
+    "doc_id": "001",
+    "source_path": "sample/pile/01 Supply Agreement.pdf",
+    "file_type": "pdf",
+    "sha256": "5c2502b9bb9213641a5848c313aef4f447e11ccd8d585b08f7f00b9d3c5dcba7",
+    "pages": "4",
+    "text_or_scan": "ttts",
+    "language_guess": "en",
+    "docx_author": "n/a",
+    "docx_dates": "n/a | n/a",
+    "docx_tracked_changes": "n/a",
+    "side": "customers",
+    "account": "Tallowfield Industries",
+    "match_basis": "in the document",
+    "match_confidence": "sure",
+    "tree": "T1",
+    "folder": "1-governs-trade"
+  },
+  "B": {
+    "B1_cover_title": "Supply Agreement - General Terms",
+    "B1_evidence": {
+      "ref": "p.1",
+      "words": "Supply Agreement - General Terms"
+    },
+    "B2_document_kind": "master_or_framework",
+    "B2_evidence": {
+      "ref": "p.1",
+      "words": "Supply Agreement - General Terms"
+    },
+    "B3_whose_paper": "ours",
+    "B3_evidence": {
+      "ref": "p.1 cl.10",
+      "words": "This agreement is on Marrowgate Supply Ltd paper."
+    },
+    "B4_signed_status": "both",
+    "B4_evidence": {
+      "ref": "p.4 (picture inspected)",
+      "words": "Signed for Marrowgate Supply Ltd"
+    },
+    "B5_complete": "yes",
+    "B5_missing": "",
+    "B5_evidence": null,
+    "B6_duplicate_or_draft_of": "none",
+    "B6_evidence": null,
+    "B6a_best_copy": "yes",
+    "B7_language": "en",
+    "B9_layered": "yes",
+    "B9_evidence": {
+      "ref": "p.2, programme clause 6",
+      "words": "General Terms continue after the Programme Terms expire."
+    }
+  },
+  "C": {
+    "C1_their_entities": [
+      {
+        "name_as_printed": "Tallowfield Industries (North) Limited",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      },
+      {
+        "name_as_printed": "Oxbrook Holdings plc",
+        "address_or_registration_if_printed": "not_found",
+        "role": "other",
+        "page": "p.3"
+      },
+      {
+        "name_as_printed": "Tallowfield Industrie GmbH",
+        "address_or_registration_if_printed": "not_found",
+        "role": "affiliate_listed",
+        "page": "p.3"
+      }
+    ],
+    "C1_evidence": {
+      "ref": "p.3 S1-S2",
+      "words": "Tallowfield Industries (North) Limited trades as Tallowfield Industries and is a subsidiary of Oxbrook Holdings plc. S2. Named affiliate: Tallowfield Industrie GmbH, Germany, may order under the General Terms."
+    },
+    "C2_our_entities": [
+      {
+        "name_as_printed": "Marrowgate Supply Ltd",
+        "address_or_registration_if_printed": "not_found",
+        "role": "signatory",
+        "page": "p.1"
+      }
+    ],
+    "C2_evidence": {
+      "ref": "p.1 cl.1",
+      "words": "Parties: Marrowgate Supply Ltd (Supplier) and Tallowfield Industries (North) Limited (Customer)."
+    },
+    "C4_signature_dates_seen": "Marrowgate Supply Ltd: 12 March 2019; Tallowfield Industries (North) Limited: 14 March 2019",
+    "C4_evidence": {
+      "ref": "p.4 (picture inspected)",
+      "words": "14 March 2019"
+    }
+  },
+  "D": {
+    "D1_start_date": "2019-03-14",
+    "D1a_basis": "date_of_last_signature",
+    "D1_evidence": {
+      "ref": "p.4 (picture inspected)",
+      "words": "14 March 2019"
+    },
+    "D2_end_type": "rolling_until_notice",
+    "D2_detail": "twelve months as printed",
+    "D2_evidence": {
+      "ref": "p.1 cl.3",
+      "words": "General Terms continue until either party gives twelve months' written notice."
+    },
+    "D3_ended_evidence": "none_found",
+    "D3_detail": "",
+    "D3_evidence": null,
+    "D4_status_as_read": "live_rolling_presumed",
+    "D4_evidence": {
+      "ref": "p.1 cl.3",
+      "words": "General Terms continue until either party gives twelve months' written notice."
+    }
+  },
+  "E": {
+    "E1_products_services": "industrial supplies",
+    "E1_evidence": {
+      "ref": "p.1 cl.4",
+      "words": "All purchases of industrial supplies between the parties are placed under these General Terms."
+    },
+    "E2_territory": "regional",
+    "E2_detail": "United Kingdom; Germany",
+    "E2_evidence": {
+      "ref": "p.1 cl.7",
+      "words": "The General Terms cover the Customer and the named affiliate in Schedule 1 in the United Kingdom and Germany."
+    },
+    "E3_entities_covered": "named_affiliates",
+    "E3_evidence": {
+      "ref": "p.1 cl.7",
+      "words": "The General Terms cover the Customer and the named affiliate in Schedule 1 in the United Kingdom and Germany."
+    },
+    "E4_trade_scope": "all_purchases",
+    "E4_evidence": {
+      "ref": "p.1 cl.4",
+      "words": "All purchases of industrial supplies between the parties are placed under these General Terms."
+    }
+  },
+  "F": [
+    {
+      "F1_part_name": "General Terms",
+      "F1_evidence": {
+        "ref": "p.1 title",
+        "words": "General Terms"
+      },
+      "F2_pages_from_to": "1",
+      "F3_part_kind": "general_terms",
+      "F3_evidence": {
+        "ref": "p.1 title",
+        "words": "General Terms"
+      },
+      "F4_D": "inherits",
+      "F5_E": "inherits",
+      "F6_internal_precedence": "not_found",
+      "F6_evidence": null
+    },
+    {
+      "F1_part_name": "Programme Terms - Hexley Refit",
+      "F1_evidence": {
+        "ref": "p.2 title",
+        "words": "Programme Terms - Hexley Refit"
+      },
+      "F2_pages_from_to": "2",
+      "F3_part_kind": "programme_or_project_terms",
+      "F3_evidence": {
+        "ref": "p.2 title",
+        "words": "Programme Terms - Hexley Refit"
+      },
+      "F4_D": {
+        "D1_start_date": "2019-03-14",
+        "D1a_basis": "date_of_last_signature",
+        "D1_evidence": {
+          "ref": "p.4 (picture inspected)",
+          "words": "14 March 2019"
+        },
+        "D2_end_type": "fixed_date",
+        "D2_detail": "2024-08-31",
+        "D2_evidence": {
+          "ref": "p.2, programme clause 2",
+          "words": "These Programme Terms expire on 31 August 2024 without renewal."
+        },
+        "D3_ended_evidence": "expiry_date_passed",
+        "D3_detail": "2024-08-31",
+        "D3_evidence": {
+          "ref": "p.2, programme clause 2",
+          "words": "These Programme Terms expire on 31 August 2024 without renewal."
+        },
+        "D4_status_as_read": "expired_by_date",
+        "D4_evidence": {
+          "ref": "p.2, programme clause 2",
+          "words": "These Programme Terms expire on 31 August 2024 without renewal."
+        }
+      },
+      "F5_E": {
+        "E1_products_services": "industrial supplies for Hexley Refit",
+        "E1_evidence": {
+          "ref": "p.2, programme clause 5",
+          "words": "Scope: industrial supplies for Hexley Refit in the United Kingdom only, for the Customer only."
+        },
+        "E2_territory": "single_country",
+        "E2_detail": "United Kingdom",
+        "E2_evidence": {
+          "ref": "p.2, programme clause 5",
+          "words": "Scope: industrial supplies for Hexley Refit in the United Kingdom only, for the Customer only."
+        },
+        "E3_entities_covered": "signatories_only",
+        "E3_evidence": {
+          "ref": "p.2, programme clause 5",
+          "words": "Scope: industrial supplies for Hexley Refit in the United Kingdom only, for the Customer only."
+        },
+        "E4_trade_scope": "project_site_or_programme",
+        "E4_evidence": {
+          "ref": "p.2, programme clause 5",
+          "words": "Scope: industrial supplies for Hexley Refit in the United Kingdom only, for the Customer only."
+        }
+      },
+      "F6_internal_precedence": {
+        "wins_over": [
+          "General Terms"
+        ],
+        "words": "Programme Terms prevail over General Terms in case of conflict.",
+        "page": "p.1 cl.9"
+      },
+      "F6_evidence": {
+        "ref": "p.1 cl.9",
+        "words": "Programme Terms prevail over General Terms in case of conflict."
+      }
+    }
+  ],
+  "G": {
+    "G1_governs_orders": "yes",
+    "G1_detail": "orders placed under it; all industrial supply purchases",
+    "G1_evidence": {
+      "ref": "p.1 cl.4",
+      "words": "All purchases of industrial supplies between the parties are placed under these General Terms."
+    },
+    "G2_commitment_or_status": "none",
+    "G2_detail": "",
+    "G2_evidence": null
+  },
+  "H": {
+    "H1_attaches_to": "none",
+    "H1_evidence": null,
+    "H2_replaces": "none",
+    "H2_evidence": null,
+    "H3_refers_to_missing": "none",
+    "H3_evidence": null
+  },
+  "I": [],
+  "J": {
+    "notes": "General Terms operative text is on p.1; Schedule 1 identity material (p.3) and signatures (p.4) share its life. Programme expired 2024-08-31. General Terms are presumed rolling; the judge must check linked documents for continuing use or changes. Topics are off; freight must be read from the pointed-to part."
+  },
+  "K": [
+    {
+      "type": "missing_field",
+      "description": "Execution status needs a separate property from lifecycle status; DCG status cannot preserve both answers at once.",
+      "page": "p.4 (picture inspected)"
+    },
+    {
+      "type": "missing_field",
+      "description": "A rolling termination notice period has no dedicated release-1 DCG property.",
+      "page": "p.1 cl.3"
+    },
+    {
+      "type": "missing_field",
+      "description": "Schedule 1 affiliate 'may order under the General Terms' may be deemed participation, but the fixed form does not encode a per-entity deemed participation instrument. Mapper must assess the tree using this source wording.",
+      "page": "p.3 S2"
+    }
+  ],
+  "L": {
+    "return_line": "doc 001 | master_or_framework | live_rolling_presumed | layered: y | flags: 3 | work/forms/001.json"
+  }
+}

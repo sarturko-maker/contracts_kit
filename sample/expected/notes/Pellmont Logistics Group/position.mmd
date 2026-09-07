@@ -1,0 +1,25 @@
+flowchart TB
+    ACC["Pellmont Logistics Group"]
+    class ACC acc
+    D004["doc 004 · Master Services Agreement - draft dated… · unsure · unsure"]
+    D005["doc 005 · Purchase Order PL-2026-042 · order/draft/duplicate · unsure"]
+    D006["doc 006 · 2026 Rebate Letter · governs part of trade · live"]
+    D007["doc 007 · Master Services Agreement - Signature P… · unsure · unsure"]
+    ACC --> D004
+    ACC --> D005
+    ACC --> D006
+    D007 -- signature page of --> D004
+    classDef f1 fill:#1f5fbf,stroke:#163f80,color:#ffffff
+    classDef f2 fill:#0f8b8d,stroke:#0a5c5e,color:#ffffff
+    classDef f3 fill:#dfe6ee,stroke:#9fb0c3,color:#333a44
+    classDef f4 fill:#e6e6e6,stroke:#9a9a9a,color:#555555
+    classDef f5 fill:#e6e6e6,stroke:#9a9a9a,color:#555555
+    classDef f6 fill:#efe3f7,stroke:#7a3fa0,color:#3a1f50,stroke-dasharray: 4 3
+    classDef unsure fill:#fff8e1,stroke:#b58900,color:#4a3a00,stroke-dasharray: 6 4
+    classDef part_live fill:#dff3e3,stroke:#3c9d5d,color:#1d4d2b
+    classDef part_dead fill:#e6e6e6,stroke:#9a9a9a,color:#666666,stroke-dasharray: 4 3
+    classDef acc fill:#ffffff,stroke:#333333,color:#000000,font-weight:bold
+    class D004 unsure
+    class D005 f5
+    class D006 f2
+    class D007 unsure

@@ -1,0 +1,34 @@
+flowchart TB
+    ACC["Tallowfield Industries"]
+    class ACC acc
+    subgraph D001 ["doc 001 · Supply Agreement - General Terms · governs trade · live"]
+        direction TB
+        D001_p1["General Terms · live"]
+        D001_p2["Programme Terms - Hexley Refit · dead"]
+    end
+    D002["doc 002 · Amendment 1 to Supply Agreement · governs trade · live"]
+    D003["doc 003 · Mutual Non-Disclosure Agreement · not live · dead"]
+    D008["doc 008 · Hexley Works Site Agreement · governs part of trade · live"]
+    D009["doc 009 · Internal Account Playbook - Tallowfield… · business practice · live"]
+    ACC --> D001
+    ACC --> D003
+    ACC --> D008
+    ACC --> D009
+    D002 -- amends --> D001
+    classDef f1 fill:#1f5fbf,stroke:#163f80,color:#ffffff
+    classDef f2 fill:#0f8b8d,stroke:#0a5c5e,color:#ffffff
+    classDef f3 fill:#dfe6ee,stroke:#9fb0c3,color:#333a44
+    classDef f4 fill:#e6e6e6,stroke:#9a9a9a,color:#555555
+    classDef f5 fill:#e6e6e6,stroke:#9a9a9a,color:#555555
+    classDef f6 fill:#efe3f7,stroke:#7a3fa0,color:#3a1f50,stroke-dasharray: 4 3
+    classDef unsure fill:#fff8e1,stroke:#b58900,color:#4a3a00,stroke-dasharray: 6 4
+    classDef part_live fill:#dff3e3,stroke:#3c9d5d,color:#1d4d2b
+    classDef part_dead fill:#e6e6e6,stroke:#9a9a9a,color:#666666,stroke-dasharray: 4 3
+    classDef acc fill:#ffffff,stroke:#333333,color:#000000,font-weight:bold
+    class D001_p1 part_live
+    class D001_p2 part_dead
+    class D002 f1
+    class D003 f4
+    class D008 f2
+    class D009 f6
+    style D001 fill:#1f5fbf,stroke:#163f80,color:#ffffff

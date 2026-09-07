@@ -1,0 +1,7 @@
+name_as_printed,account,basis,confidence,decided_by,note
+Tallowfield Industries,Tallowfield Industries,same name,sure,claude,ERP row; also the account named in doc 009.
+Tallowfield Industries (North) Limited,Tallowfield Industries,in the document,sure,claude,doc 001 p.3 S1 says the signatory trades as Tallowfield Industries.
+Oxbrook Holdings plc,Tallowfield Industries,in the document,sure,claude,"doc 001 p.3 S1 names Oxbrook Holdings plc as parent of the signing company, which trades as the ERP account."
+Tallowfield Industrie GmbH,Tallowfield Industries,in the document,sure,claude,doc 001 p.3 S2 names Tallowfield Industrie GmbH as the affiliate ordering under the General Terms.
+Pellmont Logistics Group,Pellmont Logistics Group,same name,sure,claude,Exact ERP customer account name.
+Tallowfield Industries Data Centres,Tallowfield Industries,same name,fairly sure,claude,ERP stream row; treated as one with the main account because no sample document names the stream.

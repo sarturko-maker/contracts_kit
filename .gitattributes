@@ -1,0 +1,12 @@
+# Preserve byte-sensitive fixture formats when cloning on Windows or Unix.
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tif binary
+*.tiff binary
+*.msg binary
+# Keep original CSV record endings for reproducible source hashes.
+*.csv -text

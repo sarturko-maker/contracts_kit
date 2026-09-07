@@ -1,0 +1,5 @@
+doc_id,tree,folder,reason,attaches_to,attach_kind,replaces,parts_status,limit,overlap,question,what_would_change
+004,T1,unsure,draft; signed signature page found separately (doc 007),,,,,,,Provide the complete execution version matching doc 007.,Signed body matching the detached page would establish the governing text.
+005,T3,5-orders-drafts-duplicates,Single purchase with no standard terms.,,,,,,,,
+006,T2,2-governs-part-of-trade,Current year rebate only; no general trading terms.,,,,,1 January to 31 December 2026 rebate,,,
+007,T1,unsure,Signed signature page of doc 004; final body absent.,004,signature page of,,,,,Confirm which complete text the parties signed.,

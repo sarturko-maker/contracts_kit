@@ -1,0 +1,6 @@
+doc_id,tree,folder,reason,attaches_to,attach_kind,replaces,parts_status,limit,overlap,question,what_would_change
+001,T1,1-governs-trade,"General Terms govern all purchases, as amended by doc 002; current trade confirmed there.",,,,General Terms: live | Programme Terms - Hexley Refit: dead,,"General Terms ""may charge the Customer the cost of freight""; Programme Terms ""freight shall be charged"". Programme Terms prevail on paper (p.1 cl.9) but are dead (expired 2024-08-31).",,
+002,T1,1-governs-trade,Amends General Terms: six months' notice; takes the status of doc 001.,001,amends,,,,,,
+003,T3,4-not-live,NDA expired 2022-04-30; no renewal or surviving obligation.,,,,,,,,
+008,T2,2-governs-part-of-trade,Live separate agreement for Hexley Works site; other purchases use doc 001.,,,,,Hexley Works site in the United Kingdom,,,
+009,T4,6-business-practice,"Internal margin, market basket and ad hoc delivery guidance; not a contract.",,,,,,,,

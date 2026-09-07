@@ -1,0 +1,48 @@
+{
+  "account": "Tallowfield Industries",
+  "trees": [
+    {
+      "tree": "T1",
+      "family": "C1",
+      "confidence": "not_sure",
+      "doc_ids": [
+        "001",
+        "002"
+      ],
+      "structural_evidence": "Doc 001 master has two components linked forms_part_of and doc 002 linked amends. Schedule 1 says the German affiliate 'may order under the General Terms' (p.3 S2): DCG C1 treats this as deemed participation. The fixed form has no explicit per-entity deemed participation instrument and the export lacks participation nodes; proposal requires review, not invented nodes.",
+      "overlays": []
+    },
+    {
+      "tree": "T2",
+      "family": "C2",
+      "confidence": "fairly_sure",
+      "doc_ids": [
+        "008"
+      ],
+      "structural_evidence": "Standalone customer-paper site supply master with orders under it and no participation or versioned commercial layer. Scope is Hexley Works, not a general services SOW; closest C2 structure with a narrower site limit.",
+      "overlays": []
+    },
+    {
+      "tree": "T3",
+      "family": "C0",
+      "confidence": "no_family_fits",
+      "doc_ids": [
+        "003"
+      ],
+      "structural_evidence": "Standalone expired confidentiality master: no trade-governing family; O3 identifies its NDA overlay role.",
+      "overlays": [
+        "O3"
+      ]
+    },
+    {
+      "tree": "T4",
+      "family": "C0",
+      "confidence": "no_family_fits",
+      "doc_ids": [
+        "009"
+      ],
+      "structural_evidence": "Internal practice evidence has no contract-family structure; no DCG internal_playbook node type.",
+      "overlays": []
+    }
+  ]
+}
