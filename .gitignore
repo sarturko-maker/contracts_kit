@@ -1,0 +1,13 @@
+# Confidential material never leaves the machine
+inputs/*.csv
+!inputs/*.example.csv
+work/
+out/
+# Python
+__pycache__/
+*.pyc
+.venv/
+memory/
+# OS
+.DS_Store
+Thumbs.db

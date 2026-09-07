@@ -1,0 +1,6 @@
+name_as_printed,account,basis,confidence,decided_by,note
+Tallowfield Industries (North) Limited,Tallowfield Industries,same name,sure,claude,signatory of doc 001
+Tallowfield Industrie GmbH,Tallowfield Industries,in the document,sure,claude,"listed in doc 001 Schedule 3 as an Affiliate"
+Oxbrook Holdings plc,Tallowfield Industries,in the document,fairly sure,claude,"doc 001 Schedule 3 lists it as the parent; the NDA (doc 003) names nothing else"
+Tallowfield Industries Data Centres,Tallowfield Industries,same name,sure,claude,ERP stream row treated as one with the main row; no document names the stream
+Some Other Company Ltd,_not-on-the-list,,not sure,user,not one of ours

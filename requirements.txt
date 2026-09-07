@@ -1,0 +1,5 @@
+# Runtime (enterprise side). Nothing else is installed there.
+pypdf==6.12.2
+openpyxl==3.1.5
+# Build-time only, used by sample/make_pile.py to generate the invented sample pile.
+# Not needed to run the kit. Install with: pip install reportlab==4.4.10 Pillow==12.1.1 pypdfium2==5.6.2
