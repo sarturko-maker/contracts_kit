@@ -9,8 +9,9 @@ contains the runtime house rules.
 
 The local scripts and workflows are built, and both stages' independent reading/export
 checks are recorded.
-All 53 automated tests pass. Final acceptance still has one unresolved sorting-rule/example
-conflict, described under “Decision needed” below; the rule has not been changed.
+The original 53-test build passed. The user then approved the rule 6 exception and requested
+explicit cost stages; that follow-on build is recorded below. Historical evaluation artifacts
+remain unchanged.
 
 ## What was completed
 
@@ -25,7 +26,8 @@ conflict, described under “Decision needed” below; the rule has not been cha
   Each mapper writes its own account report; the main session merges shared tables after
   all mappers finish, preventing concurrent output writes.
 - Extractor/mapper agents and `/extract`, `/map`, `/eval` commands. Existing stage 1 commands
-  were retained. No card question, sorting rule, form question or DCG registry was changed.
+  were retained as components. No card question, form question or DCG registry was changed.
+  The later user-approved rule 6 exception is recorded separately below.
 - Invented sample: nine readable files, one unreadable file and three ERP rows; explicit
   expected cards, placements, forms, family proposals and generated notes.
 - Three-account evaluation pile, twelve keyed questions, isolated scratch-kit preparation,
@@ -311,18 +313,116 @@ reading cost is counted. This single run on eleven clean invented files does not
 production accuracy or total token/runtime savings. The curated artifact limitation above
 also applies. Full results are in [eval/RESULTS.md](eval/RESULTS.md).
 
-### Decision needed: a sole live period-only letter
+### Approved decision: a sole live period-only letter
 
 The independent judge put Pellmont doc 006 in folder 1, citing rule 6's instruction that a sole
 live trade-governing document belongs there even when its scope is limited. The sample expects
 folder 2 for that period-only rebate. All other baseline folder placements matched. This is a
 conflict between the fixed sorting rules and the acceptance example, not a missing script branch.
 
-Proposed resolution, subject to the user's choice: add this sentence to sorting rule 6:
+On 7 September the user approved adding this sentence to sorting rule 6:
 “A pricing or rebate letter that sets only a period does not qualify under this rule.”
-Rule 7 would then place such a letter in folder 2. The alternative is to retain the literal
-rule and update the expected sample placement, keeping the scope qualification prominent.
-No sorting rule has been changed without that decision.
+It is now applied. A fresh independent Pellmont judge, given accepted full cards and the revised
+rule with no pre-existing placements or expected outputs, returned:
+
+```text
+governing: none | part: doc 006
+counts: 1=0, 2=1, 3=0, 4=0, 5=1, 6=0, unsure=2
+open questions: 2
+```
+
+Doc 006 is in folder 2 under rule 7, matching the existing sample oracle. No other rule changed.
+The actual judge-owned output is retained under `work/acceptance/rule6-approved/`; the older
+handover and measured question artifacts remain frozen as historical evidence.
+
+## Cost-stage follow-on build
+
+The user requested independently invoked `/sort`, `/visualise` and `/deep-dive`. Cheap means
+preliminary account filing: legal validity, signature status and governing terms are deferred.
+It cannot promise the same legal conclusions after a tiny fraction of the reading.
+
+- `/sort [pile]` now uses a separate identity record and a Haiku-configured `filer` role. The
+  packet exposes at most two opening pages or twelve Word paragraphs / 1,200 native words.
+  One extra page or up to eight extra Word paragraphs / 600 words is allowed if needed:
+  total three pages or twenty paragraphs. Scans count in that allowance. Native quotations,
+  citation/read-unit membership, record shape and source hashes are validated. Missing,
+  malformed or stale readings remain pending and receive needs-reading report rows.
+- Full cards can supply identity without rereading; otherwise filers own `work/filing/` JSON.
+  The main session matches compact company names, preserving user entity-map decisions.
+  No full readers, judges, extractors or mappers run. Output is copies, per-folder CSV and
+  Markdown, global CORPUS/ACCOUNTS CSV and INDEX.md. There are no graph rows or visual files.
+- `/visualise` runs deterministic code against existing CSV/Markdown and ERP data. It produces
+  account-to-file Mermaid HTML, with arrows labelled “filed under”. No source contract or
+  model output is read in this mode. Explicit `--analysis` renders the existing full-card
+  relationship/part judgments, only when the current tables match those placements.
+- `/deep-dive` runs all full components across the prepared readable pile, including holding
+  files. It supplies all four existing optional commercial topics by default; `--topics off`
+  or a subset controls that work. It revisits preliminary model matches while retaining user
+  decisions. Full cards/forms are reused when compatible; `--force` replaces them. It exports
+  analysis and graphs, then stops; HTML remains a separate `/visualise --analysis` request.
+- The old full-card matching skill is now `/match`. `/report` runs no model agents, creates no
+  diagrams and does not automatically export a graph just because forms exist. `--graph` is
+  explicit. Fixture/evaluation commands explicitly request the original diagrams so mode B
+  keeps its measured map inputs; the old evaluation still has commercial topics off.
+- Switching back to filing archives the generated out directory. Switching from filing to
+  full matching validates its prerequisites, then archives that filing report before building
+  fresh analysis destinations. Records and original sources are preserved. Rebuilding text
+  reports retires affected visual files so stale diagrams are not shown as current.
+
+Verification after the follow-on implementation: **71 tests passed** with
+`python -m unittest discover -s tests -v`, including eleven filing tests and seven visual boundary
+tests. An audit-hook test rejects raw-source/model-output reads and subprocess calls in default
+visualisation. Tests reconcile per-folder/global CSVs, exercise long PDF/Word packet caps,
+invalid/stale evidence, failed prerequisites and transitions both ways while preserving original
+and model-record hashes. Script compilation, workflow source paths and YAML frontmatter also pass.
+These deterministic tests do not establish model accuracy or actual provider costs.
+
+Fresh staged handover evidence is under `work/acceptance/cheap-sort/`:
+
+- Nine independently started filers completed nine identity records within their opening
+  packets, with no expansion or retry. Actual tool records show 907 native words across six
+  PDF text pages and nineteen Word paragraphs, plus two image views: eight substantive
+  PDF/image pages. There were nine page slots including one unviewed scan placeholder; the
+  audit keeps those measures separate. No later-stage artifacts were created. All eleven
+  original pile hashes and all prepared/report-copy hashes passed.
+- This first run needed two documented kit interventions: quoting the sort skill description
+  as valid YAML, and adding the promised bounded extra-Word-paragraph CLI. The latter was
+  regression-tested but not needed by this short pile. The Codex scan fallback used a local
+  build-time renderer; target Claude uses its native PDF/image viewing.
+- After those filers finished, their coordinator inspected an example entity-map file that
+  contained the sample's own account/group answers, including unread schedule claims. That
+  matching phase is explicitly **not blind accuracy evidence**. Shipped example names and
+  correction ids have now been replaced with unrelated generic examples; source fixtures
+  and measured evaluation artifacts were not changed.
+- A fresh coordinator in a separate current-code kit received only the actual prepared data
+  and identity records, generic examples, and no previous entity decisions or output. It
+  completed `/sort` with nine reused records and zero new source reads. All ten documents
+  appear in eleven corpus rows: five matched, four held for identity/account questions,
+  one unsupported. All 78 pre-existing files stayed byte-identical; nine prepared copies,
+  ten report copies and six destination-table/global filters passed reconciliation.
+- The North entity's group/account association remains uncertain without reading further.
+  Missing `our-entities.csv` also produced inconsistent own-company treatment in the fresh
+  identity records, leaving an extra supplier-name holding row. No record was silently fixed
+  to make the test match an oracle. This is a practical reason to supply own-company names
+  before cheap filing and review holdings; the bounded pass does not promise full matching.
+- Visualisation of a preserved copy of the filing output created two account diagrams and
+  the HTML index without altering any of the 26 existing output files. Headless Chromium
+  rendered the Pellmont chart offline as SVG with “filed under” edges and no syntax/error
+  diagram. The original filing-only handover output remains preserved separately.
+
+The budgets constrain intended source access and validate reported read units; they are not a
+provider-enforced currency cap. Actual Haiku accuracy, token totals and Claude enterprise cost
+remain unmeasured. Model-call overhead, main-session matching and scanning still cost something.
+CSV/Mermaid rendering is local script work; the material saving comes from deferring full reading,
+fixed forms and judgments, not from omitting HTML itself.
+
+The operating recommendation is a filing map for routing, then the relevant full instrument body,
+operative amendments and needed schedules for substantive questions. That can be done for an
+individual question without running the whole-pile deep dive. The 36-trial evaluation compared
+all raw sources with map-selected source reading and forms/graph-only answering; it did **not**
+compare reading the entire selected contract against selected parts, nor test a pure graph
+traversal engine. It cannot settle that narrower comparison. C's corpus answers were complete,
+but its missing commercial details show why the index should retain a route back to the sources.
 
 ## Documentation checks
 
@@ -330,22 +430,27 @@ The existing Claude model aliases, agent frontmatter/effort settings and inherit
 behaviour were checked against [Anthropic's subagent documentation](https://code.claude.com/docs/en/sub-agents).
 PDF page-range and image-reading instructions match its [tools reference](https://code.claude.com/docs/en/tools-reference).
 The independent test backend here is Codex; it does not certify enterprise allowlist behaviour
-or Claude subscription availability.
+or Claude subscription availability. The new Haiku alias, maxTurns and effort fields were
+rechecked against the same documentation. Current model inspection uses `/tasks`; allowlist
+substitutions may alter the requested model and cost.
 
 ## Local commits
 
 - `bbd7ef8` — Build stage 1 contract sorting and offline reports.
 - `e87bd8f` — Add validated DCG forms and graph export.
 - `2a9c33e` — Add invented fixtures and measured three-mode evaluation.
-- The following documentation commit records the README, acceptance results and remaining decisions.
+- `c70b473` — Document workflow, acceptance evidence and release limits.
+- `16c43bd` — Separate cheap filing, visualisation and full analysis stages.
+- The final documentation/example commit records the staged acceptance and removes sample-answer hints.
 
 The configured origin remains `https://github.com/sarturko-maker/contracts_kit.git`.
 No push was performed; the user reviews these notes before pushing.
 
 ## TODO and release limits
 
-- Resolve the rule 6 versus period-letter acceptance conflict above, then rerun the affected
-  judgment and refresh its expected artifacts under the chosen rule.
+- Measure cheap-filing accuracy, unresolved-match rate and actual cost on representative long
+  contracts with the intended Haiku model and supplied own-company list. Page caps are tested,
+  but the invented sample is short and the actual test backend was Codex.
 - Verify the same workflow on the target Claude Code enterprise account, including the actual
   model allowlist and PDF/image tool behaviour. The local fresh-agent tests used Codex.
 - Physical one-page note layout is not enforced. The fresh Tallowfield note is 1,372 words

@@ -27,7 +27,9 @@ and never modifies, moves or renames them. Keep real piles outside the repositor
 - Readable: PDF, DOCX and page images (PNG, JPG, TIF). Native text is extracted locally; scans are
   viewed as pictures. There is no OCR dependency. Other formats retain inventory/report rows and paths.
 - Optional `inputs/our-entities.csv` (`name,status,note`) helps distinguish your companies from theirs.
-  Copy the shape in `inputs/our-entities.example.csv`.
+  Copy the shape in `inputs/our-entities.example.csv` and replace every example. Supplying your
+  own names is recommended for cheap filing: otherwise ambiguous supplier names can become
+  extra holding entries. Example entity maps and corrections are formats, never decisions to import.
 
 ## 1. Cheap filing: /sort
 

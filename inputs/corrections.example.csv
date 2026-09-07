@@ -1,3 +1,3 @@
 doc_id,field,value,reason
-003,q4_status,live,"sales: the NDA was renewed by email in 2023; copy to follow"
-005,folder,5-orders-drafts-duplicates,"legal: agreed, single PO"
+999,q4_status,live,Illustrative only: replace doc number and support with an actual source.
+998,folder,5-orders-drafts-duplicates,Illustrative only: replace with an agreed review decision.
