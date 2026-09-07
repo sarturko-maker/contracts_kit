@@ -1,0 +1,30 @@
+id,name,layer,definition,examples
+country,Country,0 Reference,ISO 3166 country,DE; NL; GB; US
+currency,Currency,0 Reference,ISO 4217 currency,EUR; USD; GBP
+incoterm,Incoterm,0 Reference,ICC Incoterms 2020 rule,DAP; EXW; FCA
+classification_code,Classification code,0 Reference,Product classification entry,UNSPSC 26121600; ETIM EC000123
+identifier_scheme,Identifier scheme,0 Reference,Registry of identifier schemes (ISO 6523 ICDs and others),LEI; DUNS; GLN; VAT; EORI; national registry
+legal_entity,Legal entity,1 Master data,"One node per legal person, ours and theirs alike; ours flagged, never a separate model",DistributorCo GmbH; GlobalCo Inc
+group,Group,1 Master data,"Commercial grouping only (buying group, franchise, global account programme); never legal ownership",EuroBuy buying group
+relationship,Relationship,1/2 boundary,"Category anchor per counterparty group per category; anchored in master data, used by the agreement layer",GlobalCo customer relationship
+account,Account,1 Master data,"Trading arrangement: belongs to one of their entities, held with one of our org units",Sold-to account 10001
+site,Site,1 Master data,"Location with a function: HQ, warehouse, ship-to, consignment location",Munich plant ship-to
+product,Product,1 Master data,"Our SKU with manufacturer, MPN, GTIN, classification",SKU CBL-001
+person,Person,1 Master data,"Contacts, signatories, e-commerce users","Anna Weber, signatory"
+org_unit,Org unit,1 Master data,Our operational structure hanging off our legal entities,DE sales org; group procurement
+identifier,Identifier,1 Master data,Scheme plus value claim with source and validity; never a single ID field,LEI 5299...; DUNS 15-048-3782
+master,Master-level instrument,2 Agreement,Governs a relationship or a project; top of a family tree,MSA; framework; distribution agreement; lease
+participation,Participation,2 Agreement,"Per-entity adoption of a master, signed or deemed",LPA; joinder; country addendum
+component,Component,2 Agreement,Forms part of a parent instrument but changes on its own lifecycle,pricing schedule; DPA; exhibit
+change,Change,2 Agreement,"Alters another node: amendment, variation, side letter, change order, pricing letter",Amendment 1; rebate letter
+work_instrument,Work instrument,2 Agreement,Scoped engagement under a master,SOW; order form; engagement letter; equipment schedule
+shared_terms,Shared / by-reference terms,2 Agreement,One node referenced by many families; often by URL with capture dates,terms of sale; online MSA; carrier conditions
+evidence,Evidence,2 Agreement,Non-contractual record with a validity window,acceptance certificate; DoC; COI; consumption report
+security,Security,2 Agreement (O1),Secures obligations; own lifecycle; guarantor party edges,guarantee; LC; bond; charge
+clause,Clause,3 Content,Stable-ID unit of a document (eId convention borrowed from Akoma Ntoso),msa2021#cl_14
+term_fact,Term fact,3 Content,"Concerto-typed extracted value, bi-temporal",liability_cap = 12 months' charges
+obligation,Obligation,3 Content,"ODRL-shaped duty, permission or prohibition with obligor and obligee edges",pay within 30 days
+order,Order,4 Transaction,"PO, call-off, release, blanket, web order",PO 4471
+order_response,Order response,4 Transaction,"Acknowledgement, confirmation, quote in response",OA 4471-A
+invoice,Invoice,4 Transaction,Billing document,INV-2026-118
+claim,Claim,4 Transaction,Programme or commercial claim,ship-and-debit claim

@@ -1,0 +1,1796 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DCG intake kit — stage 2 fixed document form",
+  "$comment": "Mirrors stage2/document-form.md. validate_forms.py additionally checks word counts, calendar dates, required details, part references, return line consistency and native-text evidence at the cited location; scans require visual review. not_found is allowed for unanswered questions. Empty auxiliary detail strings remain allowed where no detail is called for.",
+  "type": "object",
+  "properties": {
+    "A": {
+      "type": "object",
+      "properties": {
+        "doc_id": {
+          "type": "string",
+          "pattern": "^\\d{3,}$"
+        },
+        "source_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "file_type": {
+          "enum": [
+            "pdf",
+            "docx",
+            "image",
+            "not_found"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{64}|not_found)$"
+        },
+        "pages": {
+          "type": "string",
+          "pattern": "^(?:[1-9][0-9]*|not_found|)$"
+        },
+        "text_or_scan": {
+          "type": "string"
+        },
+        "language_guess": {
+          "type": "string"
+        },
+        "docx_author": {
+          "type": "string"
+        },
+        "docx_dates": {
+          "type": "string"
+        },
+        "docx_tracked_changes": {
+          "type": "string"
+        },
+        "side": {
+          "enum": [
+            "customers",
+            "suppliers",
+            "not_found"
+          ]
+        },
+        "account": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "match_basis": {
+          "type": "string"
+        },
+        "match_confidence": {
+          "type": "string"
+        },
+        "tree": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "folder": {
+          "enum": [
+            "1-governs-trade",
+            "2-governs-part-of-trade",
+            "3-live-not-trade",
+            "4-not-live",
+            "5-orders-drafts-duplicates",
+            "6-business-practice",
+            "unsure",
+            "not_found"
+          ]
+        }
+      },
+      "required": [
+        "doc_id",
+        "source_path",
+        "file_type",
+        "sha256",
+        "pages",
+        "text_or_scan",
+        "language_guess",
+        "docx_author",
+        "docx_dates",
+        "docx_tracked_changes",
+        "side",
+        "account",
+        "match_basis",
+        "match_confidence",
+        "tree",
+        "folder"
+      ],
+      "additionalProperties": false
+    },
+    "B": {
+      "type": "object",
+      "properties": {
+        "B1_cover_title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "B2_document_kind": {
+          "enum": [
+            "master_or_framework",
+            "local_adoption_of_group_agreement",
+            "standard_terms_of_sale",
+            "project_or_programme_agreement",
+            "schedule_or_annex",
+            "amendment_or_side_letter",
+            "pricing_or_rebate_letter",
+            "nda",
+            "guarantee_or_bond",
+            "other_overlay",
+            "order_or_quote",
+            "credit_application",
+            "internal_playbook",
+            "letter_or_email",
+            "other",
+            "not_found"
+          ]
+        },
+        "B3_whose_paper": {
+          "enum": [
+            "ours",
+            "theirs",
+            "hybrid",
+            "model_form",
+            "not_found"
+          ]
+        },
+        "B4_signed_status": {
+          "enum": [
+            "both",
+            "ours_only",
+            "theirs_only",
+            "unsigned",
+            "signature_page_missing",
+            "not_found"
+          ]
+        },
+        "B5_complete": {
+          "enum": [
+            "yes",
+            "no",
+            "not_found"
+          ]
+        },
+        "B5_missing": {
+          "type": "string"
+        },
+        "B6_duplicate_or_draft_of": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^doc \\d{3,}$"
+            },
+            {
+              "enum": [
+                "none",
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "B6a_best_copy": {
+          "enum": [
+            "yes",
+            "no",
+            "not_found"
+          ]
+        },
+        "B7_language": {
+          "type": "string",
+          "pattern": "^(?:[a-z]{2}|not_found)$"
+        },
+        "B9_layered": {
+          "enum": [
+            "yes",
+            "no",
+            "not_found"
+          ]
+        },
+        "B1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "B2_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "B3_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "B4_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "B5_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "B6_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "B9_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "B1_cover_title",
+        "B2_document_kind",
+        "B3_whose_paper",
+        "B4_signed_status",
+        "B5_complete",
+        "B5_missing",
+        "B6_duplicate_or_draft_of",
+        "B6a_best_copy",
+        "B7_language",
+        "B9_layered",
+        "B1_evidence",
+        "B2_evidence",
+        "B3_evidence",
+        "B4_evidence",
+        "B5_evidence",
+        "B6_evidence",
+        "B9_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "B1_cover_title": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B1_cover_title"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "B2_document_kind": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B2_document_kind"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B2_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "B3_whose_paper": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B3_whose_paper"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B3_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "B4_signed_status": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B4_signed_status"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B4_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "B5_complete": {
+                "enum": [
+                  "yes",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B5_complete"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B5_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "B6_duplicate_or_draft_of": {
+                "enum": [
+                  "none",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B6_duplicate_or_draft_of"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B6_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "B9_layered": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "B9_layered"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "B9_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "C": {
+      "type": "object",
+      "properties": {
+        "C1_their_entities": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entity"
+              },
+              "minItems": 1
+            },
+            {
+              "enum": [
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "C2_our_entities": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entity"
+              },
+              "minItems": 1
+            },
+            {
+              "enum": [
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "C4_signature_dates_seen": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "C1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "C2_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "C4_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "C1_their_entities",
+        "C2_our_entities",
+        "C4_signature_dates_seen",
+        "C1_evidence",
+        "C2_evidence",
+        "C4_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "C1_their_entities": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "C1_their_entities"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "C1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "C2_our_entities": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "C2_our_entities"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "C2_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "C4_signature_dates_seen": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "C4_signature_dates_seen"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "C4_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "D": {
+      "$ref": "#/$defs/dates"
+    },
+    "E": {
+      "$ref": "#/$defs/scope"
+    },
+    "F": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/part"
+      },
+      "minItems": 0
+    },
+    "G": {
+      "type": "object",
+      "properties": {
+        "G1_governs_orders": {
+          "enum": [
+            "yes",
+            "no",
+            "not_found"
+          ]
+        },
+        "G1_detail": {
+          "type": "string"
+        },
+        "G2_commitment_or_status": {
+          "enum": [
+            "none",
+            "volume_or_target",
+            "exclusivity_or_sole_supplier",
+            "preferred_or_approved_supplier",
+            "not_found"
+          ]
+        },
+        "G2_detail": {
+          "type": "string"
+        },
+        "G1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "G2_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "G1_governs_orders",
+        "G1_detail",
+        "G2_commitment_or_status",
+        "G2_detail",
+        "G1_evidence",
+        "G2_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "G1_governs_orders": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "G1_governs_orders"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "G1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "G2_commitment_or_status": {
+                "enum": [
+                  "none",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "G2_commitment_or_status"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "G2_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "H": {
+      "type": "object",
+      "properties": {
+        "H1_attaches_to": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "as_printed": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "doc_id": {
+                    "type": "string",
+                    "pattern": "^(?:\\d{3,}|not_in_pile|not_found)$"
+                  },
+                  "relation": {
+                    "enum": [
+                      "forms_part_of",
+                      "accedes_to",
+                      "amends",
+                      "placed_under",
+                      "agreed_under",
+                      "varies",
+                      "extends",
+                      "renews"
+                    ]
+                  }
+                },
+                "required": [
+                  "as_printed",
+                  "doc_id",
+                  "relation"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            {
+              "enum": [
+                "none",
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "H2_replaces": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "as_printed": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "doc_id": {
+                    "type": "string",
+                    "pattern": "^(?:\\d{3,}|not_in_pile|not_found)$"
+                  },
+                  "relation": {
+                    "enum": [
+                      "supersedes",
+                      "terminates"
+                    ]
+                  }
+                },
+                "required": [
+                  "as_printed",
+                  "doc_id",
+                  "relation"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            {
+              "enum": [
+                "none",
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "H3_refers_to_missing": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "as_printed": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "where": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "as_printed",
+                  "where"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            {
+              "enum": [
+                "none",
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "H1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "H2_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "H3_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "H1_attaches_to",
+        "H2_replaces",
+        "H3_refers_to_missing",
+        "H1_evidence",
+        "H2_evidence",
+        "H3_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "H1_attaches_to": {
+                "enum": [
+                  "none",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "H1_attaches_to"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "H1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "H2_replaces": {
+                "enum": [
+                  "none",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "H2_replaces"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "H2_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "H3_refers_to_missing": {
+                "enum": [
+                  "none",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "H3_refers_to_missing"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "H3_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "I": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/topic"
+      },
+      "minItems": 0
+    },
+    "J": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "K": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "missing_field",
+              "family_misfire",
+              "no_family_fits",
+              "missing_edge",
+              "missing_allowed_value",
+              "other"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "page": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "required": [
+          "type",
+          "description",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "L": {
+      "type": "object",
+      "properties": {
+        "return_line": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "return_line"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "words": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "ref",
+        "words"
+      ],
+      "additionalProperties": false
+    },
+    "entity": {
+      "type": "object",
+      "properties": {
+        "name_as_printed": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "address_or_registration_if_printed": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "signatory",
+            "affiliate_listed",
+            "guarantor",
+            "other",
+            "not_found"
+          ]
+        },
+        "page": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "name_as_printed",
+        "address_or_registration_if_printed",
+        "role",
+        "page"
+      ],
+      "additionalProperties": false
+    },
+    "dates": {
+      "type": "object",
+      "properties": {
+        "D1_start_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            {
+              "enum": [
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "D1a_basis": {
+          "enum": [
+            "stated",
+            "date_of_last_signature",
+            "not_found"
+          ]
+        },
+        "D2_end_type": {
+          "enum": [
+            "fixed_date",
+            "rolling_until_notice",
+            "until_project_complete",
+            "not_found"
+          ]
+        },
+        "D2_detail": {
+          "type": "string"
+        },
+        "D3_ended_evidence": {
+          "enum": [
+            "none_found",
+            "termination_letter",
+            "expiry_date_passed",
+            "replaced_by",
+            "not_found"
+          ]
+        },
+        "D3_detail": {
+          "type": "string"
+        },
+        "D4_status_as_read": {
+          "enum": [
+            "live_fixed_term",
+            "live_rolling_presumed",
+            "expired_by_date",
+            "terminated",
+            "replaced",
+            "unknown",
+            "not_found"
+          ]
+        },
+        "D1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "D2_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "D3_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "D4_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "D1_start_date",
+        "D1a_basis",
+        "D2_end_type",
+        "D2_detail",
+        "D3_ended_evidence",
+        "D3_detail",
+        "D4_status_as_read",
+        "D1_evidence",
+        "D2_evidence",
+        "D3_evidence",
+        "D4_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "D1_start_date": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "D1_start_date"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "D1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "D2_end_type": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "D2_end_type"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "D2_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "D3_ended_evidence": {
+                "enum": [
+                  "none_found",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "D3_ended_evidence"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "D3_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "D4_status_as_read": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "D4_status_as_read"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "D4_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "E1_products_services": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "E2_territory": {
+          "enum": [
+            "global",
+            "regional",
+            "single_country",
+            "not_found"
+          ]
+        },
+        "E2_detail": {
+          "type": "string"
+        },
+        "E3_entities_covered": {
+          "enum": [
+            "signatories_only",
+            "named_affiliates",
+            "all_group_companies",
+            "not_found"
+          ]
+        },
+        "E4_trade_scope": {
+          "enum": [
+            "all_purchases",
+            "defined_product_set",
+            "project_site_or_programme",
+            "period",
+            "none",
+            "not_found"
+          ]
+        },
+        "E1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "E2_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "E3_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "E4_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "E1_products_services",
+        "E2_territory",
+        "E2_detail",
+        "E3_entities_covered",
+        "E4_trade_scope",
+        "E1_evidence",
+        "E2_evidence",
+        "E3_evidence",
+        "E4_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "E1_products_services": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "E1_products_services"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "E1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "E2_territory": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "E2_territory"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "E2_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "E3_entities_covered": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "E3_entities_covered"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "E3_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "E4_trade_scope": {
+                "enum": [
+                  "none",
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "E4_trade_scope"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "E4_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "part": {
+      "type": "object",
+      "properties": {
+        "F1_part_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "F2_pages_from_to": {
+          "type": "string",
+          "pattern": "^(?:[1-9][0-9]*(?:[-–][1-9][0-9]*)?|not_found)$"
+        },
+        "F3_part_kind": {
+          "enum": [
+            "general_terms",
+            "programme_or_project_terms",
+            "pricing_schedule",
+            "service_schedule",
+            "affiliate_list",
+            "other",
+            "not_found"
+          ]
+        },
+        "F4_D": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/dates"
+            },
+            {
+              "enum": [
+                "inherits",
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "F5_E": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/scope"
+            },
+            {
+              "enum": [
+                "inherits",
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "F6_internal_precedence": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "wins_over": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "words": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "page": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "wins_over",
+                "words",
+                "page"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "enum": [
+                "not_found"
+              ]
+            }
+          ]
+        },
+        "F1_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "F3_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "F6_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "F1_part_name",
+        "F2_pages_from_to",
+        "F3_part_kind",
+        "F4_D",
+        "F5_E",
+        "F6_internal_precedence",
+        "F1_evidence",
+        "F3_evidence",
+        "F6_evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "F1_part_name": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "F1_part_name"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "F1_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "F3_part_kind": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "F3_part_kind"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "F3_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "F6_internal_precedence": {
+                "enum": [
+                  "not_found"
+                ]
+              }
+            },
+            "required": [
+              "F6_internal_precedence"
+            ]
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "F6_evidence": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "topic": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "enum": [
+            "freight",
+            "pricing",
+            "payment_terms",
+            "termination_for_convenience"
+          ]
+        },
+        "part": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "page_or_clause": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "words": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "reading": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "topic",
+        "part",
+        "page_or_clause",
+        "words",
+        "reading"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "topic": {
+                "const": "freight"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reading": {
+                "enum": [
+                  "charged_at_cost",
+                  "charged_basis_unspecified",
+                  "charged_with_margin",
+                  "included_in_price",
+                  "customer_arranges",
+                  "silent",
+                  "not_found"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "topic": {
+                "const": "pricing"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reading": {
+                "enum": [
+                  "fixed_prices",
+                  "price_list_referenced",
+                  "cost_plus",
+                  "silent",
+                  "not_found"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "topic": {
+                "const": "payment_terms"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reading": {
+                "type": "string",
+                "pattern": "^(?:[1-9][0-9]* days from .+|silent|not_found)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "topic": {
+                "const": "termination_for_convenience"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reading": {
+                "type": "string",
+                "pattern": "^(?:yes \\([^()]+\\)|no|not_found)$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

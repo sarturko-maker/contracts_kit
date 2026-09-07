@@ -1,0 +1,368 @@
+alias,node_type,family_hint,notes
+MSA,master,C1,
+Master Agreement,master,C1,
+Master Supply Agreement,master,C1,
+Master Sales Agreement,master,C1,
+Global Master Agreement,master,C1,
+Global Framework Agreement,master,C1,
+Umbrella Agreement,master,C1,
+Global Procurement Agreement,master,C1,
+Global Terms Agreement,master,C1,
+LPA,participation,C1,
+LIA,participation,C1,
+PA,participation,C1,
+MCA,participation,C1,
+Local Participation Agreement,participation,C1,
+Local Implementation Agreement,participation,C1,
+Participation Agreement,participation,C1,
+Master Country Agreement,participation,C1,
+Country Addendum,participation,C1,
+Accession Agreement,participation,C1,
+Adherence Agreement,participation,C1,
+Joinder,participation,C1,
+Affiliate Agreement,participation,C1,
+Local Country Agreement,participation,C1,
+Supply Agreement,master,C2,their label for us on their paper
+Sales Agreement,master,C2,their label for us on their paper
+Master Purchase Agreement,master,C2,their label for us on their paper
+Vendor Agreement,master,C2,their label for us on their paper
+Procurement Agreement,master,C2,their label for us on their paper
+Trading Agreement,master,C2,their label for us on their paper
+Commercial Agreement,master,C2,their label for us on their paper
+Supplier Agreement,master,C2,their label for us on their paper
+Framework Agreement,master,C3,
+Framework Supply Agreement,master,C3,
+Pricing Agreement,master,C3,
+LTA,master,C3,
+Long-Term Agreement,master,C3,
+Preferred Supplier Agreement,master,C3,
+Blanket Order Agreement,master,C3,
+CAF,master,C4,"anchor, quasi-framework"
+Customer Account Application Form,master,C4,"anchor, quasi-framework"
+Account Application,master,C4,"anchor, quasi-framework"
+Account Opening Form,master,C4,"anchor, quasi-framework"
+Credit Application,master,C4,"anchor, quasi-framework"
+Trade Account Form,master,C4,"anchor, quasi-framework"
+Vendor Registration Form,master,C4,their rival anchor
+Supplier Onboarding Form,master,C4,their rival anchor
+Supplier Setup Form,master,C4,their rival anchor
+Terms of Sale,shared_terms,C4,
+Terms and Conditions of Sale,shared_terms,C4,
+Conditions of Sale,shared_terms,C4,
+General Conditions,shared_terms,C4,
+Standard Terms,shared_terms,C4,
+VAS Agreement,master,C5,
+Value-Added Services Schedule,master,C5,
+Supply Chain Services Agreement,master,C5,
+Kitting Agreement,master,C5,
+Cutting Services Schedule,master,C5,
+Configuration Services Schedule,master,C5,
+Services MSA,master,C6,
+Master Services Agreement,master,C6,
+Professional Services Agreement,master,C6,
+Installation Services Agreement,master,C6,
+SOW,work_instrument,C6,
+Statement of Work,work_instrument,C6,
+Work Order,work_instrument,C6,
+Service Order,work_instrument,C6,
+Task Order,work_instrument,C6,
+Project Order,work_instrument,C6,
+Change Order,change,C6,
+Change Control Note,change,C6,
+CCN,change,C6,
+NEC Subcontract,master,C7,
+JCT Subcontract,master,C7,
+FIDIC Subcontract,master,C7,
+Works Order,master,C7,
+Project Supply Agreement,master,C7,
+Trade Contract,master,C7,
+Variation Order,change,C7,
+Compensation Event,change,C7,
+Variation Instruction,change,C7,
+Performance Bond,security,C7,
+Advance Payment Bond,security,C7,
+Retention Bond,security,C7,
+Collateral Warranty,security,C7,
+Parent Company Guarantee,security,C7,
+Exceptions List,change,C8,
+Exceptions and Clarifications,change,C8,
+Deviations List,change,C8,
+Comments Sheet,change,C8,
+Bid Qualifications,change,C8,
+General Conditions of Purchase,shared_terms,C8,
+GC,shared_terms,C8,
+General Terms and Conditions of Purchase,shared_terms,C8,
+Special Conditions,component,C8,
+SC,component,C8,
+Particular Conditions,component,C8,
+Supplementary Conditions,component,C8,
+Consignment Agreement,master,C9,
+Consignment Stock Agreement,master,C9,
+VMI Agreement,master,C9,
+Vendor Managed Inventory Agreement,master,C9,
+DLF Agreement,master,C9,
+Direct Line Feed Agreement,master,C9,
+In-Plant Store Agreement,master,C9,
+Integrated Supply Agreement,master,C9,
+Stocking Agreement,master,C9,
+Reseller Agreement,master,C10,
+Dealer Agreement,master,C10,
+Sub-Distribution Agreement,master,C10,
+Sub-Distributor Agreement,master,C10,
+Partner Agreement,master,C10,
+Channel Agreement,master,C10,
+Dynamic Purchasing System,master,C11,
+DPS,master,C11,
+Panel Arrangement,master,C11,
+Standing Offer,master,C11,
+IDIQ,master,C11,
+Call-off Contract,master,C11,call-off level
+Order Contract,master,C11,call-off level
+Mini-Competition Award,master,C11,call-off level
+Standing Offer Call-up,master,C11,call-off level
+E-commerce Account,master,C12,
+Web Account,master,C12,
+Online Trade Account,master,C12,
+Customer Portal Account,master,C12,
+Website Terms,shared_terms,C12,
+Webshop Terms,shared_terms,C12,
+Online Terms of Sale,shared_terms,C12,
+E-commerce Terms and Conditions,shared_terms,C12,
+Rebate Letter,change,C13,
+Rebate Agreement,change,C13,
+Growth Incentive Letter,change,C13,
+Special Pricing Letter,change,C13,
+Pricing Letter,change,C13,
+Project Pricing Letter,change,C13,
+Distribution Agreement,master,S1,
+Authorised Distributor Agreement,master,S1,
+Master Distributor Agreement,master,S1,
+Channel Partner Agreement,master,S1,
+Franchised Distributor Agreement,master,S1,
+Programme Terms,component,S1,
+Partner Programme Guide,component,S1,
+Channel Programme Terms,component,S1,
+Price Protection Terms,component,S1,
+Stock Rotation Policy,component,S1,
+Ship-and-Debit Terms,component,S1,
+POS Reporting Requirements,component,S1,
+Master Purchase Agreement,master,S2,
+Goods Supply Agreement,master,S2,
+Purchase Agreement,master,S2,
+Blanket PO,order,S3,
+Blanket Order,order,S3,
+Scheduling Agreement,order,S3,
+Release,order,S3,
+Delivery Schedule,order,S3,
+Partner Agreement,master,S4,
+Cloud Solution Provider Agreement,master,S4,
+CSP Agreement,master,S4,
+Marketplace Programme Agreement,master,S4,
+Reseller Programme Terms,master,S4,
+Distribution Partner Terms,master,S4,
+Agency Agreement,master,S5,check substance for statutory regime
+Commercial Agency Agreement,master,S5,check substance for statutory regime
+Sales Agency Agreement,master,S5,check substance for statutory regime
+Sales Representative Agreement,master,S5,check substance for statutory regime
+Introducer Agreement,master,S6,
+Commission Agreement,master,S6,
+Finder's Fee Agreement,master,S6,
+Referral Agreement,master,S6,
+Business Development Agreement,master,S6,
+Manufacturing and Supply Agreement,master,S7,
+Contract Manufacturing Agreement,master,S7,
+OEM Supply Agreement,master,S7,
+Private Label Agreement,master,S7,
+Toll Manufacturing Agreement,master,S7,
+Specification,component,S7,
+Technical Agreement,component,S7,
+Quality Agreement,component,S7,
+QAA,component,S7,
+Tooling Agreement,component,S7,
+Brand Licence,component,S7,
+Trademark Licence,component,S7,
+Terms of Purchase,shared_terms,S8,
+Conditions of Purchase,shared_terms,S8,
+General Purchasing Conditions,shared_terms,S8,
+Standard Terms of Purchase,shared_terms,S8,
+Supplier Account Form,master,S8,their rival anchor
+New Supplier Form,master,S8,their rival anchor
+Vendor Setup Form,master,S8,their rival anchor
+Trading Terms Letter,master,S8,their rival anchor
+SPA,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Special Pricing Agreement,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Deviated Pricing Agreement,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+DPA,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Meet-Comp,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Contract Pricing Letter,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Project Registration,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Design Registration,change,S9,DPA here = deviated pricing; S9 SPA collides with C13 and with Sale and Purchase Agreement; disambiguate by category
+Ship-and-Debit Claim,claim,S9,
+S&D Claim,claim,S9,
+Debit Memo,claim,S9,
+Price Protection Claim,claim,S9,
+Stock Rotation Return,claim,S9,
+MDF Claim,claim,S9,
+Co-op Claim,claim,S9,
+Rebate Claim,claim,S9,
+Services Partner Agreement,master,S10,
+Subcontract,master,S10,
+Support Reseller Agreement,master,S10,
+Installation Subcontract,master,S10,
+Field Services Agreement,master,S10,
+Consignment Stock Agreement,master,S11,
+Vendor Consignment Agreement,master,S11,
+Bonded Stock Agreement,master,S11,
+Drop-Ship Agreement,master,S11,
+Direct Ship Addendum,master,S11,
+Declaration of Conformity,evidence,S12,
+DoC,evidence,S12,
+Certificate of Conformity,evidence,S12,
+CoC,evidence,S12,
+REACH Declaration,evidence,S12,
+RoHS Declaration,evidence,S12,
+CMRT,evidence,S12,
+Conflict Minerals Report,evidence,S12,
+Certificate of Insurance,evidence,S12,
+COI,evidence,S12,
+Test Report,evidence,S12,
+Mill Certificate,evidence,S12,
+Master Subscription Agreement,shared_terms,V1,
+Cloud Services Agreement,shared_terms,V1,
+Terms of Service,shared_terms,V1,
+ToS,shared_terms,V1,
+Online Services Agreement,shared_terms,V1,
+Order Form,work_instrument,V1,Order Form also appears in C11 and SaaS resale; disambiguate by category
+Order Schedule,work_instrument,V1,Order Form also appears in C11 and SaaS resale; disambiguate by category
+Subscription Order,work_instrument,V1,Order Form also appears in C11 and SaaS resale; disambiguate by category
+Licence Agreement,master,V2,
+Software Licence Agreement,master,V2,
+EULA,master,V2,
+Volume Licensing Agreement,master,V2,
+Enterprise Agreement,master,V2,
+Managed Services Agreement,master,V3,
+IT Services Agreement,master,V3,
+Outsourcing Agreement,master,V3,
+Service Order,work_instrument,V4,
+Circuit Order,work_instrument,V4,
+Connection Order,work_instrument,V4,
+Site Order,work_instrument,V4,
+Panel Agreement,master,V5,
+Panel Terms,master,V5,
+Outside Counsel Guidelines,master,V5,
+OCG,master,V5,
+Framework Engagement Terms,master,V5,
+Engagement Letter,work_instrument,V5,
+Letter of Engagement,work_instrument,V5,
+Retainer Letter,work_instrument,V5,
+Terms of Engagement,work_instrument,V5,
+Matter Confirmation,work_instrument,V5,
+Terms of Business,master,V6,
+ToB,master,V6,
+Recruitment Agency Terms,master,V6,
+Consultancy Agreement,master,V6,
+Contractor Agreement,master,V6,
+Employer of Record Agreement,master,V6,
+Umbrella Company Terms,master,V6,
+Agreement for Lease,master,V7,
+AfL,master,V7,
+Lease,master,V7,
+Underlease,master,V7,
+Sublease,master,V7,
+Licence to Occupy,master,V7,
+Reversionary Lease,master,V7,
+Wayleave,master,V7,
+Deed of Variation,change,V7,
+Rent Review Memorandum,change,V7,
+Licence to Alter,change,V7,
+Licence to Assign,change,V7,
+Break Notice,change,V7,
+Master Lease,master,V8,
+Master Hire Agreement,master,V8,
+Equipment Lease,master,V8,
+Hire Purchase Agreement,master,V8,
+FM Contract,master,V8,
+Facilities Management Agreement,master,V8,
+Logistics Services Agreement,master,V9,
+3PL Agreement,master,V9,
+Warehousing Agreement,master,V9,
+Carriage Agreement,master,V9,
+Freight Agreement,master,V9,
+Customs Brokerage Agreement,master,V9,
+Fleet Lease,master,V9,
+RHA Conditions,shared_terms,V9,
+BIFA Conditions,shared_terms,V9,
+CMR Conditions,shared_terms,V9,
+Facility Agreement,master,V10,
+RCF,master,V10,
+Revolving Credit Facility,master,V10,
+Invoice Finance Agreement,master,V10,
+ISDA Master Agreement,master,V10,
+Insurance Policy,master,V10,
+Credit Insurance Policy,master,V10,
+Debenture,security,V10,
+Charge,security,V10,
+Intercreditor Agreement,security,V10,
+Security Agreement,security,V10,
+Schedule,component,,generic component cluster; family-neutral
+Annex,component,,generic component cluster; family-neutral
+Exhibit,component,,generic component cluster; family-neutral
+Appendix,component,,generic component cluster; family-neutral
+Attachment,component,,generic component cluster; family-neutral
+Amendment,change,,generic change cluster; family-neutral
+Variation,change,,generic change cluster; family-neutral
+Deed of Variation,change,,generic change cluster; family-neutral
+Side Letter,change,,generic change cluster; family-neutral
+Extension Letter,change,,generic change cluster; family-neutral
+Amended and Restated Agreement,change,,generic change cluster; family-neutral
+Addendum,change,,"ambiguous: amendment in one usage, new component in another; assign by what it does"
+PO,order,,generic order cluster
+Purchase Order,order,,generic order cluster
+Order,order,,generic order cluster
+Call-off,order,,generic order cluster
+Sales Order,order,,generic order cluster
+Web Order,order,,generic order cluster
+Order Acknowledgement,order_response,,response side of the order flow
+Order Confirmation,order_response,,response side of the order flow
+Acknowledgement of Order,order_response,,response side of the order flow
+Quotation,order_response,,response side of the order flow
+Quote,order_response,,response side of the order flow
+Proforma,order_response,,response side of the order flow
+NDA,master,O3,
+Non-Disclosure Agreement,master,O3,
+CDA,master,O3,
+Confidentiality Agreement,master,O3,
+oneNDA,master,O3,
+LOI,master,O3,
+Letter of Intent,master,O3,
+Heads of Terms,master,O3,
+MOU,master,O3,
+Memorandum of Understanding,master,O3,
+Teaming Agreement,master,O3,
+Guarantee,security,O1,
+Parent Company Guarantee,security,O1,
+Bank Guarantee,security,O1,
+Personal Guarantee,security,O1,
+Promissory Note,security,O1,
+Post-Dated Cheque,security,O1,
+Letter of Credit,security,O1,
+LC,security,O1,
+Standby Letter of Credit,security,O1,
+Performance Bond,security,O1,
+Settlement Agreement,master,O2,
+Standstill Agreement,master,O2,
+Tomlin Order,master,O2,
+Consent Order,master,O2,
+DPA,component,O6,DPA here = data processing; collides with S9 deviated pricing
+Data Processing Agreement,component,O6,DPA here = data processing; collides with S9 deviated pricing
+Data Processing Addendum,component,O6,DPA here = data processing; collides with S9 deviated pricing
+SCCs,component,O6,DPA here = data processing; collides with S9 deviated pricing
+Standard Contractual Clauses,component,O6,DPA here = data processing; collides with S9 deviated pricing
+IDTA,component,O6,DPA here = data processing; collides with S9 deviated pricing
+Joint Controller Agreement,component,O6,DPA here = data processing; collides with S9 deviated pricing
+EDI Agreement,component,O5,
+EDI Schedule,component,O5,
+Trading Partner Agreement,component,O5,
+cXML Agreement,component,O5,
+PunchOut Schedule,component,O5,
+API Schedule,component,O5,

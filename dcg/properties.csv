@@ -1,0 +1,29 @@
+property,applies_to,allowed_values,definition
+scope,master,global | regional | single | group_referenced,"Whether the master itself contemplates multi-entity adoption; intentionality, not what local entities later do"
+paper,master|participation,ours | theirs | hybrid | model_form,"Whose base document; model_form for NEC, JCT, FIDIC and similar"
+commercial_completeness,master,yes | no,Whether an order alone completes a contract on pre-agreed commercials; the master v framework test
+commitment,master,none | volume | target | exclusivity,Binding commercial commitment carried by the master
+appointment,master,yes | no,Whether the agreement confers channel status; the S1 v S2 test
+status,any document node,signed | deemed | notified | active | superseded | terminated | expired | provisional,Deemed for participation without signature; notified for instruments binding by notice; provisional pending review
+flow_down,change|shared_terms,yes | no | per_accession,Whether the instrument reaches participation nodes automatically
+jurisdiction,master|relationship,ISO 3166 code,Governing or procurement jurisdiction
+governing_law,master|participation|work_instrument,ISO 3166-2 or named system,Extracted governing law
+time_limited,change,yes | no,Project letters and SPAs expire by design
+statutory_regime,master,eu_cad | me_agency | other | none,S5 v S6 test
+precedence,work_instrument|component,free text chain,Order of precedence where it deviates from default
+last_shot,order|order_response,ours | theirs | unresolved,Battle of the forms outcome per order
+title_transfer,master,on_delivery | on_consumption | on_payment | retained,C9 and S11
+captured_at,edge: incorporates|governed_by,date,Capture date of URL-incorporated terms
+version,shared_terms|component,free text,Version label of the referenced terms
+valid_from,node or edge,date,Start of real-world validity
+valid_to,node or edge,date,End of real-world validity
+recorded_at,term_fact and audit rows,datetime,When the graph learned it; second time axis
+source_system,any node,system id,Lineage: the system of record
+source_key,any node,key,Lineage: key in the system of record
+confidence,any classified node,0.00 to 1.00,Classifier confidence; drives review queue
+function_tag,unclassified document,governs | transacts | changes | secures | evidences | resolves | enables_channel | pre_contract,Catch-all fallback classification; nearly always determinable
+is_ours,legal_entity,true | false,Symmetry flag; never a separate schema
+partner_function,edge: partner_function,sold_to | ship_to | bill_to | payer | ordering | goods_supplier | invoicing_party | payee,SAP-style functional roles
+category,relationship,customer | supplier | vendor,"Category is a property of the relationship, not of the legal entity"
+their_part_no,edge: part_xref,free text,Customer or supplier part number
+role,person or acts_for edge,signatory | contact | user | authorised_buyer,What the person does

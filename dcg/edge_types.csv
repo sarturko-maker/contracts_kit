@@ -1,0 +1,61 @@
+id,label,kind,from_types,to_types,direction_rule,time_properties,notes
+forms_part_of,forms part of,structural,component|change|security,master|participation|work_instrument,child points at parent,valid_from/to,one structural parent per node
+accedes_to,accedes to,structural,participation,master,participation points at master,valid_from/to,status signed or deemed on the node
+placed_under,placed under,structural,order|work_instrument,master|participation|component|shared_terms,dependent points at governing node,order_date,attach at the lowest governing node
+released_under,released under,structural,order,order,release points at blanket,order_date,framework call-off pattern
+agreed_under,agreed under,structural,work_instrument,master,SOW points at master,valid_from/to,precedence property per SOW
+called_off_under,called off under,structural,master,component|master,call-off contract points at framework or lot,valid_from/to,public sector pattern C11
+engaged_under,engaged under,structural,work_instrument,master,engagement letter points at panel terms,valid_from/to,V5
+granted_under,granted under,structural,master,master,lease points at agreement for lease; sublease at lease,valid_from/to,V7
+governed_by,governed by,structural,master|order|account,shared_terms,dependent points at terms version,valid_from/to,version in force by date
+consented_under,consented under,structural,component,master,licence points at lease,valid_from/to,V7 consents
+amends,amends,lifecycle,change,master|component|work_instrument|clause,change points at target,effective_from/to,clause-level target preferred
+supersedes,supersedes,lifecycle,any versioned,same type,new points at old,effective_from,old node status superseded
+varies,varies,lifecycle,change|participation,master|component|clause,varying node points at varied clause,effective_from/to,LPA variations; side letters
+extends,extends,lifecycle,change,master|component|work_instrument,letter points at extended node,effective_from/to,
+renews,renews,lifecycle,work_instrument|change,master|work_instrument,renewal points at renewed,effective_from/to,automatic renewal is a node property instead
+terminates,terminates,lifecycle,change,master|work_instrument,notice points at terminated node,effective_date,node status change plus edge
+novated_to,novated to,lifecycle,master,legal_entity,contract points at incoming entity,effective_date,"party edges re-dated, tree untouched"
+memorialised_in,memorialised in,lifecycle,change,component,exceptions list points at special conditions,effective_date,C8
+incorporates,incorporates,reference,master|order,shared_terms|component,incorporating doc points at incorporated,"captured_at, version",URL terms need capture dates
+prevails_over,prevails over,reference,component|master,shared_terms|component|master,winner points at loser,,order of precedence; must stay acyclic
+conflicts_with,conflicts with,reference,order|master,shared_terms|master,later shot points at earlier,order_date,battle of the forms; last_shot property
+flows_down_to,flows down to,reference,shared_terms|change,master|participation|relationship,source terms point at receiving tree,valid_from/to,S1 to C10; global amendments to LPAs
+mirrors,mirrors,reference,work_instrument,work_instrument,supplier SOW points at customer SOW,,back-to-back S10 to C6
+gap,gap,reference,work_instrument|term_fact,work_instrument|term_fact,supplier side points at customer side,,delta stored as property; the risk register
+references,references,reference,change|master,relationship|master|order,referring node points at referred,,S9 SPA to customer relationship
+secures,secures,reference,security,master|obligation|account,security points at secured thing,valid_from/to,O1
+extinguishes,extinguishes,reference,master,obligation|claim,settlement points at extinguished obligation,effective_date,O2
+limits,limits,reference,component,account|legal_entity,buyer limit points at customer account,valid_from/to,V10 credit insurance
+evidences,evidences,evidence,evidence,master|component|work_instrument|order,evidence points at evidenced node,validity window,
+party_to,party to,party,master|participation|work_instrument|security|change,legal_entity,instrument points at signatory entity,valid_from/to,"the invariant, half one"
+guaranteed_by,guaranteed by,party,master|account,legal_entity,secured thing points at guarantor,valid_from/to,O1 party edge
+ordered_by,ordered by,transaction,order,account,order points at account,order_date,"the invariant, half two"
+settled_by,settled by,transaction,evidence|order,invoice,settled thing points at invoice,,C9 consumption settlement
+claimed_under,claimed under,transaction,claim,change|component,claim points at entitling instrument,claim_date,S9
+responds_to,responds to,transaction,order_response|order,order,response points at what it answers,,direction records last shot
+covers_product,covers product,masterdata,component|change,product|classification_code,schedule points at covered product,valid_from/to,
+covers_territory,covers territory,masterdata,component,country,schedule points at country,valid_from/to,
+covers_site,covers site,masterdata,component,site,site schedule points at site,valid_from/to,C9
+anchored_to,anchored to,masterdata,relationship,legal_entity,relationship points at top in-scope entity,valid_from/to,
+belongs_to,belongs to,masterdata,account,legal_entity,account points at owning counterparty entity,valid_from/to,
+held_with,held with,masterdata,account,org_unit,account points at our org unit,valid_from/to,
+unit_of,unit of,masterdata,org_unit,legal_entity,org unit points at our entity,valid_from/to,
+operated_by,operated by,masterdata,site,legal_entity,site points at operating entity,valid_from/to,
+partner_function,partner function,masterdata,account,site|account,account points at functional partner,valid_from/to,"function property: sold_to, ship_to, bill_to, payer"
+made_by,made by,masterdata,product,legal_entity,product points at manufacturer,,
+part_xref,part cross-reference,masterdata,account,product,account points at product,valid_from/to,their part number as property
+member_of,member of,masterdata,legal_entity,group,entity points at commercial group,valid_from/to,never legal ownership
+owns,owns,masterdata,legal_entity,legal_entity,parent points at subsidiary,valid_from/to,GLEIF relationship data where LEIs exist
+identified_by,identified by,masterdata,legal_entity|site|product,identifier,thing points at identifier claim,valid_from/to,scheme plus value; source recorded
+acts_for,acts for,masterdata,person,legal_entity,person points at entity,valid_from/to,"role property: signatory, contact"
+user_of,user of,masterdata,person,account,person points at account,valid_from/to,C12 users
+classified_as,classified as,masterdata,product,classification_code,product points at class,,UNSPSC or ETIM
+has_clause,has clause,content,master|participation|component,clause,document points at its clause,,stable eId convention
+tagged_as,tagged as,content,clause|master,identifier_scheme,clause points at SALI IRI,,vocabulary edge
+has_term,has term,content,clause,term_fact,clause points at extracted fact,"valid_from/to, recorded_at",bi-temporal
+has_obligation,has obligation,content,clause,obligation,clause points at obligation,,
+obligor,obligor,content,obligation,legal_entity,obligation points at who owes it,,reinforces the invariant
+obligee,obligee,content,obligation,legal_entity,obligation points at who is owed,,
+cross_refers_to,cross-refers to,content,clause,clause,referring clause points at referred,,dangling edge = broken cross-reference
+defined_in,defined in,content,clause,clause,using clause points at definition,,
