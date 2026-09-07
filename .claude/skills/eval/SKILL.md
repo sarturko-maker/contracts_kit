@@ -7,9 +7,10 @@ disable-model-invocation: true
 # /eval
 
 1. Read `eval/README.md`. Run `python eval/run.py prepare`; use the printed isolated kit path.
-   Run stage 1 there, then `/extract --all`, `/map all`, `/report`. Topics remain off. Never
+   Run `/prepare pile`, `/read all`, `/match`, `/judge all`, then `/extract --all`, `/map all`,
+   `/report --graph`. Topics remain off. Never
    replace the operator's existing `work/`, `out/` or inputs with the invented evaluation.
-   Finally run `python scripts/place.py --all` there to give mode B only stage 1 table columns;
+   Finally run `python scripts/place.py --all --visuals` there to give mode B only stage 1 table columns;
    forms and graph rows remain available to mode C. Freeze these artifacts during the trials.
 2. For each question id in `eval/questions.csv` and each mode A/B/C, run
    `python eval/run.py prompt <id> <mode>`. Give exactly that prompt to a NEW general-purpose

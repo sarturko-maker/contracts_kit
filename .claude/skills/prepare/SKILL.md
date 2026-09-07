@@ -21,6 +21,6 @@ Run from the kit root. `$ARGUMENTS` is the pile path, optionally followed by `--
    pages on their own line (a page read as a picture costs several times a page read as text),
    docx files with tracked changes; the accounts and the stream candidates from the ERP record.
 4. List every file not readable by the kit, with its path. Nothing is skipped silently.
-5. Say what to run next: `/read all`.
+5. Say what to run next: `/sort`. Stop after preparation unless a parent `/sort` or `/deep-dive` command explicitly includes the next stage.
 
 Never edit the pile, `work/inventory.csv` or `work/text/`. To redo every file, add `--force`.

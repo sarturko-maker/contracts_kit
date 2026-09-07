@@ -15,5 +15,5 @@ disable-model-invocation: true
 3. Spawn one `mapper` per account, batches of up to five, passing the exact ERP name. Wait for
    each batch. Retry one failed mapper once with its error; never edit its proposal or gaps.
 4. Print each account's three-line return and any failures. Run `python scripts/graph.py --all`
-   to merge successful source proposals. Say what to run next: `/report`; review `TREES.md`,
+   to merge successful source proposals. Say what to run next: `/report --graph`; review `TREES.md`,
    `out/FORM-HEALTH.md` and `out/DIDNT-FIT.md`. The user decides changes to the standard.

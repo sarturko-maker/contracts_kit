@@ -725,7 +725,7 @@ def invalidate_changed_sources(previous, rows, erp_changed=False):
     paths = []
     for doc in changed:
         paths += [WORK / sub / f'{doc}{ext}' for sub, extensions in
-                  [('cards', ['.json', '.md']), ('forms', ['.json'])] for ext in extensions]
+                  [('cards', ['.json', '.md']), ('forms', ['.json']), ('filing', ['.json'])] for ext in extensions]
     # Placement prose and family proposals depend on the complete account population.
     if previous:
         for sub in ('placements', 'trees', 'didnt-fit'):
@@ -743,7 +743,7 @@ def invalidate_changed_sources(previous, rows, erp_changed=False):
             path.unlink()
             archived += 1
     if archived:
-        say(f'Archived {archived} stale generated files to {rel(archive)}. Run /read, /sort and /judge again.')
+        say(f'Archived {archived} stale generated files to {rel(archive)}. Run /sort for filing, or /deep-dive to rebuild full analysis.')
 
 
 def print_table(rows):

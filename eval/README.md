@@ -10,11 +10,11 @@ signature), one unreadable file and an ERP record. Rebuild invented PDFs with
 `python eval/make_pile.py` using build-time `reportlab` and `Pillow` from the sample instructions.
 
 Run `/eval` in Claude Code. It prepares `work/eval/kit/`, an isolated copy containing no answer
-keys, expected results, operator inputs or existing work. In that kit run stage 1 on `pile/`,
-then stage 2 with all documents and topics off. The account column is `customer_account`, the side
+keys, expected results, operator inputs or existing work. In that kit run `/prepare pile`, `/read all`, `/match`, `/judge all`,
+then `/extract --all`, `/map all`, `/report --graph` with topics off. The account column is `customer_account`, the side
 is customers. All stages use the fixed as-of date. Prepared source text is available without
 OCR. Do not import `sample/expected/` answers as evaluation agent responses.
-After the final graph report, run `python scripts/place.py --all` in the isolated kit to
+After the final graph report, run `python scripts/place.py --all --visuals` in the isolated kit to
 remove stage 2 columns from mode B's document lists; the forms and graph remain available
 to C. Prompt generation rejects B lists containing stage 2 columns. Keep artifacts fixed
 while question agents run.

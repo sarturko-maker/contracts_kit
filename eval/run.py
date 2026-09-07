@@ -49,7 +49,7 @@ def prepare():
     shutil.copytree(EVAL / "pile", KIT / "pile")
     RUNS.mkdir(parents=True, exist_ok=True)
     print(f"Isolated kit: {KIT}")
-    print("Run stage 1 on pile, then stage 2 with --all and topics off, in this kit.")
+    print("Run /prepare pile, /read all, /match, /judge all, /extract all (topics off), /map all, /report --graph in this kit.")
     print("As-of date: 2026-09-06. ERP customer_account; customers; no external sources.")
 
 
@@ -67,7 +67,7 @@ def prompt(question_id, mode):
                 columns = next(csv.reader(handle), [])
             if columns != list(CORPUS_COLUMNS):
                 raise ValueError('Mode B requires stage 1 columns only. In the isolated kit, '
-                                 'run python scripts/place.py --all after graph generation, '
+                                 'run python scripts/place.py --all --visuals after graph generation, '
                                  'then generate prompts again.')
     ids = sorted({doc for account in accounts for doc in ACCOUNTS[account]})
     print(f"Answer one invented-contract question, as of 2026-09-06. Mode {mode}.")

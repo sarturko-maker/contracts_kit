@@ -67,6 +67,7 @@ Two sets of rules, applied in this order: first every document is matched to an 
 >    you would rely on and why, or "unresolved". If the only live trade-governing document has
 >    a scope that reads as limited, it still goes here, with "scope on paper: …; confirm this is
 >    all the trade" in the note.
+>    A pricing or rebate letter that sets only a period does not qualify under this rule.
 > 7. `2-governs-part-of-trade`: live, governs trade, but only for a project, site or programme,
 >    a defined product set that is plainly not everything, or a period (this year's pricing or
 >    rebate letter), while trade outside that limit runs, or could run, under something else.

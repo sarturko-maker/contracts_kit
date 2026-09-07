@@ -20,5 +20,5 @@ Run after stage 1 review and correction. Paths are relative to the kit root.
 4. On a missing form, failed validation or unusable return, retry that extractor once with its
    error; record a second failure and continue. Run `python scripts/validate_forms.py --all`.
 5. Report forms written, skipped and failures by id. A failed form blocks mapping. Otherwise
-   say what to run next: `/map all`, then `/report`. If existing forms were replaced, use
+   say what to run next: `/map all`, then `/report --graph`. If existing forms were replaced, use
    `/map all --force` so family proposals are refreshed from those changed answers.

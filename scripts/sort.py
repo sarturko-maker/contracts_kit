@@ -1,7 +1,7 @@
 """Replay the entity map: python scripts/sort.py [--force]
 
 The model decides which company name belongs to which ERP account and writes those decisions
-to inputs/entity-map.csv (the /sort skill). This script decides nothing. It reads the map, the
+to inputs/entity-map.csv (the /match skill). This script decides nothing. It reads the map, the
 ERP record, the inventory and the sort cards, then:
 
 - creates one folder per ERP account under out/<side>/ (streams get a README only),
@@ -16,11 +16,13 @@ Copy, never move. Re-runs are deterministic: stale copies from an earlier run ar
 import argparse
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from kit_common import (  # noqa: E402
-    CONFIDENCE_RANK, HOLDING_FOLDERS, OUT, SORT_LOG_COLUMNS, SORT_LOG_CSV, TO_JUDGE, WORK_FILES,
+    CONFIDENCE_RANK, HOLDING_FOLDERS, OUT, SORT_LOG_COLUMNS, SORT_LOG_CSV, TO_JUDGE, WORK, WORK_FILES,
+    _header_of,
     account_folder, apply_corrections_to_card, load_corrections, doc_label, erp_account_names, fail, join_multi, load_all_cards, load_entity_map,
     load_erp, load_inventory, load_our_entities, names_from_card, norm_name, rel, safe_folder_name,
     say, stream_map, warn, write_csv, write_text,
@@ -55,6 +57,35 @@ def remove_stale_copies(side, accounts, produced):
             folder.rmdir()
     if removed:
         say(f"removed {removed} stale copies from an earlier run")
+
+
+def archive_filing_report(side, inventory, cards):
+    """Retain the whole cheap report before starting a full-card matching pass.
+
+    Cheap output has extra holding tables and copies that a normal full replay does
+    not own. Keeping them in the active output would mix two different read stages.
+    Validate the transition before changing any generated files; an ordinary full
+    replay keeps its established behavior.
+    """
+    corpus = OUT / side / "CORPUS.csv"
+    if not corpus.is_file() or "read_status" not in _header_of(corpus):
+        return
+    readable_cards = [row for row in inventory
+                      if row.get("doc_id") != "erp" and row.get("readable") == "yes"
+                      and row.get("doc_id") in cards]
+    if not readable_cards:
+        fail("The current report is filing only and no full cards are available. "
+             "Run /read or /deep-dive before /match. The filing report is unchanged.")
+    for row in readable_cards:
+        source = WORK_FILES / f"{row['doc_id']}.{row.get('ext', '')}"
+        if not source.is_file():
+            fail(f"doc {row['doc_id']}: {rel(source)} is missing; run /prepare again. "
+                 "The filing report is unchanged.")
+    history = WORK / "history"
+    history.mkdir(parents=True, exist_ok=True)
+    archive = Path(tempfile.mkdtemp(prefix="analysis-transition-", dir=history))
+    OUT.rename(archive / "out")
+    say(f"Previous filing report retained at {rel(archive / 'out')} before full matching.")
 
 
 def decide_targets(names, entity_by_name, erp_names_by_norm, streams):
@@ -178,6 +209,8 @@ def main():
     streams = stream_map(erp, entity_by_name)
     main_accounts = [n for n in erp_names if n not in streams]
 
+    archive_filing_report(side, inventory, cards)
+
     # 2. streams: a README only
     for stream, (main, row) in streams.items():
         folder = account_folder(side, stream)
@@ -275,7 +308,7 @@ def main():
         say("  not readable by the kit: " + ", ".join(doc_label(d) for d in unreadable))
     say("")
     if undecided_names:
-        say("Names that need your decision (add or edit a row in inputs/entity-map.csv with decided_by = user, then run /sort again):")
+        say("Names that need your decision (add or edit a row in inputs/entity-map.csv with decided_by = user, then run /match again):")
         for name, docs in undecided_names.items():
             row = entity_by_name.get(norm_name(name))
             why = "no entity-map row" if row is None else f"mapped to {row.get('account', '')!r} with confidence {row.get('confidence', '')!r}"

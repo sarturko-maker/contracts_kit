@@ -26,4 +26,4 @@ skipped. Print the list before starting. Then, in batches of five:
 Never fill a card yourself; never edit a card a reader wrote.
 
 When every batch is done, print the counts: cards written, cards skipped (already present),
-failures (with their ids). Say what to run next: `/sort`.
+failures (with their ids). Say what to run next: `/match`. Stop; do not start it automatically.

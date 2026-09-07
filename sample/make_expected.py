@@ -264,7 +264,7 @@ def replay(target, oracle=HERE / "expected", pile=HERE / "pile"):
     shutil.copytree(Path(oracle) / "placements", target / "work" / "placements", dirs_exist_ok=True)
     for name in ("entity-map.csv", "our-entities.csv"):
         shutil.copyfile(Path(oracle) / name, target / "inputs" / name)
-    logs += [run("scripts/sort.py").stdout, run("scripts/place.py", "--all").stdout]
+    logs += [run("scripts/sort.py").stdout, run("scripts/place.py", "--all", "--visuals").stdout]
     return "\n".join(logs)
 
 

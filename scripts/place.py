@@ -1,9 +1,10 @@
-"""Generate an account's folders, note, document list and diagram from the judge's placements.
+"""Generate an account's folders, note and document list from the judge's placements.
 
     python scripts/place.py --account "<name>"   one account: status folders, README.md,
-                                                 documents.csv, position.mmd, position.html
-    python scripts/place.py --index              CORPUS.csv, ACCOUNTS.csv, INDEX.md, INDEX.html
+                                                 documents.csv
+    python scripts/place.py --index              CORPUS.csv, ACCOUNTS.csv, INDEX.md
     python scripts/place.py --all                every account with a placements file, then --index
+    python scripts/place.py --all --visuals      also build the original analysis diagrams/HTML
 
 Sources: work/placements/<account>.csv and .md (the judge), work/cards/<id>.json (the readers),
 work/inventory.csv and work/erp.json (prepare.py), work/logs/sort.csv (sort.py),
@@ -76,7 +77,7 @@ def load_context():
         fail("work/erp.json has no side. Re-run /prepare with --side customers|suppliers.")
     sort_rows = load_sort_log()
     if not sort_rows:
-        fail("work/logs/sort.csv is missing or empty. Run /sort first.")
+        fail("work/logs/sort.csv is missing or empty. Run /match first.")
     entity_by_name, _ = load_entity_map()
     corrections = load_corrections()
     cards = load_all_cards()
@@ -681,20 +682,24 @@ def legend_html():
     return '<div class="legend">' + "".join(chips) + "</div>"
 
 
-def build_html(account, mmd, note_md):
+def build_html(account, mmd, note_md, analysis=True):
     """position.html: the diagram, the legend, the note, a link to documents.csv. Offline."""
+    report_title = "position" if analysis else "filing map"
+    legend = legend_html() if analysis else (
+        "<p>The arrows show where documents are filed. They do not establish governing terms, "
+        "legal relationships or current status.</p>")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(account)} — position</title>
+<title>{html.escape(account)} — {report_title}</title>
 <style>{PAGE_CSS}</style>
 </head>
 <body>
-<h1>{html.escape(account)} — position</h1>
+<h1>{html.escape(account)} — {report_title}</h1>
 <p class="links"><a href="README.md">README.md</a> <a href="documents.csv">documents.csv</a> <a href="position.mmd">position.mmd</a> <a href="../../INDEX.html">all accounts</a></p>
-{legend_html()}
+{legend}
 <pre class="mermaid">
 {html.escape(mmd, quote=False)}</pre>
 <div class="note">
@@ -708,11 +713,34 @@ def build_html(account, mmd, note_md):
 
 
 # --------------------------------------------------------------------------- one account
-def write_account(ctx, account, settled, prose, all_rows):
-    """Status folders with copies, documents.csv, README.md, position.mmd, position.html."""
+def retire_visuals(folder=None):
+    """Remove only stale generated visual artifacts when their text inputs change."""
+    if folder is not None:
+        for name in ("position.mmd", "position.html"):
+            (folder / name).unlink(missing_ok=True)
+    (OUT / "INDEX.html").unlink(missing_ok=True)
+    # Other account diagrams can remain current after an account-only report refresh.
+    # Keep their shared renderer, but do not leave an unused visual bundle behind.
+    if not any(OUT.glob("*/*/position.html")):
+        (OUT / "assets" / "mermaid.min.js").unlink(missing_ok=True)
+
+
+def ensure_visual_assets():
+    """Copy the local renderer only for an explicitly requested visual output."""
+    target_js = OUT / "assets" / "mermaid.min.js"
+    if not MERMAID_JS.exists():
+        fail(f"{rel(MERMAID_JS)} is missing; the diagrams cannot render offline.")
+    if not target_js.exists() or target_js.read_bytes() != MERMAID_JS.read_bytes():
+        target_js.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(MERMAID_JS, target_js)
+        say(f"copied assets/mermaid.min.js to {rel(target_js)}")
+
+
+def write_account(ctx, account, settled, prose, all_rows, visuals=False):
+    """Status folders with copies, documents.csv and README.md; optional diagrams/HTML."""
     folder = account_folder(ctx["side"], account)
     folder.mkdir(parents=True, exist_ok=True)
-    for name in [TO_JUDGE] + STATUS_FOLDERS:
+    for name in [TO_JUDGE, "files"] + STATUS_FOLDERS:
         target = folder / name
         if target.exists():
             shutil.rmtree(target)
@@ -734,14 +762,19 @@ def write_account(ctx, account, settled, prose, all_rows):
     write_csv(folder / "documents.csv", rows, CORPUS_COLUMNS)
     note = build_note(ctx, account, settled, prose)
     write_text(folder / "README.md", note)
-    mmd = build_mermaid(ctx, account, settled)
-    write_text(folder / "position.mmd", mmd)
-    write_text(folder / "position.html", build_html(account, mmd, note))
+    if visuals:
+        ensure_visual_assets()
+        mmd = build_mermaid(ctx, account, settled)
+        write_text(folder / "position.mmd", mmd)
+        write_text(folder / "position.html", build_html(account, mmd, note))
+    else:
+        retire_visuals(folder)
 
     counts = {f: sum(1 for p in settled.values() if p["folder"] == f) for f in STATUS_FOLDERS}
     say(f"{account}: {copied} files copied into status folders; "
         + ", ".join(f"{f.split('-')[0]}={n}" for f, n in counts.items())
-        + f"; written {rel(folder)}/README.md, documents.csv, position.mmd, position.html")
+        + f"; written {rel(folder)}/README.md, documents.csv"
+        + (", position.mmd, position.html" if visuals else ""))
 
 
 def settled_for_all_accounts(ctx):
@@ -834,16 +867,15 @@ def sort_log_summary(ctx):
     return lines
 
 
-def write_index(ctx, settled_by_account, all_rows):
-    """out/assets, documents.csv per judged account, CORPUS.csv, ACCOUNTS.csv, INDEX.md, INDEX.html."""
+def write_index(ctx, settled_by_account, all_rows, visuals=False):
+    """CSV/Markdown index and account lists; optional HTML and offline visual assets."""
     side = ctx["side"]
-    target_js = OUT / "assets" / "mermaid.min.js"
-    if not MERMAID_JS.exists():
-        fail(f"{rel(MERMAID_JS)} is missing; the diagrams cannot render offline.")
-    if not target_js.exists() or target_js.stat().st_size != MERMAID_JS.stat().st_size:
-        target_js.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(MERMAID_JS, target_js)
-        say(f"copied assets/mermaid.min.js to {rel(target_js)}")
+    if visuals:
+        ensure_visual_assets()
+    else:
+        for account in settled_by_account:
+            retire_visuals(account_folder(side, account))
+        retire_visuals()
 
     for account in settled_by_account:
         rows = [r for r in all_rows if r["account"] == account]
@@ -871,8 +903,9 @@ def write_index(ctx, settled_by_account, all_rows):
         judged = account in settled_by_account
         counts = [row[c] for c in ("n_1_governs_trade", "n_2_part", "n_3_live_not_trade", "n_4_not_live",
                                    "n_5_orders_drafts_duplicates", "n_6_business_practice", "n_unsure")]
-        link_md = (f"[position]({links['html']}) · [note]({links['readme']}) · [list]({links['csv']})" if judged
-                   else "not judged yet")
+        link_md = (f"[note]({links['readme']}) · [list]({links['csv']})" if judged else "not judged yet")
+        if judged and visuals:
+            link_md = f"[position]({links['html']}) · " + link_md
         link_html = (f'<a href="{links["html"]}">position</a> · <a href="{links["readme"]}">note</a> · '
                      f'<a href="{links["csv"]}">list</a>' if judged else "not judged yet")
         md.append(f"| {md_cell(account)} | {md_cell(row['governing_docs'] or ('not judged' if not judged else 'none'))} | "
@@ -908,20 +941,22 @@ def write_index(ctx, settled_by_account, all_rows):
 </body>
 </html>
 """
-    write_text(OUT / "INDEX.html", page)
+    if visuals:
+        write_text(OUT / "INDEX.html", page)
     say(f"written {rel(OUT / side / 'CORPUS.csv')} ({len(all_rows)} rows), {rel(OUT / side / 'ACCOUNTS.csv')} "
-        f"({len(account_rows)} rows), out/INDEX.md, out/INDEX.html")
+        f"({len(account_rows)} rows), out/INDEX.md" + (", out/INDEX.html" if visuals else ""))
     say(f"totals: {len(settled_by_account)} accounts judged of {len([a for a in ctx['accounts'] if a not in ctx['streams']])}; "
         f"{len(unreadable)} files not readable by the kit")
 
 
 # --------------------------------------------------------------------------- main
 def main():
-    parser = argparse.ArgumentParser(description="Generate account folders, notes, lists and diagrams.")
+    parser = argparse.ArgumentParser(description="Generate account folders, Markdown notes and CSV lists.")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--account", help="rebuild one account (name exactly as the ERP row)")
-    group.add_argument("--index", action="store_true", help="rebuild CORPUS.csv, ACCOUNTS.csv, INDEX.md, INDEX.html")
+    group.add_argument("--index", action="store_true", help="rebuild CORPUS.csv, ACCOUNTS.csv, INDEX.md")
     group.add_argument("--all", action="store_true", help="rebuild every judged account, then the index")
+    parser.add_argument("--visuals", action="store_true", help="also build analysis diagrams, HTML and offline assets")
     args = parser.parse_args()
 
     ctx = load_context()
@@ -937,15 +972,15 @@ def main():
         if account not in settled_by_account:
             fail(f"work/placements/{safe_folder_name(account)}.csv is missing. Run /judge \"{account}\" first.")
         settled, prose = settled_by_account[account]
-        write_account(ctx, account, settled, prose, all_rows)
+        write_account(ctx, account, settled, prose, all_rows, visuals=args.visuals)
         return 0
 
     if args.all:
         for account, (settled, prose) in settled_by_account.items():
-            write_account(ctx, account, settled, prose, all_rows)
+            write_account(ctx, account, settled, prose, all_rows, visuals=args.visuals)
         if not settled_by_account:
             warn("no account has a placements file yet; run /judge first. Writing the index anyway.")
-    write_index(ctx, settled_by_account, all_rows)
+    write_index(ctx, settled_by_account, all_rows, visuals=args.visuals)
     return 0
 
 

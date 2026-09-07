@@ -112,7 +112,7 @@ No current-use gap: the confirmation is on doc 012 p.3.
     matches = entity_rows() + [{"name_as_printed": ACCOUNT, "account": ACCOUNT, "basis": "same name", "confidence": "sure", "decided_by": "claude", "note": "Exact invented ERP row."}]
     write_csv(KIT / "inputs/entity-map.csv", matches, ENTITY_MAP_COLUMNS)
     write_csv(KIT / "inputs/our-entities.csv", [{"name": OURS}], ["name"])
-    logs += [run("scripts/sort.py"), run("scripts/place.py", "--all")]
+    logs += [run("scripts/sort.py"), run("scripts/place.py", "--all", "--visuals")]
     forms = build_forms(KIT, KIT / "work/forms") | extra_forms(KIT)
     for doc, form in forms.items():
         # Keep source paths inside this isolated pile rather than the sample generator's path.
@@ -132,7 +132,7 @@ No current-use gap: the confirmation is on doc 012 p.3.
     logs += [run("scripts/validate_forms.py", "--all"), run("scripts/graph.py", "--all", "--as-of", "2026-09-06")]
     # Mode B gets the stage 1 map, not stage 2 facts appended to the document list.
     # Rebuilding these reports leaves forms and graph rows available to mode C.
-    logs.append(run('scripts/place.py', '--all'))
+    logs.append(run('scripts/place.py', '--all', '--visuals'))
     (KIT.parent / "fixture-build.log").write_text("\n".join(logs), encoding="utf-8")
     (KIT.parent / "FIXTURE-PROVENANCE.md").write_text("Curated cards, placements and forms; deterministic oracle replay, not model extraction. Fresh question trials compare answering on these map/form artifacts.\n", encoding="utf-8")
     print(f"Curated eval map/forms ready: {KIT}; eleven validated forms. This is not model extraction.")

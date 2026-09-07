@@ -6,8 +6,10 @@ disable-model-invocation: true
 
 # /judge all | "<account>"
 
-Run from the kit root. Needs `/read` and `/sort` done: cards in `work/cards/`, rows in
-`work/logs/sort.csv`.
+Run from the kit root. Needs `/read` and `/match` done: full cards in `work/cards/`, rows in
+`work/logs/sort.csv`. Cheap `/sort` filing records are insufficient. Require a full card for
+every readable document assigned to an account; report incomplete accounts instead of judging
+them from filing records.
 
 1. Read `work/erp.json` for `side` and the `accounts` list. Read `inputs/entity-map.csv`: a row
    whose `name_as_printed` is an ERP row name and whose `account` is a different ERP row name
