@@ -97,7 +97,7 @@ class SampleAcceptance(unittest.TestCase):
         mmd = (self.root / "out/customers" / ACCOUNT1 / "position.mmd").read_text()
         self.assertIn("subgraph D001", mmd)
         self.assertIn("D001_p2 part_dead", mmd)
-        note = (self.root / "out/customers" / ACCOUNT1 / "README.md").read_text()
+        note = (self.root / "out/customers" / ACCOUNT1 / "ANALYSIS.md").read_text()
         self.assertIn("may charge the Customer the cost of freight", note)
         self.assertIn("freight shall be charged", note)
         self.assertIn("prevail on paper", note)

@@ -102,11 +102,11 @@ CORPUS_COLUMNS = [
     "side", "account", "companies_found", "match_basis", "match_confidence", "sort_note",
     # card
     "kind", "title", "their_signing_entities", "their_group_companies", "our_entity", "signed",
-    "start_date", "start_basis", "end", "ended_sign", "status", "parts", "attaches_to",
+    "start_date", "start_basis", "end", "ended_sign", "status", "status_per_document", "parts", "attaches_to",
     "replaces", "referred_to_not_in_pile", "trade_scope", "what_makes_it_govern",
     "entities_covered", "countries_covered", "copy_or_draft_of", "oddities",
     # judge
-    "tree", "folder", "placement_reason", "overlap_or_conflict", "question_for_business",
+    "tree", "folder", "placement_reason", "overlap_or_conflict", "question_for_business", "analysis_stage",
     # evidence
     "evidence_signed", "evidence_dates", "evidence_companies", "evidence_trade",
     # reviewer
@@ -748,18 +748,22 @@ def erp_account_names(erp):
     return list(dict.fromkeys(a.get("account", "") for a in erp.get("accounts", []) if a.get("account", "")))
 
 
-def stream_map(erp, entity_by_name):
+def stream_map(erp, entity_by_name, named_accounts=()):
     """ERP rows the entity map declares to be streams: {stream row: (main row, map row)}.
 
     A stream is an entity-map row whose name is itself an ERP row and whose account is a
-    different ERP row.
+    different ERP row. A stream explicitly named in a document keeps its own folder,
+    unless a user decision explicitly maps it to the parent.
     """
     names = erp_account_names(erp)
     by_norm = {norm_name(n): n for n in names}
+    named = {norm_name(n) for n in named_accounts}
     streams = {}
     for name in names:
         row = entity_by_name.get(norm_name(name))
         if not row:
+            continue
+        if norm_name(name) in named and row.get("decided_by") != "user":
             continue
         target = by_norm.get(norm_name(row.get("account", "")))
         if target and norm_name(target) != norm_name(name):

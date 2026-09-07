@@ -159,7 +159,7 @@ def report(rows, records):
     side = erp['side']
     accounts = erp_account_names(erp)
     entities, _ = load_entity_map()
-    streams = stream_map(erp, entities)
+    streams = stream_map(erp, entities, [n for record in records.values() for n in record.get('names', [])])
     corpus, logs = [], []
     used_names = {}
     holding_names = {}

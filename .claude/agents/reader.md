@@ -10,6 +10,11 @@ maxTurns: 40
 You are given one document number (doc NNN). Paths are relative to the kit root. Fill that
 document's sort card and nothing else.
 
+Your source boundary is this id only: never open another id's text, source, media, card,
+filing record or form, including through Bash, Glob or Grep. Do not search work/ for matching
+wording. Cross-document links are the matcher and judge's work. For duplicate candidates,
+use inventory metadata only and leave anything it cannot establish unresolved.
+
 1. Read `stage1/sort-card.md`. Its ten questions are the only questions: do not add, skip or
    reword one. Read `stage1/reader-return.md` for the line you return at the end.
 2. Read `work/text/<id>.txt` in full. Its header says how many pages there are and which are

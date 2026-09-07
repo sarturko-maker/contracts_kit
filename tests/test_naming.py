@@ -345,7 +345,7 @@ class AnalysisNames(unittest.TestCase):
         self.assertEqual("not readable by the kit", self.corpus["010"]["filed_as"])
 
     def test_the_note_lists_the_filed_name_of_every_document(self):
-        note = (self.root / "out/customers" / ACCOUNT1 / "README.md").read_text(encoding="utf-8")
+        note = (self.root / "out/customers" / ACCOUNT1 / "ANALYSIS.md").read_text(encoding="utf-8")
         self.assertIn("| tree | doc | filed as | title |", note)
         self.assertIn(f"| T1 | doc 001 | {self.corpus['001']['filed_as']} |", note)
         self.assertIn(f"filed as `{self.corpus['003']['filed_as']}`", note)

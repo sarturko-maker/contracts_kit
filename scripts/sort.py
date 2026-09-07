@@ -28,7 +28,8 @@ from kit_common import (  # noqa: E402
     _header_of,
     account_folder, apply_corrections_to_card, counterparty_for, load_corrections, doc_label,
     entity_row_for, erp_account_names, fail, filed_name, group_key, join_multi, load_all_cards, load_entity_map,
-    load_erp, load_inventory, load_our_entities, names_from_card, naming_from_card, norm_name, rel,
+    load_erp, load_inventory, load_our_entities, load_sort_log, names_from_card, naming_from_card, norm_name, rel,
+    WORK_CARDS, WORK_PLACEMENTS, read_csv, split_multi,
     safe_folder_name, say, stream_map, unique_filed_name, warn, write_csv, write_text,
 )
 
@@ -41,7 +42,7 @@ def copy_if_needed(source, target, produced, force):
     produced.add(target.resolve())
 
 
-def remove_stale_copies(side, accounts, produced):
+def remove_stale_copies(side, accounts, produced, selected=None):
     """Delete files in _to-judge and the holding folders that this run did not produce."""
     folders = [account_folder(side, a) / TO_JUDGE for a in accounts]
     folders += [OUT / side / h for h in HOLDING_FOLDERS]
@@ -50,6 +51,8 @@ def remove_stale_copies(side, accounts, produced):
         if not folder.exists():
             continue
         for path in sorted(folder.rglob("*")):
+            if selected is not None and path.name.split(" ", 1)[0].split(".", 1)[0] not in selected:
+                continue
             if path.is_file() and path.resolve() not in produced:
                 path.unlink()
                 removed += 1
@@ -72,7 +75,10 @@ def archive_filing_report(side, inventory, cards):
     replay keeps its established behavior.
     """
     corpus = OUT / side / "CORPUS.csv"
-    if not corpus.is_file() or "read_status" not in _header_of(corpus):
+    if not corpus.is_file():
+        return
+    if "read_status" not in _header_of(corpus) and not any(
+            r.get('analysis_stage') == 'filing only' for r in read_csv(corpus)):
         return
     readable_cards = [row for row in inventory
                       if row.get("doc_id") != "erp" and row.get("readable") == "yes"
@@ -139,6 +145,14 @@ def decide_targets(names, entity_by_name, erp_names_by_norm, streams):
             continue
         if account in streams:
             account = streams[account][0]
+        # Rule A1: an explicitly named ERP stream has its own filing destination.
+        # A user-confirmed parent mapping still wins over this automatic exception.
+        printed_account = erp_names_by_norm.get(norm_name(name))
+        if printed_account and printed_account not in streams and row.get("decided_by") != "user":
+            if account != printed_account:
+                row = {**row, 'note': 'Rule A1: explicitly named ERP stream retains its own folder. '
+                                      + row.get('note', '')}
+            account = printed_account
         if confidence == "not sure":
             not_sure.append((name, row))
             undecided.append(name)
@@ -219,6 +233,7 @@ def group_holding_targets(targets, holding_names):
 def main():
     parser = argparse.ArgumentParser(description="Replay inputs/entity-map.csv into account folders.")
     parser.add_argument("--force", action="store_true", help="copy again even if the copy exists")
+    parser.add_argument("--account", help="rematch only documents already filed to this ERP account")
     args = parser.parse_args()
 
     erp = load_erp()
@@ -236,13 +251,37 @@ def main():
 
     erp_names = erp_account_names(erp)
     erp_names_by_norm = {norm_name(n): n for n in erp_names}
-    streams = stream_map(erp, entity_by_name)
+    previous = load_sort_log()
+    selected = None
+    if args.account:
+        if args.account not in erp_names:
+            fail(f"{args.account!r} is not an ERP account")
+        selected = {r['doc_id'] for r in previous if r.get('account') == args.account}
+        if not selected:
+            fail("This account has no filing rows. Run /sort first, or use /analyse all.")
+        missing = {d for d in selected if d not in cards or not (WORK_CARDS / f'{d}.md').is_file()}
+        if missing:
+            fail("Account analysis is incomplete; missing full cards: " + ", ".join(sorted(missing)))
+        for row in inventory:
+            if row.get('doc_id') in selected and not (WORK_FILES / f"{row['doc_id']}.{row.get('ext', '')}").is_file():
+                fail(f"doc {row['doc_id']}: prepared copy missing; run /prepare again")
+    named = [n for c in cards.values() for n in names_from_card(c, our_names)]
+    named += [n for r in previous if r['doc_id'] not in cards
+              for n in split_multi(r.get('companies_found', ''))]
+    streams = stream_map(erp, entity_by_name, named)
     main_accounts = [n for n in erp_names if n not in streams]
 
-    archive_filing_report(side, inventory, cards)
+    incomplete = any(r.get('readable') == 'yes' and r.get('doc_id') != 'erp'
+                     and r.get('doc_id') not in cards for r in inventory)
+    if selected is None and not incomplete:
+        archive_filing_report(side, inventory, cards)
+    elif selected is None and not cards:
+        archive_filing_report(side, inventory, cards)  # fail before replacing a filing-only report
 
     # 2. streams: a README only
     for stream, (main, row) in streams.items():
+        if selected is not None and stream != args.account:
+            continue
         folder = account_folder(side, stream)
         folder.mkdir(parents=True, exist_ok=True)
         write_text(folder / "README.md",
@@ -260,8 +299,7 @@ def main():
     # 4. every document
     produced = set()
     used_names = {}
-    log_rows = []
-    per_account_docs = {a: [] for a in main_accounts}
+    log_rows = [r for r in previous if r['doc_id'] not in selected] if selected is not None else []
     holding = {h: {} for h in HOLDING_FOLDERS}  # holding folder -> {name: [doc ids]}
     undecided_names = {}
     holding_names = {}  # group key -> the printed name that names the holding folder
@@ -271,6 +309,8 @@ def main():
     for row in inventory:
         doc_id = row.get("doc_id", "")
         if doc_id == "erp":
+            continue
+        if selected is not None and doc_id not in selected:
             continue
         original = row.get("original_path", "")
         if row.get("readable") != "yes":
@@ -282,6 +322,10 @@ def main():
         card = cards.get(doc_id)
         if card is None:
             no_card.append(doc_id)
+            retained = [r for r in previous if r['doc_id'] == doc_id]
+            if retained:
+                log_rows.extend(retained)
+                continue
             log_rows.append({"doc_id": doc_id, "original_path": original, "companies_found": "",
                              "account": "_no-card", "basis": "", "confidence": "", "note": "no card yet; run /read"})
             continue
@@ -301,7 +345,6 @@ def main():
                 others = [a for a in account_targets if a != t["target"]]
                 if others:
                     note = f"shared with: {', '.join(others)}; " + note
-                per_account_docs[t["target"]].append(doc_id)
                 folder_path = account_folder(side, t["target"]) / TO_JUDGE
             elif kind == "_no-name-found":
                 holding["_no-name-found"].setdefault("(no name)", []).append(doc_id)
@@ -319,7 +362,24 @@ def main():
                              "account": t["target"], "basis": t["basis"], "confidence": t["confidence"],
                              "note": note})
 
-    remove_stale_copies(side, main_accounts, produced)
+    remove_stale_copies(side, main_accounts, produced, selected if selected is not None else set(cards))
+
+    if selected is not None:
+        # A changed shared document also makes the other account's judgment stale.
+        # Keep its source copies and filing rows; /report marks it awaiting judgment.
+        affected = {r['account'] for r in previous + log_rows if r['doc_id'] in selected}
+        archive = None
+        for account in affected & set(erp_names):
+            for path in list(WORK_PLACEMENTS.glob('*')):
+                if (path.is_file() and path.suffix in ('.csv', '.md')
+                        and safe_folder_name(path.stem) == safe_folder_name(account)):
+                    if archive is None:
+                        history = WORK / 'history' / 'scoped-placements'
+                        history.mkdir(parents=True, exist_ok=True)
+                        archive = Path(tempfile.mkdtemp(prefix='previous-', dir=history))
+                    path.rename(archive / path.name)
+            if account != args.account:
+                say(f"{account}: shared or reassigned document changed; judgment must be refreshed explicitly.")
 
     # 5. the log and the summary
     log_rows.sort(key=lambda r: (r["doc_id"], r["account"]))
@@ -327,7 +387,7 @@ def main():
 
     say(f"Side: {side}. Accounts: {len(main_accounts)}" + (f", streams: {len(streams)}" if streams else ""))
     for account in main_accounts:
-        docs = per_account_docs[account]
+        docs = [r['doc_id'] for r in log_rows if r['account'] == account]
         say(f"  {account}: " + (", ".join(doc_label(d) for d in docs) if docs else "(no documents)"))
     for stream, (main, _) in streams.items():
         say(f"  stream: {stream!r} treated as one with {main!r} (README only)")

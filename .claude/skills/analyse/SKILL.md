@@ -32,7 +32,10 @@ runs only when the user types it. It never runs `/extract`, `/map` or the graph 
    card is still flagged, leave it, say so, and carry the warning into the report. Other
    warnings (evidence longer than forty words, paraphrase suspected) are reported, not retried.
 
-4. Invoke `/match --force`. Rows with `decided_by` = `user` are preserved untouched; `--force`
+4. Invoke `/match --force` for all, or `/match account "<name>" --force` for a single account.
+   Never use the global matching command for account-only analysis. It must preserve the other
+   accounts' filing rows, including documents that have not had a full read.
+   Rows with `decided_by` = `user` are preserved untouched; `--force`
    only re-decides the `claude` rows from the full cards. Put the names that still need the
    user's decision in your reply.
 
@@ -42,6 +45,10 @@ runs only when the user types it. It never runs `/extract`, `/map` or the graph 
 6. Run `python scripts/place.py --all --visuals`. Visuals are the default at this stage: the
    account folders, `documents.csv`, the position notes, `CORPUS.csv`, `ACCOUNTS.csv`,
    `INDEX.md`, and `position.html`/`position.mmd` plus `INDEX.html` are written here.
+   README.md is the short overview; ANALYSIS.md retains the full evidence and qualifications.
+   Accounts awaiting reading or judgment retain their document lists and copies and are marked
+   analysis incomplete. They get no governing diagram. Shared or reassigned documents may
+   invalidate another account's old judgment; report that account, but do not spend on it unasked.
 
 7. Print, in the reply: each account's three judge lines under its name; the counts from
    `INDEX.md` (documents per status folder, per account, holding folders, anything unresolved);

@@ -35,7 +35,7 @@ from kit_common import (  # noqa: E402
     ACCOUNTS_COLUMNS, CORPUS_COLUMNS, HOLDING_FOLDERS, MERMAID_JS, NOTE_TEMPLATE, NOT_FOUND, OUT,
     PLACEMENT_COLUMNS, REVIEWER_COLUMNS, STATUS_FOLDERS, TO_JUDGE, WORK_FILES, WORK_PLACEMENTS,
     account_folder, apply_corrections_to_card, apply_corrections_to_placement, counterparty_for,
-    doc_label, entity_row_for, erp_account_names, fail, filed_name, is_empty_answer, join_multi, load_all_cards,
+    doc_label, entity_row_for, erp_account_names, fail, filed_name, is_empty_answer, is_unsigned_draft, join_multi, load_all_cards,
     load_corrections, load_entity_map, load_erp, load_inventory, load_our_entities, load_sort_log,
     names_from_card, naming_from_card, norm_name, read_csv, rel, safe_folder_name, say, split_multi,
     stream_map, strip_role, truncate, unique_filed_name, warn, write_csv, write_text,
@@ -113,7 +113,9 @@ def load_context():
         "erp": erp,
         "side": side,
         "accounts": erp_account_names(erp),
-        "streams": stream_map(erp, entity_by_name),
+        "streams": stream_map(erp, entity_by_name, [r.get('account', '') for r in sort_rows]),
+        "existing_rows": {(r['doc_id'], r.get('account', '')): r
+                          for r in read_csv(OUT / side / 'CORPUS.csv')},
         "inventory": {r["doc_id"]: r for r in load_inventory()},
         "cards": cards,
         "entity_by_name": entity_by_name,
@@ -219,6 +221,22 @@ def settle_placements(ctx, account, placements):
 
 
 # --------------------------------------------------------------------------- corpus rows
+def final_status(card, placement):
+    """Display the judge's conclusion; never override it with the isolated reading."""
+    folder = placement.get('folder', '')
+    if folder in ('1-governs-trade', '2-governs-part-of-trade', '3-live-not-trade'):
+        return 'live'
+    if folder == '4-not-live':
+        return 'not live'
+    if folder == '5-orders-drafts-duplicates':
+        if placement.get('attach_kind') == 'duplicate of':
+            return 'duplicate'
+        if is_unsigned_draft(card):
+            return 'draft'
+        return 'order/draft/duplicate'
+    return FOLDER_WORDS.get(folder, 'unsure')
+
+
 def merge_parts(detail, parts_status):
     """The card's parts detail with live/dead taken from the judge's parts_status."""
     segments = [] if is_empty_answer(detail) else split_multi(detail)
@@ -306,6 +324,7 @@ def corpus_row(ctx, sort_row, placement, judged):
             if col not in ("doc_id", "original_path", "file_type") and col not in REVIEWER_COLUMNS:
                 row[col] = UNREADABLE
         row["account"] = sort_row.get("account", "_unreadable")
+        row['analysis_stage'] = 'unreadable'
         return row
 
     is_docx = inv.get("file_type") == "docx"
@@ -327,7 +346,7 @@ def corpus_row(ctx, sort_row, placement, judged):
         "kind": "q1_kind", "title": "q1_title", "their_signing_entities": "q2_their_signing_entities",
         "their_group_companies": "q2_their_group_companies", "our_entity": "q2_our_entity",
         "signed": "q3_signed", "start_date": "q4_start_date", "start_basis": "q4_start_basis",
-        "end": "q4_end", "ended_sign": "q4_ended_sign", "status": "q4_status",
+        "end": "q4_end", "ended_sign": "q4_ended_sign", "status_per_document": "q4_status",
         "attaches_to": "q6_attaches_to", "replaces": "q6_replaces",
         "referred_to_not_in_pile": "q6_referred_to_not_in_pile", "trade_scope": "q7_trade_scope",
         "what_makes_it_govern": "q7_what_makes_it_govern", "entities_covered": "q8_entities_covered",
@@ -338,6 +357,9 @@ def corpus_row(ctx, sort_row, placement, judged):
     if card is None:
         for col in list(card_map) + ["parts"]:
             row[col] = NO_CARD
+        previous = ctx.get('existing_rows', {}).get((doc_id, row['account']), {})
+        for col in ('title', 'kind'):
+            row[col] = previous.get(col, NO_CARD)
     else:
         for col, key in card_map.items():
             row[col] = card.get(key, "")
@@ -348,9 +370,15 @@ def corpus_row(ctx, sort_row, placement, judged):
         counterparty=counterparty_for(sort_row.get("account", ""), split_multi(sort_row.get("companies_found", ""))),
         pages=inv.get("pages", ""), unresolved=card is None,
         **naming_from_card(card, placement if judged else None))
+    if card is None:
+        row['filed_as'] = previous.get('filed_as') or row['filed_as']
+    row['status'] = NOT_JUDGED if card else 'unassessed (filing only)'
+    row['analysis_stage'] = 'read; awaiting judgment' if card else 'filing only'
 
     if judged and placement is not None:
         row.update({
+            "status": final_status(card or {}, placement),
+            "analysis_stage": "judged",
             "tree": placement.get("tree", ""),
             "folder": placement.get("folder", ""),
             "placement_reason": placement.get("reason", ""),
@@ -465,7 +493,7 @@ def table_rows(ctx, settled, folder, with_limit, filed=None):
             tree, doc_label(doc_id), (filed or {}).get(doc_id, NOT_FOUND),
             card.get("q1_title", NOT_FOUND), card.get("q1_kind", NOT_FOUND),
             signing_names(card),
-            f"{card.get('q4_start_date', NOT_FOUND)} / {card.get('q4_end', NOT_FOUND)} / {card.get('q4_status', NOT_FOUND)}",
+            f"{card.get('q4_start_date', NOT_FOUND)} / {card.get('q4_end', NOT_FOUND)} / {final_status(card, p)}",
             card.get("q7_trade_scope", NOT_FOUND),
         ]
         if with_limit:
@@ -568,6 +596,32 @@ def build_note(ctx, account, settled, prose, filed=None):
     return note
 
 
+def brief_note(ctx, account, settled, prose):
+    """A bounded entry point; all evidence and qualifications remain in ANALYSIS.md."""
+    def docs(folder):
+        ids = [doc_label(d) for d, p in sorted(settled.items()) if p['folder'] == folder]
+        return ', '.join(ids[:10]) + (f' (+{len(ids) - 10} more; see documents.csv)' if len(ids) > 10 else '') or 'none'
+
+    position = prose.get('position', '').strip() or NOTHING
+    if len(position.split()) > 180:
+        position = 'The detailed position exceeds this overview. Read [the full position](ANALYSIS.md#2-the-position) before relying on these placements.'
+    lines = [f'# {account} — position ({ctx["side"]})', '', position, '',
+             '| classification | documents |', '| --- | --- |']
+    for folder, label in FOLDER_WORDS.items():
+        lines.append(f'| {label} | {docs(folder)} |')
+    questions = prose.get('questions', '').strip()
+    count = len(re.findall(r'^\s*\d+[.)]\s+\S', questions, re.M))
+    lines += ['', f'{len(settled)} documents; {count if count else "see full note for"} business questions.', '',
+              '[Full analysis, exact evidence, conflicts and qualifications](ANALYSIS.md) · '
+              '[Document list and filenames](documents.csv)', '',
+              'The diagram is in position.html when visuals are enabled. Status reflects the account judgment; '
+              'status_per_document in the CSV preserves the earlier document reading. '
+              'Review execution uncertainty and limited scopes in the full analysis.', '']
+    if safe_folder_name(account) != account:
+        lines += [f'Folder name: `{safe_folder_name(account)}`.', '']
+    return '\n'.join(lines)
+
+
 # --------------------------------------------------------------------------- the diagram
 def mm_label(text):
     """Text safe inside a quoted Mermaid label."""
@@ -590,7 +644,7 @@ def build_mermaid(ctx, account, settled):
         nid = node_id(doc_id)
         defined.add(nid)
         label = mm_label(f"{doc_label(doc_id)} · {truncate(card.get('q1_title', NOT_FOUND), 40)} · "
-                         f"{FOLDER_WORDS.get(p['folder'], p['folder'])} · {card.get('q4_status', 'unsure') or 'unsure'}")
+                         f"{FOLDER_WORDS.get(p['folder'], p['folder'])}")
         cls = FOLDER_CLASS.get(p["folder"], "unsure")
         parts = parts_of(card, p)
         if parts:
@@ -840,7 +894,8 @@ def write_account(ctx, account, settled, prose, all_rows, visuals=False):
 
     write_csv(folder / "documents.csv", rows, CORPUS_COLUMNS)
     note = build_note(ctx, account, settled, prose, filed=filed)
-    write_text(folder / "README.md", note)
+    write_text(folder / "ANALYSIS.md", note)
+    write_text(folder / "README.md", brief_note(ctx, account, settled, prose))
     if visuals:
         ensure_visual_assets()
         mmd = build_mermaid(ctx, account, settled)
@@ -852,7 +907,7 @@ def write_account(ctx, account, settled, prose, all_rows, visuals=False):
     counts = {f: sum(1 for p in settled.values() if p["folder"] == f) for f in STATUS_FOLDERS}
     say(f"{account}: {copied} files copied into status folders; "
         + ", ".join(f"{f.split('-')[0]}={n}" for f, n in counts.items())
-        + f"; written {rel(folder)}/README.md, documents.csv"
+        + f"; written {rel(folder)}/README.md, ANALYSIS.md, documents.csv"
         + (", position.mmd, position.html" if visuals else ""))
 
 
@@ -893,11 +948,46 @@ def settled_for_all_accounts(ctx):
     for account in ctx["accounts"]:
         if account in ctx["streams"]:
             continue
+        missing = [r['doc_id'] for r in docs_sorted_to(ctx, account) if r['doc_id'] not in ctx['cards']]
+        if missing:
+            warn(f"{account}: awaiting full reading of " + ', '.join(missing) + '; no status judgment published')
+            continue
         placements = load_placements(ctx, account)
         if placements is None:
             continue
         result[account] = settle_placements(ctx, account, placements)
     return result
+
+
+def write_pending_account(ctx, account, all_rows):
+    """Keep known filing and copies visible while this account awaits reading/judgment."""
+    folder = account_folder(ctx['side'], account)
+    rows = [r for r in all_rows if r['account'] == account]
+    for name in [TO_JUDGE, 'files'] + STATUS_FOLDERS:
+        target = folder / name
+        if target.exists():
+            shutil.rmtree(target)
+    for name in ('ANALYSIS.md',):
+        if (folder / name).exists():
+            (folder / name).unlink()
+    for row in rows:
+        inv = ctx['inventory'][row['doc_id']]
+        source = WORK_FILES / f"{row['doc_id']}.{inv.get('ext', '')}"
+        if source.is_file():
+            target = folder / 'files' / row['filed_as']
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+    write_csv(folder / 'documents.csv', rows, CORPUS_COLUMNS)
+    lines = [f'# {account} — filed documents', '',
+             f'{len(rows)} documents are filed here. Analysis is incomplete; governing status has not been judged.', '',
+             'Run /analyse for this account to complete its reading and judgment. '
+             'An account analysed separately does not establish which contracts govern this one.', '',
+             '[Documents, printed identities and matching decisions](documents.csv)', '']
+    lines += [f"- {doc_label(r['doc_id'])}: {md_cell(r['title'])}" for r in rows[:20]]
+    if len(rows) > 20:
+        lines.append(f'- {len(rows) - 20} further documents are listed in documents.csv.')
+    write_text(folder / 'README.md', '\n'.join(lines) + '\n')
+    retire_visuals(folder)
 
 
 # --------------------------------------------------------------------------- the index
@@ -916,10 +1006,13 @@ def account_summary(ctx, account, settled, prose):
     doc_ids = [r["doc_id"] for r in docs_sorted_to(ctx, account)]
     row["n_documents"] = str(len(doc_ids))
     if settled is None:
+        row['review_status'] = 'analysis incomplete'
         return row
     def docs_in(folder):
         return join_multi(doc_label(d) for d, p in sorted(settled.items()) if p["folder"] == folder)
-    row["governing_docs"] = docs_in("1-governs-trade")
+    governing = {d for d, p in settled.items() if p['folder'] == '1-governs-trade'}
+    roots = [d for d in sorted(governing) if settled[d].get('attaches_to', '').strip().zfill(3) not in governing]
+    row["governing_docs"] = join_multi(doc_label(d) for d in roots)
     row["part_docs"] = docs_in("2-governs-part-of-trade")
     count_cols = dict(zip(STATUS_FOLDERS, ["n_1_governs_trade", "n_2_part", "n_3_live_not_trade", "n_4_not_live",
                                            "n_5_orders_drafts_duplicates", "n_6_business_practice", "n_unsure"]))
@@ -1005,6 +1098,9 @@ def needs_a_decision(all_rows):
 def write_index(ctx, settled_by_account, all_rows, visuals=False):
     """CSV/Markdown index and account lists; optional HTML and offline visual assets."""
     side = ctx["side"]
+    for account in ctx['accounts']:
+        if account not in ctx['streams'] and account not in settled_by_account:
+            write_pending_account(ctx, account, all_rows)
     if visuals:
         ensure_visual_assets()
     else:
@@ -1038,11 +1134,14 @@ def write_index(ctx, settled_by_account, all_rows, visuals=False):
         judged = account in settled_by_account
         counts = [row[c] for c in ("n_1_governs_trade", "n_2_part", "n_3_live_not_trade", "n_4_not_live",
                                    "n_5_orders_drafts_duplicates", "n_6_business_practice", "n_unsure")]
-        link_md = (f"[note]({links['readme']}) · [list]({links['csv']})" if judged else "not judged yet")
+        link_md = f"[note]({links['readme']}) · [list]({links['csv']})"
+        if not judged:
+            link_md = 'analysis incomplete · ' + link_md
         if judged and visuals:
             link_md = f"[position]({links['html']}) · " + link_md
         link_html = (f'<a href="{links["html"]}">position</a> · <a href="{links["readme"]}">note</a> · '
-                     f'<a href="{links["csv"]}">list</a>' if judged else "not judged yet")
+                     f'<a href="{links["csv"]}">list</a>' if judged else
+                     f'analysis incomplete · <a href="{links["readme"]}">note</a> · <a href="{links["csv"]}">list</a>')
         md.append(f"| {md_cell(account)} | {md_cell(row['governing_docs'] or ('not judged' if not judged else 'none'))} | "
                   + " | ".join(counts) + f" | {row['n_documents']} | {row['open_questions']} | {link_md} |")
         html_rows.append("<tr>" + "".join(f"<td>{html.escape(x)}</td>" for x in

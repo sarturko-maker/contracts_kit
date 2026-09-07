@@ -13,6 +13,40 @@ The original 53-test build passed. The user then approved the rule 6 exception a
 explicit cost stages; that follow-on build is recorded below. Historical evaluation artifacts
 remain unchanged.
 
+## Enterprise /analyse readiness fixes — 7 September 2026
+
+The readiness review found that account-only analysis replaced other accounts' known filing
+with empty reports, and final CSV/diagram statuses disagreed with the judge's placements.
+
+- `/match account "<name>" --force` now replays only the selected account's documents. Other
+  filing rows and prepared copies survive. Missing card pairs or prepared files stop the
+  scoped replay before it changes reports. Shared/reassigned documents retire the affected
+  old placements; those accounts remain explicitly awaiting judgment without more model calls.
+- Mixed-stage reports retain all inventory rows and pending account lists. `analysis_stage`
+  distinguishes filing, reading awaiting judgment, judged and unreadable. Pending accounts
+  get no governing diagram. A later full run archives the mixed report and retires cheap leftovers.
+- CSV `status` reflects the judge's final placement; `status_per_document` preserves the reader's
+  earlier assessment. Diagrams use the final placement label. The governing index lists roots,
+  with amendments and attached letters retained in document lists and classification counts.
+- Explicitly named ERP streams retain their own folders in both filing and full analysis,
+  following rule A1. A user-confirmed parent mapping wins. The matching/judging instructions
+  now agree with those script decisions.
+- README.md is a short overview linking to ANALYSIS.md, which retains the complete position,
+  evidence, qualifications and business questions. Existing long prose is preserved in full;
+  the judge now targets 180 words for the overview's position paragraph. Analysis HTML and
+  later render-only refreshes retain the full note.
+- Reader instructions explicitly prohibit opening other documents' text, cards, forms or media,
+  including through shell/search tools. This is an instruction boundary, not OS isolation.
+
+Validation: 172 automated tests, including 11 new workflow/report regression tests; Python
+compilation and whitespace checks. Renderer replay against the saved actual Claude /analyse
+outputs retained all 34 corpus rows and left readings, placements and prepared files unchanged.
+The two superseded contracts now show `not live`; populated account overviews are 133–137 words.
+An offline Chromium check rendered the Mermaid SVG without a syntax error. No new model calls
+were made and the incomplete /deep-dive run was not resumed. The actual enterprise tenant still
+has not been exercised; the previous Claude live run and this deterministic replay are distinct
+validation evidence. No fixed card/form questions or DCG registry changed.
+
 ## What was completed
 
 - Stage 2 JSON Schema and a standard-library validator: fixed choices, required answers,

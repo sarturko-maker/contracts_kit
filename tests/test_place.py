@@ -309,10 +309,11 @@ class HostileAccountNames(KitFixture):
         self.assertIn("no account has a placements file yet", out)
         self.assertEqual("not judged", self.corpus()["001"]["folder"])
         index = (self.root / "out/INDEX.md").read_text(encoding="utf-8")
-        self.assertIn("not judged yet", index)
+        self.assertIn("analysis incomplete", index)
         # An account with documents is not treated as an empty account.
-        self.assertFalse((self.root / "out/customers" / safe_folder_name(HOSTILE)
-                          / "README.md").exists())
+        readme = (self.root / "out/customers" / safe_folder_name(HOSTILE) / "README.md").read_text()
+        self.assertIn("documents are filed here", readme)
+        self.assertNotIn("Nothing is filed", readme)
 
 
 if __name__ == "__main__":

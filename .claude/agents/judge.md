@@ -39,7 +39,7 @@ document only to check a quote you doubt; never edit a card.
    by `_` and trailing dots and spaces stripped, exactly as `kit_common.safe_folder_name` does
    it; `place.py` reads that name, so an account written under its raw name is never found.
 6. Write `work/placements/<safe_account>.md` with exactly four headings. `## The position`: three
-   to six lines, no table, every sentence a fact from a card, no hedging: what governs trade,
+   to six lines and at most 180 words, no table, every sentence a fact from a card, no hedging: what governs trade,
    since when, whose paper, signed by whom, what it covers, how it ends; the one qualification
    that matters most; what governs part of the trade; what is missing; if nothing governs, say
    so and what the account appears to trade on. `## Overlaps and conflicts`: doc and part, the
@@ -47,7 +47,10 @@ document only to check a quote you doubt; never edit a card.
    itself. For layered parts, include conflicting wording even if one part has expired.
    Separate current applicability from priority while both parts applied: if no precedence
    wording settles that earlier conflict, label that priority `unresolved`; expiry alone
-   does not supply a historical precedence rule. `None found.` if none.
+   does not supply a historical precedence rule. `None found.` if none. Put detailed evidence
+   and additional qualifications in the appropriate remaining sections; do not lengthen the
+   position summary to repeat the document tables. The renderer retains every section in
+   ANALYSIS.md and places the short position in README.md.
    `## Couldn't find or couldn't tell`. `## Questions for the
    business`: numbered, each names a doc.
 7. Run `python scripts/place.py --account "<account>"`. If it warns, fix your placements and

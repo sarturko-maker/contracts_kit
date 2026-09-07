@@ -14,9 +14,9 @@ Run from the kit root. Needs `/read` and `/match` done: full cards in `work/card
 every readable document assigned to an account; report incomplete accounts instead of judging
 them from filing records.
 
-1. Read `work/erp.json` for `side` and the `accounts` list. Read `inputs/entity-map.csv`: a row
-   whose `name_as_printed` is an ERP row name and whose `account` is a different ERP row name
-   marks a stream. Streams are not judged; their documents sit under the main row.
+1. Read `work/erp.json` for `side` and the `accounts` list. Use the script's account list in
+   step 2: an explicitly named stream keeps its own folder under rule A1 and can need a judge.
+   Do not infer which accounts to skip from the entity map alone.
 2. Accounts to judge: `all` = the accounts printed by
    `python scripts/place.py --accounts-with-documents`, which are the non-stream ERP rows that
    actually have documents. An account with no documents gets **no** judge: `place.py` writes its

@@ -1,9 +1,9 @@
 ---
 name: match
-description: Matches every document to an ERP account, writes the entity map, then runs sort.py to build the account folders. Usage /match [--force].
+description: Matches documents to ERP accounts, writes the entity map, then replays filing. Usage /match [account "<name>"] [--force].
 ---
 
-# /match [--force]
+# /match [account "<name>"] [--force]
 
 Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
 targeted maintenance. It stops after its own step and never starts the next.
@@ -44,6 +44,11 @@ word for word:
 > edits does not ask you again. Tell the user which names need their decision.
 
 Steps:
+With `account "<name>"`, first capture that account's doc ids from `work/logs/sort.csv`.
+Require a full card for every selected id; stop if any is missing. Read other existing cards
+only as matching context. Re-decide only names found in the selected cards, preserving all
+other entity-map rows. Do not read other source documents or start readers for other accounts.
+
 1. Read `work/erp.json` (accounts, side, stream candidates), `inputs/our-entities.csv` if present,
    the `q2_*` fields of every `work/cards/<id>.json`, and the existing `inputs/entity-map.csv`
    (`name_as_printed,account,basis,confidence,decided_by,note`). Keep every existing row; rows with
@@ -63,11 +68,16 @@ Steps:
    own entities, `none` and `not found`): decide `account` (an ERP row name spelled exactly, or
    `_not-on-the-list`, or `_not-sure` with the candidate in `note`), `basis`, `confidence`, `note`.
    For `known group` the note says what you know.
-3. Decide the streams: an ERP row that is a stream of another gets a row with `name_as_printed` =
-   the stream row, `account` = the main row, basis `same name`. Say which rows you treated as one.
+3. Decide the streams using rule A1's exception: if a document explicitly names the stream,
+   map that printed stream name to its own ERP row. Otherwise record `name_as_printed` = the
+   stream row, `account` = the main row, basis `same name`. Do not change a user-confirmed
+   mapping. The scripts enforce the explicit-name exception for automatic mappings too.
+   Say which rows you treated as one and which named streams retain their own folders.
 4. Append your new rows with `decided_by` = `claude`. Never change a `user` row. With `--force`,
    replace the `claude` rows you re-decided.
-5. Run `python scripts/sort.py` (with `--force` if it was typed). Put its output in your reply:
+5. Run `python scripts/sort.py` for all, or `python scripts/sort.py --account "<name>"` for the
+   selected account (with `--force` if it was typed). Never drop `--account` on a scoped run.
+   Put its output in your reply:
    documents per account, holding folders, streams.
 6. List the names that need the user's decision (no row, or confidence `not sure`). Say: edit
    `inputs/entity-map.csv`, set `decided_by` = `user`, run `/match` again; nothing is asked twice.

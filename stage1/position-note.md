@@ -1,8 +1,9 @@
 # {{account}} — position ({{side}})
 
 <!--
-This is the template for out/<side>/<account>/README.md. One page. Its job is to let a busy
-adult capture the position in thirty seconds: not simplified, just fast to absorb. Plain words,
+This is the template for out/<side>/<account>/ANALYSIS.md, the complete evidence and reasoning.
+README.md is a separate short overview linking here. Its position paragraph is at most 180 words;
+all longer prose stays here in full, with a link in the overview. Plain words,
 no hedging, no recitals, every sentence a fact. Nothing in it that is not in a sort card.
 
 place.py fills every {{placeholder}}. Sections 1, 3, 4, 5, 6 and the list in 8 are generated

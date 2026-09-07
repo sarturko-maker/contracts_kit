@@ -145,8 +145,11 @@ def main(argv=None):
         rows = read_csv(table, required_columns=["doc_id", "title", "kind"])
         note = note_path.read_text(encoding="utf-8")
         if args.analysis:
+            full_note = folder / 'ANALYSIS.md'
+            if full_note.is_file():
+                note = full_note.read_text(encoding='utf-8')
             if account not in settled:
-                warn(f"{account}: no existing placements; run /deep-dive before --analysis")
+                warn(f"{account}: no existing placements; run /analyse before --analysis")
                 continue
             current = settled[account][0]
             listed = {row.get("doc_id"): row for row in rows}
@@ -155,7 +158,7 @@ def main(argv=None):
                     listed[doc_id].get("folder") != placement.get("folder")
                     for doc_id, placement in current.items()):
                 warn(f"{account}: current tables do not match the analysis placements; "
-                     "refresh /deep-dive reports before --analysis")
+                     "refresh /analyse reports before --analysis")
                 continue
             mmd = build_mermaid(ctx, account, settled[account][0])
         else:

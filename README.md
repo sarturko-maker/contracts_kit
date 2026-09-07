@@ -6,7 +6,7 @@ There are four commands, and **each stops after its own stage**:
 | command | runs | models | delivers |
 | --- | --- | --- | --- |
 | `/sort <pile>` (optional triage) | `/check`, `/prepare`, one filer per document, name matching, filing report | Haiku filers; main session matches | account folders with renamed copies, per-folder `documents.csv` and `README.md`, global `CORPUS.csv`/`ACCOUNTS.csv`, `INDEX.md` |
-| `/analyse [all \| account "<name>"]` | `/read`, the card check, `/match --force`, `/judge` per account, `place.py --all --visuals` | Sonnet readers, Opus judges | status folders `1`–`6`/`unsure` with renamed copies, a position note per account, `documents.csv`, `CORPUS.csv`, `position.html` and `INDEX.html` |
+| `/analyse [all \| account "<name>"]` | `/read`, the card check, `/match --force`, `/judge` per account, `place.py --all --visuals` | Sonnet readers, Opus judges | status folders `1`–`6`/`unsure` with renamed copies, a position note per account, `documents.csv`, `CORPUS.csv`, short `README.md`, full `ANALYSIS.md`, `position.html` and `INDEX.html` |
 | `/deep-dive [--topics ...] [--force]` | prerequisite check, `/extract`, `/map`, `/report --graph` | Sonnet extractors, Opus mappers | validated forms, `TREES.md`, `out/FORM-HEALTH.md`, `out/DIDNT-FIT.md`, `out/graph/` |
 | `/visualise [all \| "account"] [--analysis]` | scripts only | none | re-rendered Mermaid HTML after corrections; free |
 
@@ -42,7 +42,7 @@ Start with the preflight:
 
 It checks Python, `pypdf`, the pile, the ERP record, the bundled `mermaid.min.js` and write access,
 and stops on the first `FAIL`. Then `/prepare <path to pile>` inventories and numbers the files.
-`/sort` and `/analyse` will run both for you if you give them a pile path.
+`/sort <pile>` runs both for you. `/analyse` requires prepared inputs; run `/check` and `/prepare` first when skipping triage.
 
 Put contract files and one ERP record in a folder; subfolders are allowed. The kit copies originals
 and never modifies, moves or renames them. Keep real piles outside the repository.
@@ -91,7 +91,8 @@ page is sufficient for preliminary filing; it does not establish that the compan
 
 Holding folders retain names not matched to the list, uncertain matches and files with no name;
 `_needs-reading` retains failed/missing reads and `_unreadable` lists unsupported files. Stream ERP
-rows get a README pointing to the main account. Shared documents may appear under multiple accounts,
+rows get a README pointing to the main account unless a document explicitly names that stream;
+a named stream keeps its own ERP folder. An explicit user mapping to the parent wins. Shared documents may appear under multiple accounts,
 so the global CSV has one row per document/account, not necessarily one row per original.
 
 Fix matches in `inputs/entity-map.csv`, set `decided_by` to `user`, then rerun `/sort`. User decisions
@@ -129,10 +130,23 @@ under what needs a decision. Nothing is invented and nothing is dropped.
 
 The result puts copies into status folders — `1-governs-trade`, `2-governs-part-of-trade`,
 `3-live-not-trade`, `4-not-live`, `5-orders-drafts-duplicates`, `6-business-practice`, `unsure` —
-and turns each account README into a position note: what governs, execution and version uncertainty,
-limited scopes, overlaps and conflicts with both sets of exact words, what is missing, and the
-questions for the business. Its target is concise; one printed page is not currently enforced (the
-live-test notes ran 1,374–2,169 words).
+and writes a short `README.md` overview with a classification list and links. The full position,
+execution and version uncertainty, limited scopes, conflicts with exact evidence, missing documents
+and business questions stay in `ANALYSIS.md` and `position.html`. The judge targets 180 words for
+the position paragraph; longer existing positions remain complete in the full analysis, with a
+link from the overview.
+
+The CSV `status` follows the final account judgment. `status_per_document` separately preserves
+the reader’s initial assessment, before amendments and replacements were linked. The diagram
+uses the final placement. `governing_docs` in the account index lists governing roots; amendments
+and attached letters remain in the classification counts and document lists.
+
+For `/analyse account "<name>"`, matching is scoped to the documents previously filed to that
+account. Other accounts retain their filing rows and copies. The global CSV marks each row as
+`filing only`, `read; awaiting judgment`, `judged` or `unreadable` in `analysis_stage`; an incomplete
+account gets no governing diagram. A shared or reassigned document invalidates the affected
+account’s old judgment, which is archived and must be refreshed explicitly. No additional readers
+or judges are started for that account without your instruction.
 
 `/analyse` stops here and mentions `/deep-dive`. Rerun `/visualise --analysis` for free after
 corrections.
