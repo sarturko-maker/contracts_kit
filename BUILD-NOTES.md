@@ -501,6 +501,61 @@ proposals over 5 accounts; `graph.py --all` wrote 181 nodes and 160 edges with n
 subagent tokens over 79 agents, plus ~351k cumulative orchestrator tokens for all three stages.
 Position notes ran 1,374–2,169 words: complete, and still far beyond one page.
 
+### Second run on the changed kit (7 September 2026, afternoon)
+
+The same pile, same roles and same held-back key, run as `/sort` then `/analyse` then `/deep-dive`
+from the repo root. `/sort` and `/analyse` ran on `caac171`; `9399c2a` landed at 16:49 while
+`/deep-dive` was extracting, so its map and report steps ran on that commit. Judgments are in the
+session records (`livekit-results-2/`).
+
+**/sort — pass, 33 of 33.** The Skill tool ran `/check` and `/prepare` as components; 29 filers,
+no retries, no failures, no escalation. Every baseline miss that the changes targeted is gone: the
+mixed scan (doc 020) filed on the first attempt within three pages; the renamed company's 2019
+agreement (doc 011) matched "in the document, sure" through the name-change letter; both Brenlow
+spellings grouped as one company; renamed copies such as `017 master-agreement Sturmore-Rail-Group.pdf`
+were written. Cost: 266,800 filer tokens (9,200 per document, 3,067 per page read) and 144,287
+orchestrator tokens over 16 minutes. One rule conflict stayed open: `/match` step 3 records every
+stream row unconditionally while section A rule 1 excepts a stream that a document names (doc 018).
+
+**/analyse — pass.** 29 readers and 4 judges, no retries, no failures, `check_cards.py` found 0
+warnings so no reread was forced, the empty account was skipped by the judge step and still got its
+folder, README and diagram, and `place.py` printed no warning. Every account's governing position
+matched the key, and all 34 corpus rows were in the expected folder or an acceptable holding; the
+full cards moved the trading-name rebate letter (doc 027) out of `_not-sure` into its account on
+documentary basis. Defects to fix: five readers opened other documents' text to cross-check, against
+the one-document rule; the Sturmore note leaves the purchase-order precedence clause "unresolved"
+rather than saying the signed master prevails; duplicates are renamed `002 duplicate-of-015.pdf`
+without kind or counterparty; and the orchestrator reversed its own `/sort` stream decision because
+of the conflict above. Four of these were fixed by `9399c2a` before this note was written (see
+"Enterprise /analyse readiness fixes"): the reader boundary, the stream rule, `CORPUS.csv` printing
+the card's `status` ("live") next to the judge's `4-not-live`, and INDEX listing amendments and
+attached letters as "governing docs"; the last two were verified by re-running `place.py` at that
+commit over this run's placements. Cost: readers 828,182 tokens (29, 28,558 per document;
+the 42-page master 50.6k, the rotated scan 47k), judges 194,383 (4, 48,596 per account), about 241k
+orchestrator tokens — roughly 1.26M for the stage, or 35k subagent tokens per readable document.
+
+**/deep-dive — pass, with one regression.** The prerequisite check passed without spawning a reader
+or judge; 29 forms valid with one retry, 4 mappers, 13 family proposals over 4 accounts, a graph of
+174 nodes and 147 edges with 32 of 179 edge-evidence rows `exported=no`, 56 didn't-fit rows. Every
+topic reading on a governing instrument matched the key (payment 60 days from month end for
+Sturmore via Amendment No. 1, 45 days from invoice for Ardleigh, 30 days for the Larkhall Works,
+and so on), every draft figure stayed inside a folder-5 or `unsure` document, and one-sided execution
+went to the didn't-fit list. A session rate limit hit mid-extraction; the orchestrator resumed without
+rework, re-validating the 20 existing forms and recovering the one lost ledger row. Regression: `/report`
+ran `place.py --all` without `--visuals`, which retires every `/analyse` diagram, `INDEX.html` and the
+bundled Mermaid file, so the stage ended with none of the minimum deliverable's diagrams. The report
+and deep-dive skills now keep them (run `--visuals` when `out/INDEX.html` exists); `place.py` itself
+was left as the visualise tests specify. Second defect: `graph.py` rejects a form whose `A.side`
+differs from the run and loads every form first, so one holding document on the other trading side
+(doc 029) blocked the graph for all accounts until re-extracted, and `validate_forms.py` does not
+catch it. The one retry was that re-extract. Cost: extractors 1,799,002 tokens (30, 62,035 per
+document; the 42-page master 90k), mappers 438,302 (4, 109,576 per account), about 138k orchestrator
+tokens — roughly 2.38M for the stage.
+
+**Three stages together:** 3,526,669 subagent tokens plus 523,192 orchestrator, about 4.05M for 33
+files (baseline 3.7M plus 351k). Per readable document about 140k all-in, of which `/analyse` is
+about 44k. The harness figures do not split cache reads from writes; `/cost` does.
+
 ## Stage reorder
 
 The live test showed that `/sort` is not on the path to the deliverable and that `/deep-dive` was

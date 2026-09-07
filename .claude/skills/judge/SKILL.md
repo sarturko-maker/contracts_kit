@@ -9,6 +9,10 @@ Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it di
 targeted maintenance. It stops after its own step and never starts the next.
 Commands are written `python`; use `python3` where that is the installed name.
 
+With `work/review-table/active.json`, use the direct table route in /analyse instead and stop
+this component. That route writes account decisions and placements in the main session, without
+native cards or additional judges.
+
 Run from the kit root. Needs `/read` and `/match` done: full cards in `work/cards/`, rows in
 `work/logs/sort.csv`. Cheap `/sort` filing records are insufficient. Require a full card for
 every readable document assigned to an account; report incomplete accounts instead of judging

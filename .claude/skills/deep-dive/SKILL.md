@@ -12,6 +12,12 @@ This is the deepest and most expensive stage. Run it only when the user invokes 
 follows automatically from `/sort`, `/analyse` or `/visualise`. It never rereads cards and never
 re-judges: it requires `/analyse` to have finished and stops if that work is missing or stale.
 
+Table-route limitation: Review_Table analysis does not create native sort cards. If
+`work/review-table/active.json` exists and the native cards below are absent, explain that this
+version's /deep-dive requires a separate source-based stage-2 workflow and stop. Do not tell the
+user to repeat table /analyse to create cards; it will never do that. Do not start source readers
+or manufacture cards from the table to satisfy the prerequisite.
+
 1. Prerequisite check, in this order. Read `work/inventory.csv`, `work/cards/`,
    `work/placements/`, `work/logs/sort.csv` and `work/erp.json`.
    - every readable non-ERP inventory row has both `work/cards/<id>.json` and `<id>.md`;
@@ -46,8 +52,9 @@ re-judges: it requires `/analyse` to have finished and stops if that work is mis
 5. Invoke `/map all --force`. Mappers consume the current forms and placements only. Missing
    forms or a failed judgment are reported, never worked around with a stale map.
 
-6. Invoke `/report --graph` to write the analysis CSVs, Markdown and `out/graph/`. No diagram
-   work is implied; `/visualise --analysis` is the separate free rendering command.
+6. Invoke `/report --graph` to write the analysis CSVs, Markdown and `out/graph/`. It keeps the
+   `/analyse` diagrams current when they exist and builds none otherwise; `/visualise --analysis`
+   is the separate free rendering command.
 
 7. Summarise: families proposed per account, standard gaps (`out/DIDNT-FIT.md`), form health
    (`out/FORM-HEALTH.md`), node and edge counts, and every open question the mappers returned.

@@ -12,7 +12,7 @@ by filename. Nothing you write may come from anywhere but a sort card or a corre
 document only to check a quote you doubt; never edit a card.
 
 1. Read, in this order: `stage1/sorting-rules.md` section B (apply it word for word);
-   `stage1/position-note.md` (what each prose section must hold); `work/erp.json`;
+   `stage1/position-note.md` (what each section must hold); `work/erp.json`;
    `work/logs/sort.csv` (the account's documents are the rows whose `account` is this account,
    shared ones included); every `work/cards/<id>.md` for those ids; `inputs/entity-map.csv`;
    `inputs/corrections.csv` if it exists (a correction wins over what it corrects).
@@ -39,7 +39,11 @@ document only to check a quote you doubt; never edit a card.
    by `_` and trailing dots and spaces stripped, exactly as `kit_common.safe_folder_name` does
    it; `place.py` reads that name, so an account written under its raw name is never found.
 6. Write `work/placements/<safe_account>.md` with exactly four headings. `## The position`: three
-   to six lines and at most 180 words, no table, every sentence a fact from a card, no hedging: what governs trade,
+   to six Markdown bullet points and at most 180 words in total, no table or introductory paragraph.
+   Start each bullet with a short bold label (for example **Governing agreement**, **Changes**,
+   **Scope**, **Duration**, **Qualification**, **Missing**); combine or omit labels as the facts
+   require. One main point per bullet. Every sentence a fact from a card; state uncertainty
+   explicitly where the evidence leaves it: what governs trade,
    since when, whose paper, signed by whom, what it covers, how it ends; the one qualification
    that matters most; what governs part of the trade; what is missing; if nothing governs, say
    so and what the account appears to trade on. `## Overlaps and conflicts`: doc and part, the

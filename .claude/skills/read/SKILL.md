@@ -11,6 +11,11 @@ Commands are written `python`; use `python3` where that is the installed name.
 
 Run from the kit root. `$ARGUMENTS` says which documents. Build the list of doc ids first:
 
+If `work/review-source.json` or `work/review-table/active.json` exists, this source-reading skill
+is not the table route. Stop and direct the user to `/analyse`; never spend on document readers
+to repair an imported row. /analyse itself may make rare, logged, targeted source checks;
+it does not use this full-card reading skill for those checks.
+
 - `all`: every row of `work/inventory.csv` with `readable` = `yes`, except the `erp` row.
 - `<ids>`: the numbers typed (`003 007 012`; pad to three digits).
 - `account "<name>"`: the `doc_id` of every row in `work/logs/sort.csv` whose `account` is that

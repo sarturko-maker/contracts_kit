@@ -12,7 +12,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "sample"))
+sys.path.insert(0, str(ROOT / "scripts"))
 from make_expected import ACCOUNT1, ACCOUNT2, isolated_kit, replay
+from place import build_mermaid, legend_html
 
 
 def hashes(folder):
@@ -31,6 +33,31 @@ def write_csv(path, rows, columns):
 def is_visual(path):
     return path == "out/INDEX.html" or path == "out/assets/mermaid.min.js" or (
         path.startswith("out/") and Path(path).name in ("position.html", "position.mmd"))
+
+
+class UncertainRelationships(unittest.TestCase):
+    def test_unsure_effect_is_dashed_while_settled_links_stay_solid(self):
+        # No native cards are required: the same placement status drives the index route.
+        ctx = {"cards": {}}
+        settled = {
+            "001": {"folder": "1-governs-trade", "tree": "T1"},
+            "002": {"folder": "unsure", "tree": "T1", "attaches_to": "001", "attach_kind": "amends"},
+            "003": {"folder": "1-governs-trade", "tree": "T1", "attaches_to": "001", "attach_kind": "amends"},
+            "004": {"folder": "unsure", "tree": "T2"},
+            "005": {"folder": "unsure", "tree": "T3", "replaces": "001"},
+        }
+        diagram = build_mermaid(ctx, "Invented Account", settled)
+        self.assertIn("D002 -. amends .-> D001", diagram)
+        self.assertNotIn("D002 -- amends --> D001", diagram)
+        self.assertIn("D003 -- amends --> D001", diagram)
+        self.assertIn("D005 -. replaces .-> D001", diagram)
+        self.assertIn("ACC -.-> D004", diagram)
+        self.assertIn("ACC --> D001", diagram)
+        self.assertIn("their effect is unconfirmed", legend_html())
+        settled["002"]["folder"] = "1-governs-trade"
+        revised = build_mermaid(ctx, "Invented Account", settled)
+        self.assertIn("D002 -- amends --> D001", revised)
+        self.assertNotIn("D002 -. amends .-> D001", revised)
 
 
 class VisualBoundary(unittest.TestCase):

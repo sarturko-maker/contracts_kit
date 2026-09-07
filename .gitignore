@@ -1,6 +1,10 @@
 # Confidential material never leaves the machine
 inputs/*.csv
+inputs/*.xlsx
 !inputs/*.example.csv
+[Rr]eview_[Tt]able*.csv
+[Rr]eview_[Tt]able*.xlsx
+!inputs/Review_Table.example.csv
 work/
 out/
 # Python

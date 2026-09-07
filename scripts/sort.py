@@ -236,6 +236,10 @@ def main():
     parser.add_argument("--account", help="rematch only documents already filed to this ERP account")
     args = parser.parse_args()
 
+    if (WORK / "review-table/active.json").is_file():
+        fail("Review_Table is the analysis index. Use /analyse and review_table.py --assign; "
+             "native card matching would overwrite the table account decisions.")
+
     erp = load_erp()
     side = erp.get("side")
     if not side:

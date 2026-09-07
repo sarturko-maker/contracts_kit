@@ -13,10 +13,11 @@ Run from the kit root. This command runs scripts only, never reading/judging/ext
 
 1. Without `--graph`, inspect the current `out/<side>/CORPUS.csv` header. If it contains
    `read_status`, run `python scripts/filing.py --report` to refresh the cheap filing outputs.
-   Otherwise, after completed judgments, run `python scripts/place.py --all` for analysis
-   CSVs and Markdown (`/analyse` runs `place.py --all --visuals`, which also writes the
-   diagrams). Missing prerequisites are reported; do not perform them automatically.
-2. Only with explicit `--graph`, run `python scripts/place.py --all`, then
+   Otherwise, after completed judgments, run `python scripts/place.py --all --visuals` when
+   `out/INDEX.html` exists (the `/analyse` diagrams are re-rendered from the same placements;
+   a plain `--all` would delete them) and `python scripts/place.py --all` when it does not.
+   Missing prerequisites are reported; do not perform them automatically.
+2. Only with explicit `--graph`, run `place.py --all` with the same `--visuals` rule, then
    `python scripts/graph.py --all`. Report missing decisions or invalid forms; never fill or
    repair them here. Existing forms alone NEVER authorise graph export.
 3. Report written files and every warning, plus the counts and unresolved items in INDEX.md.

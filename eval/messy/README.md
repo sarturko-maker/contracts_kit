@@ -17,5 +17,8 @@ an agent that runs the kit.** Copy `inputs-our-entities.csv` to `inputs/our-enti
 running, as an operator would.
 
 Acceptance on this pile (7 September 2026, Opus main session, Haiku/Sonnet/Opus roles as configured):
-`/sort` filed 30 of 33 in the expected place or an acceptable holding, `/deep-dive` matched 26 of 26
-placements. Figures and defects are in `BUILD-NOTES.md` under "Live test on the messy pile".
+first run (pre-reorder kit): `/sort` filed 30 of 33 in the expected place or an acceptable holding and
+`/deep-dive` matched 26 of 26 placements; second run (`caac171`, afternoon): `/sort` 33 of 33,
+`/analyse` every governing position and all 34 corpus rows as expected, `/deep-dive` every topic
+reading on a governing instrument as expected, about 4.05M tokens for the three stages. Figures and
+defects are in `BUILD-NOTES.md` under "Live test on the messy pile".

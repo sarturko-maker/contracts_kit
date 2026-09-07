@@ -2,7 +2,8 @@
 
 <!--
 This is the template for out/<side>/<account>/ANALYSIS.md, the complete evidence and reasoning.
-README.md is a separate short overview linking here. Its position paragraph is at most 180 words;
+README.md is a separate short overview linking here. Its position is three to six Markdown
+bullet points, with short bold labels and at most 180 words in total;
 all longer prose stays here in full, with a link in the overview. Plain words,
 no hedging, no recitals, every sentence a fact. Nothing in it that is not in a sort card.
 
@@ -24,18 +25,20 @@ entities found; their entities found, each with how sure the match was and on wh
 
 {{position}}
 
-<!-- judge prose, three to six lines, no table: what governs trade, since when, whose paper,
+<!-- judge bullets, three to six points, no table or introductory paragraph: what governs trade, since when, whose paper,
 signed by whom, what it covers, how it ends; the one qualification that matters most; what
 governs part of the trade; what is missing. If nothing governs, say so and say what the account
 appears to trade on instead. An invented example:
 
-Tallowfield Industries trades with us under the 2019 Supply Agreement (doc 001): our paper,
-signed by both, all UK sites, rolling with twelve months' notice. Amended once (doc 002, 2022) to
-shorten the notice period to six months. The programme terms inside it, for the Line 4 refit,
-ended in March 2024 and no longer apply; they said freight "shall be charged", the live general
-terms say freight "may" be charged at cost. Nothing else governs all the trade: the Hexley Works
-project agreement (doc 008) governs that site only; the NDA with the parent expired in 2023.
-Missing: the price list referred to in clause 5 is not in the pile.
+- **Governing agreement:** The 2019 Supply Agreement (doc 001), our paper, signed by both,
+  covers all UK sites.
+- **Changes and duration:** Doc 002 (2022) reduced the rolling notice period from twelve
+  months to six months.
+- **Expired part:** The Line 4 programme terms ended in March 2024. Their mandatory freight
+  charge differs from the live general terms; the historical priority is unresolved.
+- **Limited scope:** Doc 008 governs Hexley Works only. Nothing else governs all the trade.
+- **Other paper:** The parent NDA expired in 2023.
+- **Missing:** The price list referred to in clause 5 is not in the pile.
 -->
 
 ## 3. Governs trade

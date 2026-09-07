@@ -16,6 +16,8 @@ and the ERP record); it may be empty.
    - with a path: `python scripts/check.py --pile "<pile path>"`
    - with no path: `python scripts/check.py`
    If the user also typed `--erp <file>` (to name the ERP record), pass it through unchanged.
+   Also pass `--review-table "<file>"` when given. A reserved Review_Table.csv/xlsx in the pile
+   is discovered automatically; its ten analysis columns are checked without model calls.
 2. Put every line the script printed in your reply, as printed: `ok  ...`, `skip ...`, `FAIL ...`.
 3. If any line starts with `FAIL`: tell the user what to fix (the line says how) and stop. Run
    nothing else; do not go on to `/prepare`.

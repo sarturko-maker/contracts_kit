@@ -109,6 +109,10 @@ CORPUS_COLUMNS = [
     "tree", "folder", "placement_reason", "overlap_or_conflict", "question_for_business", "analysis_stage",
     # evidence
     "evidence_signed", "evidence_dates", "evidence_companies", "evidence_trade",
+    # External review index: literal answers, not inferred native-card fields.
+    "review_document", "review_parties", "review_execution", "review_term", "review_trade_scope",
+    "review_group_scope", "review_links", "review_precedence", "review_parts", "review_gaps",
+    "source_checks",
     # reviewer
     "legal_agrees", "sales_agrees", "correct_folder", "comment",
 ]

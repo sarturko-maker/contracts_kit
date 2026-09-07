@@ -102,7 +102,18 @@ def load_context():
             row["account"] = exact
     entity_by_name, _ = load_entity_map()
     corrections = load_corrections()
-    cards = load_all_cards()
+    from review_table import ACTIVE, display_records, packet_for, current_checks
+    review_rows = {}
+    source_checks = []
+    if ACTIVE.is_file():
+        try:
+            cards = display_records()
+            review_rows = {doc: packet_for(doc)["answers"] for doc in cards}
+            source_checks = current_checks()
+        except (ValueError, OSError) as err:
+            fail(str(err))
+    else:
+        cards = load_all_cards()
     for doc_id, card in list(cards.items()):
         cards[doc_id] = apply_corrections_to_card(card, corrections)
     for row in corrections:
@@ -118,6 +129,8 @@ def load_context():
                           for r in read_csv(OUT / side / 'CORPUS.csv')},
         "inventory": {r["doc_id"]: r for r in load_inventory()},
         "cards": cards,
+        "review_rows": review_rows,
+        "source_checks": source_checks,
         "entity_by_name": entity_by_name,
         "sort_rows": sort_rows,
         "corrections": corrections,
@@ -396,8 +409,25 @@ def corpus_row(ctx, sort_row, placement, judged):
             row["status"] = UNASSESSED
             row["placement_reason"] = NO_ACCOUNT_REASON
 
+    if doc_id in ctx.get("review_rows", {}):
+        answers = ctx["review_rows"][doc_id]
+        row.update({"review_" + key: answers[key] for key in (
+            "document", "parties", "execution", "term", "trade_scope", "group_scope",
+            "links", "precedence", "parts", "gaps")})
+        row["analysis_stage"] = "judged from Review_Table" if judged else "Review_Table; awaiting judgment"
+        for key in ("kind", "their_signing_entities", "their_group_companies", "our_entity",
+                    "signed", "start_date", "start_basis", "end", "ended_sign", "status_per_document"):
+            row[key] = "see review columns (not separately extracted)"
+        if judged and placement:
+            for key in ("attaches_to", "replaces"):
+                row[key] = placement.get(key, "")
+        row["source_checks"] = " | ".join(
+            f'{c["check_id"]}: {c["event"]}; {c["mode"]}; {c["location"]}; '
+            f'{c.get("finding", c["reason"])}' for c in ctx["source_checks"] if c["doc_id"] == doc_id) or "none"
+
     for col in CORPUS_COLUMNS:
-        if col not in REVIEWER_COLUMNS and row[col] == "":
+        literal_cell = col.startswith("review_") and doc_id in ctx.get("review_rows", {})
+        if col not in REVIEWER_COLUMNS and not literal_cell and row[col] == "":
             row[col] = NOT_FOUND
     return row
 
@@ -539,6 +569,8 @@ def couldnt_section(ctx, settled, prose):
     bullets = []
     known_group_seen = set()
     for doc_id, p in settled.items():
+        if doc_id in ctx.get("review_rows", {}):
+            continue  # The orchestrator decides which table gaps matter; no synthetic card gaps.
         card = ctx["cards"].get(doc_id)
         if not card:
             continue
@@ -557,6 +589,17 @@ def couldnt_section(ctx, settled, prose):
                                f"({row.get('confidence', '')}; {doc_label(doc_id)}): {row.get('note', '') or 'no note'}")
     text = prose.get("couldnt", "").strip() or NOTHING
     return "\n".join(bullets + [text]) if bullets else text
+
+
+def review_basis(ctx, settled):
+    if any("Basis: Review_Table extraction" in ctx["cards"].get(doc, {}).get("q10_oddities", "")
+           for doc in settled):
+        checks = [c for c in ctx.get("source_checks", []) if c["doc_id"] in settled]
+        complete = sum(c["event"] == "completed" for c in checks)
+        pending = sum(c["event"] == "requested" for c in checks) - complete
+        return ("Evidence basis: Review_Table extraction, with targeted source checks only where recorded. "
+                f"{complete} completed checks; {pending} pending. Other source claims are externally reported.")
+    return ""
 
 
 def build_note(ctx, account, settled, prose, filed=None):
@@ -585,6 +628,8 @@ def build_note(ctx, account, settled, prose, filed=None):
     if leftover:
         warn(f"{account}: the note template has placeholders place.py does not fill: {', '.join(sorted(set(leftover)))}")
     note = re.sub(r"\n{3,}", "\n\n", note).strip() + "\n"
+    if review_basis(ctx, settled):
+        note = note.replace("\n", "\n\n" + review_basis(ctx, settled) + "\n", 1)
 
     # every document exactly once across sections 3, 4 and 5
     shown = re.findall(r"^\|\s*[^|]+\|\s*doc (\d{3,})\s*\|", values["governs_table"] + "\n" + values["part_table"], re.M)
@@ -607,6 +652,8 @@ def brief_note(ctx, account, settled, prose):
         position = 'The detailed position exceeds this overview. Read [the full position](ANALYSIS.md#2-the-position) before relying on these placements.'
     lines = [f'# {account} — position ({ctx["side"]})', '', position, '',
              '| classification | documents |', '| --- | --- |']
+    if review_basis(ctx, settled):
+        lines[2:2] = [review_basis(ctx, settled), '']
     for folder, label in FOLDER_WORDS.items():
         lines.append(f'| {label} | {docs(folder)} |')
     questions = prose.get('questions', '').strip()
@@ -678,20 +725,26 @@ def build_mermaid(ctx, account, settled):
         if not roots:
             roots = [min(docs)]
         for root in roots:
-            edges.append(f"    ACC --> {node_id(root)}")
+            arrow = "-.->" if settled[root]["folder"] == "unsure" else "-->"
+            edges.append(f"    ACC {arrow} {node_id(root)}")
     for doc_id, p in settled.items():
+        # An intended amendment can identify its master without having taken effect.
+        # The judgment's unsure status must qualify the edge as well as the node.
+        uncertain = p["folder"] == "unsure"
+        start, end = ("-.", ".->") if uncertain else ("--", "-->")
         target = p.get("attaches_to", "").strip()
         if target:
             target = target.zfill(3)
             if target in settled:
-                edges.append(f"    {node_id(doc_id)} -- {p.get('attach_kind', '').strip() or 'attached to'} --> {node_id(target)}")
+                kind = p.get('attach_kind', '').strip() or 'attached to'
+                edges.append(f"    {node_id(doc_id)} {start} {kind} {end} {node_id(target)}")
             else:
                 warn(f"{account}: doc {doc_id} attaches to doc {target}, which is not in this account; edge left out")
         replaced = p.get("replaces", "").strip()
         if replaced:
             replaced = replaced.zfill(3)
             if replaced in settled:
-                edges.append(f"    {node_id(doc_id)} -- replaces --> {node_id(replaced)}")
+                edges.append(f"    {node_id(doc_id)} {start} replaces {end} {node_id(replaced)}")
             else:
                 warn(f"{account}: doc {doc_id} replaces doc {replaced}, which is not in this account; edge left out")
     lines.extend(edges)
@@ -806,7 +859,9 @@ def legend_html():
         fill, stroke, color, extra = CLASS_STYLE[cls]
         dashed = "border-style: dashed;" if "dasharray" in extra else ""
         chips.append(f'<span style="background:{fill};border-color:{stroke};color:{color};{dashed}">{text}</span>')
-    return '<div class="legend">' + "".join(chips) + "</div>"
+    return ('<div class="legend">' + "".join(chips) + "</div>"
+            "<p>Dashed arrows mark documents classified unsure: their effect is unconfirmed. "
+            "An intended amendment link does not establish that the amendment took effect.</p>")
 
 
 def build_html(account, mmd, note_md, analysis=True):
@@ -1098,6 +1153,33 @@ def needs_a_decision(all_rows):
 def write_index(ctx, settled_by_account, all_rows, visuals=False):
     """CSV/Markdown index and account lists; optional HTML and offline visual assets."""
     side = ctx["side"]
+    if ctx.get("review_rows"):
+        # Native matching copies holding documents; the direct table route has no matcher.
+        for name in HOLDING_FOLDERS:
+            target = OUT / side / name
+            if target.exists():
+                shutil.rmtree(target)
+        groups = {}
+        for row in all_rows:
+            holding = holding_folder_of(row["account"])
+            if holding:
+                parent, _, name = holding.partition("/")
+                folder = OUT / side / parent
+                if name:
+                    folder /= safe_folder_name(name)
+                groups.setdefault(folder, []).append(row)
+        for folder, rows in groups.items():
+            folder.mkdir(parents=True, exist_ok=True)
+            for row in rows:
+                inv = ctx["inventory"][row["doc_id"]]
+                source = WORK_FILES / f'{row["doc_id"]}.{inv["ext"]}'
+                if source.is_file():
+                    shutil.copyfile(source, folder / row["filed_as"])
+            write_csv(folder / "documents.csv", rows, CORPUS_COLUMNS)
+            write_text(folder / "README.md", "# Account matching unresolved\n\n"
+                       "These documents use Review_Table facts; governing status is unassessed.\n\n"
+                       + "\n".join(f'- {doc_label(r["doc_id"])}: {md_cell(r["sort_note"])}' for r in rows)
+                       + "\n\nSee [documents.csv](documents.csv) for the table answers and match reasons.\n")
     for account in ctx['accounts']:
         if account not in ctx['streams'] and account not in settled_by_account:
             write_pending_account(ctx, account, all_rows)

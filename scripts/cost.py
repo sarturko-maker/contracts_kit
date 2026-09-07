@@ -31,7 +31,8 @@ LEDGER_COLUMNS = [
 DEFAULT_LEDGER = WORK / "logs" / "cost.csv"
 
 # One agent per document; these scale with the size of the pile.
-DOCUMENT_ROLES = ("filer", "reader", "extractor")
+# table-reader is retained only to report historical failed conversion experiments.
+DOCUMENT_ROLES = ("filer", "reader", "table-reader", "extractor")
 # One agent per ERP account; the account count is the user's, not ours to guess.
 ACCOUNT_ROLES = ("judge", "mapper")
 

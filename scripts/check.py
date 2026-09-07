@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -89,6 +90,8 @@ def main():
     parser = argparse.ArgumentParser(description="Preflight checks for the DCG intake kit.")
     parser.add_argument("--pile", help="folder holding the contract files and the ERP record")
     parser.add_argument("--erp", help="the ERP record, if its name does not contain 'erp'")
+    parser.add_argument("--review-table", help="CSV/XLSX review export; otherwise discover Review_Table in the pile")
+    parser.add_argument("--sheet", help="worksheet to check in the Review_Table XLSX")
     args = parser.parse_args()
 
     results = []  # (status, text); status is ok / FAIL / skip
@@ -169,6 +172,21 @@ def main():
         ok("openpyxl not needed (ERP record is csv)")
     else:
         skip("openpyxl: only needed if the ERP record is .xlsx")
+
+    # Review_Table is a control input; validate its format without invoking a model.
+    if args.review_table or (args.pile and Path(args.pile).expanduser().is_dir()):
+        try:
+            from review_table import find_review_table, read_table
+            review = find_review_table(Path(args.pile or ".").expanduser(), args.review_table)
+            if review:
+                rows = read_table(review, args.sheet)
+                ok(f"Review_Table {review.name}: {len(rows)} rows; ten analysis columns present")
+            else:
+                skip("Review_Table not supplied: /analyse will use full source readers")
+        except (ValueError, OSError, ImportError, zipfile.BadZipFile) as err:
+            fail(f"Review_Table: {err}; see docs/review-table-pilot.md")
+    else:
+        skip("Review_Table: supply a pile path or --review-table to check the export")
 
     # 5. Claude Code's PDF page/image reads need an external renderer, not just pypdf.
     error = check_poppler()

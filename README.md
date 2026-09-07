@@ -6,7 +6,7 @@ There are four commands, and **each stops after its own stage**:
 | command | runs | models | delivers |
 | --- | --- | --- | --- |
 | `/sort <pile>` (optional triage) | `/check`, `/prepare`, one filer per document, name matching, filing report | Haiku filers; main session matches | account folders with renamed copies, per-folder `documents.csv` and `README.md`, global `CORPUS.csv`/`ACCOUNTS.csv`, `INDEX.md` |
-| `/analyse [all \| account "<name>"]` | `/read`, the card check, `/match --force`, `/judge` per account, `place.py --all --visuals` | Sonnet readers, Opus judges | status folders `1`–`6`/`unsure` with renamed copies, a position note per account, `documents.csv`, `CORPUS.csv`, short `README.md`, full `ANALYSIS.md`, `position.html` and `INDEX.html` |
+| `/analyse [all \| account "<name>"]` | With Review_Table: import, main-session account analysis, rare targeted checks, reports. Otherwise full readers and judges | Main session on table rows; otherwise Sonnet readers and Opus judges | status folders, short bullet position, per-account/global CSV, `README.md`, full `ANALYSIS.md`, diagrams and `INDEX.html` |
 | `/deep-dive [--topics ...] [--force]` | prerequisite check, `/extract`, `/map`, `/report --graph` | Sonnet extractors, Opus mappers | validated forms, `TREES.md`, `out/FORM-HEALTH.md`, `out/DIDNT-FIT.md`, `out/graph/` |
 | `/visualise [all \| "account"] [--analysis]` | scripts only | none | re-rendered Mermaid HTML after corrections; free |
 
@@ -16,6 +16,36 @@ unfamiliar pile where you want to fix the entity map and drop junk before paying
 `/deep-dive` never rereads cards or judgments: it requires them and stops if they are missing.
 
 ## Setup and inputs
+
+Already have a bulk-review export? Use **ERP + Review_Table + the original contract files**.
+ERP controls account names; Review_Table supplies cited document facts. See the
+[ten focused column prompts and import instructions](docs/review-table-pilot.md) and the
+[header template](inputs/Review_Table.example.csv). Both inputs accept CSV or XLSX.
+
+```text
+corpus/
+  ERP.xlsx
+  Review_Table.xlsx
+  contracts/
+    ...original contract files...
+```
+
+After installing the dependencies below, run `/check <corpus>` then `/prepare <corpus>` then
+`/analyse`. Preparation registers Review_Table separately. The main session uses its rows
+and ERP directly to decide folders and governing relationships. There is no per-document model
+conversion or card-validation pass. It rarely opens a relevant contract excerpt when a specific
+material doubt could change the conclusion, recording the reason, scope and finding. Minor blanks
+can remain unresolved. Missing citations and signature-attestation labels do not block analysis.
+A governing candidate with missing/NOT_FOUND priority information and a competing priority claim
+in another row requires a targeted precedence check. Table absence is not proof of source absence.
+Initial import requires a row for each readable contract (blank answers are allowed), and exact
+filename matching; it never falls back automatically to full-source reading. Table claims stay
+externally reported except where a targeted source check is recorded. The main session still costs
+money; actual savings and accuracy need a pilot measurement. CSV review_* columns preserve answers.
+This table route covers `/analyse`; it does not create the native cards required by the current
+`/deep-dive`. Stage 2 integration remains separate work.
+For a local comparison using existing invented extraction, follow the
+[fresh Opus test and evaluation handover](docs/review-table-handover.md).
 
 Use Python 3.10 or later and Claude Code, opened from this kit's root. Clone
 `https://github.com/sarturko-maker/contracts_kit.git` or download the zip, then install:
@@ -132,17 +162,19 @@ fresh filing report. Existing full cards, forms and judgments remain available f
 ```
 
 This is the stage that answers "what governs trade with this account". It needs `/prepare`; it does
-not need `/sort`. It reads every readable document in full (or only the named account's documents),
+not need `/sort`. With Review_Table it reasons directly from rows and uses rare logged source
+checks; no cards or reader/judge agents are required. Without a table it reads every
+readable document in full (or only the named account's documents),
 checks the cards, matches identities from those full cards, judges each account and writes the
 account folders, notes and diagrams. It does not fill forms and does not touch the graph.
 
-Readers inspect the full body and open the signature pages as pictures. Schedules initially get title
+In the source-reading route, readers inspect the full body and open the signature pages as pictures. Schedules initially get title
 and first page, expanding when a question needs them; appendices that list depots, sites or group
 companies are read, because they answer the parties question. DOCX signature images, tracked changes
 and comments inform the execution/draft assessment. Cheap filing records never substitute for a
 full card.
 
-After the readers return, `python scripts/check_cards.py --all` prints card warnings — most
+In the full-source route, after the readers return, `python scripts/check_cards.py --all` prints card warnings — most
 importantly `question 2 may be reversed`, which is your own company written into a counterparty slot
 and the reason a document lands in `_no-name-found`. `/analyse` reruns that one reader with the
 warning quoted, never with the answer. Warnings it cannot fix (evidence over forty words, suspected
