@@ -7,7 +7,8 @@ description: Inventories contracts, reads ERP CSV/XLSX and registers optional Re
 
 Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
 targeted maintenance. It stops after its own step and never starts the next.
-Commands are written `python`; use `python3` where that is the installed name.
+Commands are written `python`; use `python3` where that is the installed name. On Windows,
+use `py` if that is the working launcher. Reuse the command that passed /check.
 
 Run from the kit root. `$ARGUMENTS` is the pile path, optionally followed by `--erp <file>`
 (name the ERP record when its file name does not contain "erp", or when several files do).

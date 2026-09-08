@@ -31,12 +31,21 @@ Review_Table.xlsx is discovered automatically. For another filename:
 Use one populated Review_Table worksheet, or choose it with the importer's --sheet option.
 Export literal values rather than spreadsheet formulas. CSV supports UTF-8/BOM, commas,
 semicolons or tabs and properly quoted multiline cells.
+Use paths to the files' actual locations; ERP and the export may be inside the corpus folder.
+On Windows, if `python` is unavailable but `py` works, Claude should use `py` for the Python
+script commands throughout the run. This does not change slash commands such as `/analyse`.
 
 ## Column shape
 
 ```csv
 file_name,document,parties,execution,term,trade_scope,group_scope,links,precedence,parts,gaps,contents
 ```
+
+These short keys must be the actual column headings in row 1. The importer does not guess
+which full question heading corresponds to which field. If the vendor exports question text
+as headings, keep that original export and rename the headers in a working copy using the
+[example header](../inputs/Review_Table.example.csv). Preserve every cell value and its citation.
+Column order does not matter. Do not add a second header row or fill absent answers with guesses.
 
 `contents` is optional: the importer accepts a table without it. When present it is stored with
 the row but held back from the index printout, because a clause-level map of a long instrument
@@ -127,6 +136,9 @@ answer. Distinguish visible signatures or completion certificates from typed nam
 Describe missing signature pages, draft markers, tracked changes, or uncertainty. If execution
 could not be reviewed, say so. Do not infer execution from the filename. No special attestation
 label is required; preserve whatever verification information the review tool provides.
+Use the visual page where available. Absence of a signature in extracted text is not evidence
+of an empty signature block. If only text was available, state that limitation rather than
+declaring the document unsigned. Give the signature section's PDF page locator.
 ```
 
 ### term — What controls the instrument's duration?
@@ -194,6 +206,10 @@ For each separately operating instrument, schedule or part in this file, give it
 function and page range; different parties, scope or dates; and whether it is expressly attached
 to the main agreement. Include annual prices/programme terms within a continuing framework and
 unrelated instruments combined into a PDF. Identify where the main rules expressly apply unchanged.
+For price/rebate schedules, distinguish filled entries from blanks/placeholders, identify material
+region/product limits and any obligation to complete entries by a later amendment. Give the table's
+page locator; do not reproduce every price or claim a referenced table is missing merely because
+it was not extracted. Do not decide whether another instrument is absent from the corpus.
 Do not assume a silent annex expired with an annual price list. If none are found, say NONE_FOUND;
 if relevant pages were not inspected, say NOT_REVIEWED rather than no parts.
 ```
@@ -220,8 +236,20 @@ The default is zero contract reads. A conflicting governing candidate, uncertain
 or missing priority clause needed to resolve an actual conflict may justify a targeted read. The
 orchestrator decides whether the doubt matters enough, logs its reason/scope before access, then
 records its finding. Text checks count as source reads just as images do. Missing citations,
-unverified signatures or blank cells alone do not automatically trigger checks; minor gaps may
+missing attestation metadata or minor blank cells do not automatically trigger checks; minor gaps may
 stay unresolved. No fixed quota should force either unnecessary reads or unsupported certainty.
+
+A claimed missing/blank signature on an otherwise governing candidate needs a signature-page
+check before deciding status or carrying that doubt forward. A schedule marked missing or
+unreviewed needs a focused check when it could change the position's central scope, price or
+rebate qualification. Reuse recorded findings. This does not mean checking every signature or
+extracting every commercial term. The mandatory competing-precedence check also still applies.
+
+Apply the status rules in order. Candidates left in unsure mean no governing agreement is
+confirmed; they do not establish that no contract governs. A previous run's output is another
+analysis, not source truth: a material disagreement warrants a recorded check before correction.
+Keep questions about the same evidence together and separate business decisions from mere
+extraction limitations.
 
 One narrow check is mandatory: missing/NOT_FOUND priority information on a governing candidate
 plus a competing priority claim in another row requires a logged check of the candidate's own

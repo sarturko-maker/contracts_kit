@@ -7,7 +7,9 @@ description: Preflight for the DCG intake kit. Checks Python, pypdf, Poppler PDF
 
 Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
 targeted maintenance. It stops after its own step and never starts the next.
-Commands are written `python`; use `python3` where that is the installed name.
+Commands are written `python`; use `python3` where that is the installed name. On Windows,
+use `py` if that is the working launcher. Retain the working command for subsequent stages;
+an unavailable alias does not mean Python itself needs installing.
 
 Run from the kit root. `$ARGUMENTS` is the pile path (the folder holding the contract files
 and the ERP record); it may be empty.

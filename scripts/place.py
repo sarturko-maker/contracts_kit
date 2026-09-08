@@ -191,7 +191,19 @@ def load_placements(ctx, account):
         if doc_id in by_doc:
             warn(f"{account}: placements list doc {doc_id} twice; the first row is used")
             continue
-        by_doc[doc_id] = apply_corrections_to_placement(row, ctx["corrections"])
+        row = apply_corrections_to_placement(row, ctx["corrections"])
+        for field in ("attaches_to", "replaces"):
+            target = row[field].strip()
+            if is_empty_answer(target):
+                row[field] = ""
+            elif re.fullmatch(r"[0-9]+", target):
+                row[field] = target.zfill(3)
+                if row[field] not in ctx["inventory"] or row[field] == doc_id:
+                    fail(f"{account}: doc {doc_id} {field} must name another inventory document; got {target!r}")
+            else:
+                fail(f"{account}: doc {doc_id} {field} requires one document ID (e.g. 001) or blank; "
+                     "put relationship wording in reason/overlap, not in a link field")
+        by_doc[doc_id] = row
     md_path = csv_path.with_suffix(".md")
     prose = parse_prose(md_path.read_text(encoding="utf-8")) if md_path.exists() else {}
     if not md_path.exists():
@@ -513,7 +525,7 @@ def table_rows(ctx, settled, folder, with_limit, filed=None):
         header.insert(8, "limit")
     docs = [(p["tree"], d) for d, p in settled.items() if p.get("folder") == folder]
     if not docs:
-        return "(none)"
+        return "(none confirmed; see unsure documents)" if governing_unconfirmed(settled) else "(none)"
     docs.sort(key=lambda t: (tree_number(t[0]), t[1]))
     lines = ["| " + " | ".join(header) + " |", "|" + " --- |" * len(header)]
     for tree, doc_id in docs:
@@ -568,6 +580,12 @@ def couldnt_section(ctx, settled, prose):
     """Section 8: generated bullets, then the judge's prose."""
     bullets = []
     known_group_seen = set()
+    for row in ctx["sort_rows"]:
+        if (row["doc_id"] in settled and row["doc_id"] in ctx.get("review_rows", {})
+                and "known group" in row.get("basis", "").lower()):
+            bullets.append(f"- {doc_label(row['doc_id'])}: account match to {row['account']} uses known group only "
+                           f"({row.get('confidence', '')}); human confirmation is needed. "
+                           "This does not establish contractual affiliate coverage.")
     for doc_id, p in settled.items():
         if doc_id in ctx.get("review_rows", {}):
             continue  # The orchestrator decides which table gaps matter; no synthetic card gaps.
@@ -602,6 +620,16 @@ def review_basis(ctx, settled):
     return ""
 
 
+def governing_unconfirmed(settled):
+    """An empty governing folder with unresolved documents is not proof of absence."""
+    folders = {p["folder"] for p in settled.values()}
+    return "unsure" in folders and not folders.intersection({"1-governs-trade", "2-governs-part-of-trade"})
+
+
+UNCONFIRMED_POSITION = ("No governing agreement is confirmed by this analysis. Documents remain in unsure; "
+                        "this does not establish that no contract governs the account.")
+
+
 def build_note(ctx, account, settled, prose, filed=None):
     """Fill stage1/position-note.md for this account."""
     if not NOTE_TEMPLATE.exists():
@@ -630,6 +658,8 @@ def build_note(ctx, account, settled, prose, filed=None):
     note = re.sub(r"\n{3,}", "\n\n", note).strip() + "\n"
     if review_basis(ctx, settled):
         note = note.replace("\n", "\n\n" + review_basis(ctx, settled) + "\n", 1)
+    if governing_unconfirmed(settled):
+        note = note.replace("\n", "\n\n" + UNCONFIRMED_POSITION + "\n", 1)
 
     # every document exactly once across sections 3, 4 and 5
     shown = re.findall(r"^\|\s*[^|]+\|\s*doc (\d{3,})\s*\|", values["governs_table"] + "\n" + values["part_table"], re.M)
@@ -645,7 +675,9 @@ def brief_note(ctx, account, settled, prose):
     """A bounded entry point; all evidence and qualifications remain in ANALYSIS.md."""
     def docs(folder):
         ids = [doc_label(d) for d, p in sorted(settled.items()) if p['folder'] == folder]
-        return ', '.join(ids[:10]) + (f' (+{len(ids) - 10} more; see documents.csv)' if len(ids) > 10 else '') or 'none'
+        empty = ('none confirmed' if folder in ('1-governs-trade', '2-governs-part-of-trade')
+                 and governing_unconfirmed(settled) else 'none')
+        return ', '.join(ids[:10]) + (f' (+{len(ids) - 10} more; see documents.csv)' if len(ids) > 10 else '') or empty
 
     position = prose.get('position', '').strip() or NOTHING
     if len(position.split()) > 180:
@@ -654,6 +686,8 @@ def brief_note(ctx, account, settled, prose):
              '| classification | documents |', '| --- | --- |']
     if review_basis(ctx, settled):
         lines[2:2] = [review_basis(ctx, settled), '']
+    if governing_unconfirmed(settled):
+        lines[2:2] = [UNCONFIRMED_POSITION, '']
     for folder, label in FOLDER_WORDS.items():
         lines.append(f'| {label} | {docs(folder)} |')
     questions = prose.get('questions', '').strip()
@@ -1083,6 +1117,9 @@ def account_summary(ctx, account, settled, prose):
             warn(f"{account}: Questions for the business must be numbered so the index can count them")
     if any(c.get("doc_id") in settled for c in ctx["corrections"]):
         row["review_status"] = "corrections applied"
+    if governing_unconfirmed(settled):
+        row["review_status"] = "governing position unconfirmed" + (
+            "; corrections applied" if row["review_status"] == "corrections applied" else "")
     return row
 
 
@@ -1145,8 +1182,11 @@ def needs_a_decision(all_rows):
         return ["- none"]
     lines = []
     for (folder, name), docs in sorted(groups.items()):
+        action = ("identify the document or replace a placeholder with the intended file; leave it unassessed "
+                  "until its identity is known" if folder == "_no-name-found" else
+                  "map the name in `inputs/entity-map.csv`, then run /analyse for that account")
         lines.append(f"- {name} (`{folder}`): " + ", ".join(doc_label(d) for d in sorted(docs))
-                     + " — map the name in `inputs/entity-map.csv`, then run /analyse for that account")
+                     + " — " + action)
     return lines
 
 
@@ -1224,13 +1264,15 @@ def write_index(ctx, settled_by_account, all_rows, visuals=False):
         link_html = (f'<a href="{links["html"]}">position</a> · <a href="{links["readme"]}">note</a> · '
                      f'<a href="{links["csv"]}">list</a>' if judged else
                      f'analysis incomplete · <a href="{links["readme"]}">note</a> · <a href="{links["csv"]}">list</a>')
-        md.append(f"| {md_cell(account)} | {md_cell(row['governing_docs'] or ('not judged' if not judged else 'none'))} | "
+        governing_display = row["governing_docs"] or ("not judged" if not judged else
+                            "not confirmed" if row["review_status"].startswith("governing position unconfirmed") else "none")
+        md.append(f"| {md_cell(account)} | {md_cell(governing_display)} | "
                   + " | ".join(counts) + f" | {row['n_documents']} | {row['open_questions']} | {link_md} |")
         html_rows.append("<tr>" + "".join(f"<td>{html.escape(x)}</td>" for x in
-                                          [account, row["governing_docs"] or ("not judged" if not judged else "none")] + counts
+                                          [account, governing_display] + counts
                                           + [row["n_documents"], row["open_questions"]]) + f"<td>{link_html}</td></tr>")
     md += ["", "## Needs a decision", "",
-           "Read, but no ERP account: their status is not assessed until the name is mapped.", ""]
+           "Documents without an ERP account remain unassessed until their identity and account are resolved.", ""]
     md += needs_a_decision(all_rows)
     md += ["", "## Files not readable by the kit", ""]
     md += [f"- doc {d}: `{p}` ({n})" for d, p, n in unreadable] or ["- none"]

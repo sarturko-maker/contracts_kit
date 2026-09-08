@@ -112,6 +112,40 @@ class ReviewTableTest(KitFixture):
         self.assertTrue((self.root / "out/INDEX.html").exists())
         self.assertIn("Use /analyse", self.command("sort.py", success=False))
 
+    def test_known_group_matching_stays_provisional_in_reports(self):
+        self.import_table()
+        decisions = self.assignments()
+        path = self.root / "work/review-table/assignments.json"
+        before = (self.root / "work/logs/sort.csv").read_bytes()
+        decisions[0].update(basis="known group; not established in the document", confidence="sure")
+        path.write_text(json.dumps(decisions))
+        self.assertIn("at most fairly sure", self.run_review("--assign", str(path), success=False))
+        self.assertEqual(before, (self.root / "work/logs/sort.csv").read_bytes())
+        decisions[0]["confidence"] = "fairly sure"
+        path.write_text(json.dumps(decisions))
+        self.run_review("--assign", str(path))
+        for account in self.erp_accounts:
+            self.judge(account, self.sorted_docs(account))
+        self.command("place.py", "--all", "--visuals")
+        note = self.root / "out/customers" / decisions[0]["account"] / "ANALYSIS.md"
+        self.assertIn("human confirmation is needed", note.read_text())
+        self.assertIn("does not establish contractual affiliate coverage", note.read_text())
+
+    def test_no_name_holding_does_not_ask_to_map_a_nonexistent_entity(self):
+        self.import_table()
+        decisions = self.assignments()
+        decisions[0]["account"] = "_no-name-found"
+        path = self.root / "work/review-table/assignments.json"
+        path.write_text(json.dumps(decisions))
+        self.run_review("--assign", str(path))
+        for account in self.erp_accounts:
+            self.judge(account, self.sorted_docs(account))
+        self.command("place.py", "--all")
+        index = (self.root / "out/INDEX.md").read_text()
+        decision = next(line for line in index.splitlines() if "identify the document" in line)
+        self.assertIn("leave it unassessed", decision)
+        self.assertNotIn("map the name", decision)
+
     def test_contents_map_is_stored_but_fetched_only_per_document(self):
         self.assertIn("no contents column", self.run_review("--contents", "001", success=False)
                       if self.import_table() else "")

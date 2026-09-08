@@ -179,6 +179,62 @@ class JudgedOutput(KitFixture):
         self.assertNotIn('doc 002', account['governing_docs'])
         self.assertEqual('1-governs-trade', self.corpus()['002']['folder'])
 
+    def test_bad_relationship_targets_stop_before_replacing_reports(self):
+        self.prepare_judgments()
+        self.command('place.py', '--all', '--visuals')
+        before = hashes(self.root / 'out')
+        placement = self.root / 'work/placements' / f'{ACCOUNT1}.csv'
+        original = read_csv(placement)
+        for field in ('attaches_to', 'replaces'):
+            for bad_target in ('supersedes the earlier framework', '001|002', '999999', original[0]['doc_id']):
+                with self.subTest(field=field, target=bad_target):
+                    records = [dict(row) for row in original]
+                    records[0][field] = bad_target
+                    write_csv(placement, records)
+                    message = self.command('place.py', '--all', '--visuals', success=False)
+                    self.assertIn(field, message)
+                    self.assertEqual(before, hashes(self.root / 'out'))
+
+    def test_numeric_relationship_ids_are_normalised_and_rendered(self):
+        self.prepare_judgments()
+        placement = self.root / 'work/placements' / f'{ACCOUNT1}.csv'
+        records = read_csv(placement)
+        for row in records:
+            if row['doc_id'] == '002':
+                row.update(attaches_to='1', attach_kind='amends', replaces='not found')
+            if row['doc_id'] == '003':
+                row.update(replaces='1')
+        write_csv(placement, records)
+        self.command('place.py', '--all', '--visuals')
+        diagram = (self.root / 'out/customers' / ACCOUNT1 / 'position.mmd').read_text()
+        self.assertIn('D002 -- amends --> D001', diagram)
+        self.assertIn('D003 -- replaces --> D001', diagram)
+
+    def test_unconfirmed_governance_is_distinct_from_absence_everywhere(self):
+        self.prepare_judgments()
+        placement = self.root / 'work/placements' / f'{ACCOUNT1}.csv'
+        records = read_csv(placement)
+        for row in records:
+            row.update(folder='unsure', reason='rule 3: current use unconfirmed')
+        write_csv(placement, records)
+        self.command('place.py', '--all', '--visuals')
+        account = next(r for r in read_csv(self.root / 'out/customers/ACCOUNTS.csv') if r['account'] == ACCOUNT1)
+        self.assertEqual('', account['governing_docs'])  # This remains a document list.
+        self.assertEqual('governing position unconfirmed', account['review_status'])
+        for name in ('README.md', 'ANALYSIS.md', 'position.html'):
+            self.assertIn('No governing agreement is confirmed',
+                          (self.root / 'out/customers' / ACCOUNT1 / name).read_text())
+        for name in ('INDEX.md', 'INDEX.html'):
+            self.assertIn('not confirmed', (self.root / 'out' / name).read_text())
+        self.assertTrue(all(self.corpus()[r['doc_id']]['folder'] == 'unsure' for r in records))
+        # Settled non-trade documents alone must not be labelled as unresolved governance.
+        for row in records:
+            row.update(folder='3-live-not-trade', reason='rule 5: no trade function')
+        write_csv(placement, records)
+        self.command('place.py', '--all', '--visuals')
+        self.assertNotIn('No governing agreement is confirmed',
+                         (self.root / 'out/customers' / ACCOUNT1 / 'README.md').read_text())
+
 
 class NamedStreams(KitFixture):
     depot = ACCOUNT1 + ' Northern Depot'

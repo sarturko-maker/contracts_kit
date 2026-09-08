@@ -99,7 +99,10 @@ def read_table(path, sheet=None):
         raise ValueError("Review_Table has blank or duplicate column names")
     missing = set(("file_name",) + COLUMNS) - set(names)
     if missing:
-        raise ValueError("Review_Table is missing columns: " + ", ".join(sorted(missing)))
+        raise ValueError("Review_Table is missing columns: " + ", ".join(sorted(missing))
+                         + ". Row 1 must use the short field names in inputs/Review_Table.example.csv; "
+                         "full question headings are not mapped automatically. Rename the matching headers "
+                         "in a copy of the export, preserving the original and cell values.")
     rows = []
     for number, values in enumerate(table[1:], 2):
         if len(values) > len(names) and any(str(v).strip() for v in values[len(names):]):
@@ -336,6 +339,9 @@ def assign(path, account=None):
             raise ValueError(f"Assignment account {target!r} is not an ERP row or holding target")
         if not row.get("basis", "").strip() or row.get("confidence") not in {"sure", "fairly sure", "not sure"}:
             raise ValueError(f"doc {doc}: give a match basis and sure/fairly sure/not sure confidence")
+        if "known group" in row["basis"].lower() and row["confidence"] == "sure":
+            raise ValueError(f"doc {doc}: a known group match is at most fairly sure; "
+                             "record that human confirmation is needed")
         if (doc, target) in seen:
             raise ValueError(f"Duplicate assignment for doc {doc}, {target}")
         seen.add((doc, target))

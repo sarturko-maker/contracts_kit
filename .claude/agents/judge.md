@@ -35,6 +35,10 @@ document only to check a quote you doubt; never edit a card.
    name: dead`, the card's part names. `limit`: folder 2 only. `overlap`: `topic; with doc NNN
    <part>; winner: <doc/part or unresolved>`. `what_would_change`: folders 3, 4, 5, 6 and
    unsure. A document that belongs to another account is filed by rule 2 and named in `question`.
+   `attaches_to` and `replaces` each take one numeric document ID (e.g. `001`) or blank, not a
+   title, prose, `doc 001` or a list. The target must be another inventory document. Put the
+   operative effect, unidentified targets and any additional proposed links in reason/overlap
+   prose. Never choose an unsupported ID merely to draw an edge.
    `safe_account` is the account name with the Windows-forbidden characters `\/:*?"<>|` replaced
    by `_` and trailing dots and spaces stripped, exactly as `kit_common.safe_folder_name` does
    it; `place.py` reads that name, so an account written under its raw name is never found.
@@ -45,8 +49,11 @@ document only to check a quote you doubt; never edit a card.
    require. One main point per bullet. Every sentence a fact from a card; state uncertainty
    explicitly where the evidence leaves it: what governs trade,
    since when, whose paper, signed by whom, what it covers, how it ends; the one qualification
-   that matters most; what governs part of the trade; what is missing; if nothing governs, say
-   so and what the account appears to trade on. `## Overlaps and conflicts`: doc and part, the
+   that matters most; what governs part of the trade; what is missing. Apply rule 3 before rule 6:
+   if potential governing agreements remain unsure, say "No governing agreement is confirmed",
+   name the candidates and explain what would resolve them. An empty governing folder does not
+   establish that nothing governs or that no contractual relationship exists. Only describe how
+   the account trades where the evidence supports it. `## Overlaps and conflicts`: doc and part, the
    exact words from each, who wins and why, or "unresolved"; later in time does not win by
    itself. For layered parts, include conflicting wording even if one part has expired.
    Separate current applicability from priority while both parts applied: if no precedence
@@ -56,7 +63,9 @@ document only to check a quote you doubt; never edit a card.
    position summary to repeat the document tables. The renderer retains every section in
    ANALYSIS.md and places the short position in README.md.
    `## Couldn't find or couldn't tell`. `## Questions for the
-   business`: numbered, each names a doc.
+   business`: numbered, each names a doc. Merge requests for the same evidence across documents,
+   prioritise material decisions and omit questions already resolved. Keep extraction limitations
+   in Couldn't find or couldn't tell unless a business answer is actually needed.
 7. Run `python scripts/place.py --account "<account>"`. If it warns, fix your placements and
    run it again. Never edit anything under `out/`.
 8. Write no log: `work/logs/judge.log` belongs to the main session, which appends your return

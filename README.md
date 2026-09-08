@@ -38,6 +38,10 @@ material doubt could change the conclusion, recording the reason, scope and find
 can remain unresolved. Missing citations and signature-attestation labels do not block analysis.
 A governing candidate with missing/NOT_FOUND priority information and a competing priority claim
 in another row requires a targeted precedence check. Table absence is not proof of source absence.
+Material negative signature claims on otherwise governing candidates and gaps in schedules central
+to the position also require focused checks. Unknown governing status is labelled unconfirmed;
+it does not mean no contract governs. The [pilot guide](docs/review-table-pilot.md) explains the
+checks and how to give the export short column headings instead of full question text.
 An optional `contents` column, a clause-level map of each file, is held out of the index printout
 and fetched only for the document being checked or the lines matching a search.
 Initial import requires a row for each readable contract (blank answers are allowed), and exact
@@ -48,6 +52,8 @@ This table route covers `/analyse`; it does not create the native cards required
 `/deep-dive`. Stage 2 integration remains separate work.
 For a local comparison using existing invented extraction, follow the
 [fresh Opus test and evaluation handover](docs/review-table-handover.md).
+For the proposed three-column filing route and the next cost comparison, see
+[the next-pilot design](docs/index-first-next-pilot.md). That light route is not yet implemented.
 
 Use Python 3.10 or later and Claude Code, opened from this kit's root. Clone
 `https://github.com/sarturko-maker/contracts_kit.git` or download the zip, then install:
@@ -55,6 +61,10 @@ Use Python 3.10 or later and Claude Code, opened from this kit's root. Clone
 ```
 pip install -r requirements.txt
 ```
+
+On Windows, if only the Python launcher is available, use `py -m pip install -r requirements.txt`
+and use `py` wherever these instructions say `python`. Claude should retain the interpreter that
+passed `/check`, rather than retrying an unavailable command at every step.
 
 Also install **Poppler** separately. Claude Code's PDF page/image reading can use its `pdftoppm`
 program; `pypdf` extracts text and does not supply that program. The kit requires `pdftoppm` on
