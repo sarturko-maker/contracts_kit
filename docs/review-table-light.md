@@ -7,6 +7,12 @@ that list of names and the ERP account names, nothing else, and its suggestions 
 entity map as provisional rows for the user to confirm. `/analyse` remains the optional next
 stage for the accounts the user picks, and it uses the separate full Review_Table.
 
+What the script needs from each row, in order of importance: the nature of the instrument,
+whether it is current, what supply it covers, and which customer contracts. Reference numbers
+are rare in real piles and nothing depends on them. Dates are the anchor instead: the date a
+document bears links a draft to its executed version, an amendment or notice to its parent, and
+a superseding agreement to the one it replaces.
+
 Keep the export beside the ERP and the original contracts:
 
 ```text
@@ -18,12 +24,23 @@ corpus/
 ```
 
 CSV or XLSX, one sheet, one row per file, row 1 holding the column names below. Column names
-may be written with spaces; the importer normalises case, spaces and hyphens. Answers are
-plain words with spaces. Playbooks and other internal guidance are not sent to the review tool;
-they will be filed from a local list into the business practice folder (to do).
+may be written with spaces, and the review tool may append the question text to them; the
+importer keys on the leading number and name. An empty cell, None and an em dash all mean no
+answer. Playbooks and other internal guidance are not sent to the review tool; they are filed
+from a local list into the business practice folder (to do).
 
 Use [the invented example](../inputs/Review_Table_Light.example.csv) as a header and format
 guide only. Its rows are invented and must not be imported into a real corpus.
+
+## Field types in the review tool
+
+Set the closed questions (Instrument, Supply coverage, Group mechanism, Signed, Status) as
+single-select fields with exactly the permitted values, and require an answer so that None is
+chosen rather than left blank. A single-select field exports only its label: anything the
+model writes after the value is lost, so the questions no longer ask for a reason. Set every
+other column as free text. Replace `[AS-AT DATE]` in the Status question with the date of the
+run, in the form 2026-09-10, every time the table is generated; the model's own sense of today
+cannot be trusted and the script needs the same date.
 
 ## What "governs supply" means
 
@@ -41,84 +58,83 @@ one product line is a normal combination.
 
 ## Columns and permitted answers
 
-| column | permitted answers |
-| --- | --- |
-| File name | exact filename with extension, supplied by the export, not a question |
-| Title | free text, short normalised title |
-| Reference | free text, or None |
-| Customer entity | one legal name as printed, or Not found |
-| Additional customer entities | None, or legal names one per line |
-| Supplier entity | one legal name as printed, or Not found |
-| Instrument | Global master agreement; Master or supply agreement; Local participation agreement; Standard terms or account form; Project agreement or statement of work; Schedule or exhibit; Amendment or side letter; Pricing or rebate letter; Purchase order or call-off; Purchase order or call-off carrying standard terms; Quote or acknowledgement; Quote or acknowledgement carrying standard terms; NDA, MOU or letter of intent; Guarantee or security; Certificate or evidence; Other overlay; Mixed; Other; Unclear |
-| Supply coverage | All supply between the parties; Substantially all supply; Part of supply; Named division or site; Varies commercials only; No supply coverage; Unclear |
-| Group mechanism | Contracting for affiliates; Adoption agreement; Entity schedule; Ordering entitlement; None; Unclear |
-| Signed | Signed by all parties; Signed by one party; Unsigned; Draft; Signature not established |
-| Status | Current; Expired; Terminated; Not yet effective; Unclear |
-| Relation to parent | None, or one of Forms part of; Accedes to; Placed under; Agreed under; Governed by; Amends; Varies; Extends; Renews; Supersedes; Terminates, then a vertical bar and the parent's reference, title and date |
-
-Closed answers begin with the permitted value exactly, then a vertical bar, then a short
-reason. The script reads the value before the bar and ignores the rest; the analyst reads the
-reason.
+| column | field | permitted answers |
+| --- | --- | --- |
+| File name | metadata | exact filename with extension, supplied by the export |
+| Title | free text | short normalised title |
+| Document date | free text | YYYY-MM-DD, YYYY-MM, or None |
+| Customer entity | free text | one legal name as printed, with company number if printed, or Not found |
+| Additional customer entities | free text | None, or legal names one per line |
+| Supplier entity | free text | one legal name as printed, with company number if printed, or Not found |
+| Instrument | single-select | Global master agreement; Master or supply agreement; Local participation agreement; Standard terms or account form; Project agreement or statement of work; Schedule or exhibit; Amendment or side letter; Pricing or rebate letter; Notice letter; Purchase order or call-off; Purchase order or call-off carrying standard terms; Quote or acknowledgement; Quote or acknowledgement carrying standard terms; NDA, MOU or letter of intent; Guarantee or security; Certificate or evidence; Other overlay; Mixed; Other; Unclear |
+| Supply coverage | single-select | All supply between the parties; Substantially all supply; Part of supply; Named division or site; Varies commercials only; No supply coverage; Unclear |
+| Group mechanism | single-select | Contracting for affiliates; Adoption agreement; Entity schedule; Ordering entitlement; None; Unclear |
+| Signed | single-select | Signed by all parties; Signed by one party; Unsigned; Draft; Signature not established |
+| Status | single-select | Current; Expired; Terminated; Not yet effective; Unclear |
+| End date | free text | YYYY-MM-DD, Rolling, Event, or None |
+| Parent agreement | free text | None, or a relation word followed by the parent's title and date as printed |
 
 ## The questions
 
 Each question is self-contained because the review tool applies no common instruction.
 
-### Title
+### 1. Title
 
 ```text
 Answer from this document only; never use the filename. Give a short normalised title that
 says what this document is, based on its printed title and its content, for example Master
 Supply Agreement, Amendment No. 2 to Master Supply Agreement, Local Participation Agreement,
-Rebate Letter 2026, Purchase Order, Mutual Non-Disclosure Agreement.
+Rebate Letter 2026, Purchase Order, Notice of Termination, Mutual Non-Disclosure Agreement.
 ```
 
-### Reference
+### 2. Document date
 
 ```text
-Answer from this document only. Give this document's own contract, agreement or reference
-number if one is printed on its cover, header, footer or parties clause, for example a
-procurement or contract ID. Give only this document's own number, never the numbers of other
-agreements it refers to. If no such number appears in the reviewed content, answer None.
+Answer from this document only. Give the date this document bears: the date it states it is
+made or dated, or the latest signature date if there is no dated line. Write it as
+YYYY-MM-DD. If only a month and year appear, write YYYY-MM. If no date appears in the
+reviewed content, answer None.
 ```
 
-### Customer entity
+### 3. Customer entity
 
 ```text
 Answer from this document only. Give the one legal entity that contracts as the customer,
 buyer or purchaser: the customer entity that signs, or where several customer entities are
 parties, the first named. Give the full legal name exactly as printed in the parties clause or
-signature block, including suffixes such as Ltd, GmbH or Inc. This is the contracting party,
-not the affiliates, sites or divisions permitted to use the agreement. If no customer entity
-can be identified, answer Not found.
+signature block, including suffixes such as Ltd, GmbH or Inc. If a registered company number
+is printed for that entity, add it after the name in the form (No. 12345678). This is the
+contracting party, not the affiliates, sites or divisions permitted to use the agreement. If
+no customer entity can be identified, answer Not found.
 ```
 
-### Additional customer entities
+### 4. Additional customer entities
 
 ```text
 Answer from this document only. Apart from the entity you gave as the customer entity, list
 every other legal entity that is itself a contracting party on the customer side, one full
-legal name per line exactly as printed, including co-signing group companies and entities
-listed as parties in a schedule of signatories. Exclude affiliates, sites or divisions that
-are only permitted to use the agreement. If there are none, answer None.
+legal name per line exactly as printed, with its registered company number in the form
+(No. 12345678) where printed, including co-signing group companies and entities listed as
+parties in a schedule of signatories. Exclude affiliates, sites or divisions that are only
+permitted to use the agreement. If there are none, answer None.
 ```
 
-### Supplier entity
+### 5. Supplier entity
 
 ```text
 Answer from this document only. Give the one legal entity that contracts as the supplier,
 seller or provider: the supplier entity that signs, or where several are parties, the first
 named. Give the full legal name exactly as printed in the parties clause or signature block,
-including suffixes. This is the contracting party, not supplier group companies permitted to
-supply under it. If none can be identified, answer Not found.
+including suffixes, and its registered company number in the form (No. 12345678) where
+printed. This is the contracting party, not supplier group companies permitted to supply under
+it. If none can be identified, answer Not found.
 ```
 
-### Instrument
+### 6. Instrument
 
 ```text
-Answer from this document only. Classify the document by what it does, not by its title.
-Begin with exactly one value below, then a vertical bar, then a reason of at most 25 words
-citing the clause or page.
+Answer from this document only. Classify the document by what it does, not by its title, as
+exactly one of the values below.
 Global master agreement: a negotiated agreement of standing supply terms that other legal
 entities can adopt, through a participation, adoption, accession or joinder mechanism, an
 affiliate or entity schedule, or the parties contracting on behalf of their affiliates.
@@ -135,11 +151,14 @@ works package or statement of work.
 Schedule or exhibit: a price list, product schedule, specification, service level or other
 schedule, exhibit or annex that the parent agreement incorporates as part of its supply terms
 and that is issued or updated on its own.
-Amendment or side letter: a document that amends, varies, extends, renews, restates or
-terminates the text of another agreement.
+Amendment or side letter: a document agreed by the parties that amends, varies, extends,
+renews or restates the text of another agreement.
 Pricing or rebate letter: a letter or short agreement granting or varying a rebate, bonus,
 growth incentive, marketing contribution, special price or payment term for a period or
 project, standing beside the supply terms rather than forming part of them.
+Notice letter: a letter from one party giving notice of termination, non-renewal, extension,
+a price change or a change of name, or confirming that trading continues under an agreement,
+without amending the agreement's text.
 Purchase order or call-off: a single order with no standard terms printed, attached or
 incorporated by reference.
 Purchase order or call-off carrying standard terms: a single order that prints, attaches or
@@ -154,62 +173,63 @@ Guarantee or security: a guarantee, bond, letter of credit or charge.
 Certificate or evidence: an acceptance certificate, declaration of conformity, insurance
 certificate or similar record with a validity period.
 Other overlay: data processing, code of conduct, EDI, quality or similar side terms.
-Mixed: distinct instruments bound into one file; name them in the reason.
+Mixed: distinct instruments bound into one file.
 Other. Unclear.
 ```
 
-### Supply coverage
+### 7. Supply coverage
 
 ```text
 Answer from this document only. Governing supply means setting the terms on which goods,
 services or software are supplied: what may be ordered, delivery, warranty, price and
-payment. A document that only varies prices, rebates, bonuses or incentives under terms that
-govern elsewhere does not govern supply, even if it applies to all purchases. This question
-asks what supply is covered, not which group entities may use the agreement. Begin with
-exactly one value below, then a vertical bar, then a reason of at most 25 words citing the
-clause or schedule.
-All supply between the parties: all goods, services or software the customer buys from the
-supplier, or wording placing all orders between them under this document.
-Substantially all supply: supply of a defined product set, bill of materials or catalogue
-that the document describes or treats as all or nearly all of what the customer buys from
-the supplier.
-Part of supply: supply limited to a product set, project, site or programme, while other
-supply is or could be governed by something else.
-Named division or site: supply to a named division, business unit or group of sites of the
-customer only.
-Varies commercials only: does not govern supply; grants or varies a rebate, bonus, growth
-incentive, marketing contribution, special price or payment term under other governing terms.
-No supply coverage: does not concern the supply of goods, services or software, for example
-an NDA, MOU, guarantee, certificate or data processing agreement.
+payment. Choose exactly one of the values below.
+All supply between the parties: the document states that all purchases, all orders or all
+supply between the customer and the supplier are made under it, or it sets the standing terms
+for whatever the customer buys from the supplier. A definition of Products, or a schedule of
+product categories, does not make the coverage partial when the scope or ordering clause
+applies to all purchases.
+Substantially all supply: the document limits itself to a listed product set, bill of
+materials or catalogue, and describes or treats that set as all or nearly all of what the
+customer buys from the supplier.
+Part of supply: the document expressly limits itself to one project, site, programme or works
+package, or to a product subset while other purchases from the supplier are, or could be,
+made under different terms.
+Named division or site: the document applies only to purchases by a named division, business
+unit or group of sites of the customer.
+Varies commercials only: the document does not itself set supply terms; it grants or changes
+a rebate, bonus, incentive, price or payment term under terms that govern elsewhere.
+No supply coverage: the document does not concern the supply of goods, services or software,
+for example an NDA, MOU, guarantee, certificate or data processing agreement.
 Unclear: the reviewed content does not establish which applies.
-Decide from the scope, ordering, delivery, price and payment clauses and any product or site
-schedule, not from the title. A clause saying this document prevails over purchase orders
-does not by itself mean all supply.
+For an amendment, schedule, notice or letter under another agreement, answer for the change
+it makes. Decide from the scope, ordering, delivery, price and payment clauses and any product
+or site schedule, not from the title. A clause saying this document prevails over purchase
+orders does not by itself mean all supply.
 ```
 
-### Group mechanism
+### 8. Group mechanism
 
 ```text
 Answer from this document only. Does this agreement reach legal entities beyond the two
 contracting parties, and by what mechanism? This is separate from what supply is covered: an
-agreement can be open to a whole group while covering one product line. Begin with exactly
-one value below, then a vertical bar, then a reason of at most 25 words citing the clause or
-schedule.
+agreement can be open to a whole group while covering one product line. Choose exactly one
+of the values below.
 Contracting for affiliates: a party contracts on behalf of its affiliates, subsidiaries or
 group companies so that they are bound or entitled without further signature.
 Adoption agreement: affiliates join by signing a participation, adoption, accession,
 implementation or joinder agreement, or a template for one is attached or referred to.
-Entity schedule: a schedule or appendix lists the affiliates, sites or divisions covered.
-Ordering entitlement: affiliates may place orders under it without a separate agreement.
+Entity schedule: a schedule or appendix lists the affiliates, sites, depots or divisions
+covered.
+Ordering entitlement: affiliates or bodies under the customer's control may place orders
+under it without a separate agreement.
 None: the agreement is limited to the two named entities or contains no such wording.
 Unclear: the reviewed content does not establish the position.
 ```
 
-### Signed
+### 9. Signed
 
 ```text
-Answer from this document only. Begin with exactly one value below, then a vertical bar, then
-the signing entities and dates shown, or what was found instead, in at most 25 words.
+Answer from this document only. Choose exactly one of the values below.
 Signed by all parties: a visible signature, electronic signature certificate or completion
 statement for every contracting party.
 Signed by one party: visible signature for one side only.
@@ -220,31 +240,42 @@ present, or not among the reviewed content. A typed name is not a signature, and
 of a signature from the reviewed content does not mean the document is unsigned.
 ```
 
-### Status
+### 10. Status
 
 ```text
-Answer from this document only, as at the date of this review. Begin with exactly one value
-below, then a vertical bar, then the start date, the end date or renewal rule and the clause,
-in at most 25 words.
+Answer from this document only, as at [AS-AT DATE]. Choose exactly one of the values below.
 Current: the document has commenced and either its fixed term has not ended or it continues
 on a rolling, evergreen, automatic renewal or until-terminated basis. Treat evergreen and
 rolling terms as Current unless this document records termination.
 Expired: a fixed end date has passed and no extension appears in the reviewed content.
 Terminated: this document records its own termination or its replacement by another
 agreement.
-Not yet effective: commencement depends on a future date or on a condition not shown as met.
+Not yet effective: commencement depends on a date after [AS-AT DATE] or on a condition not
+shown as met.
 Unclear: dates are missing from the reviewed content, or parts of the document have different
-terms; say which.
+terms.
 Do not assume anything about amendments or terminations in other documents.
 ```
 
-### Relation to parent
+### 11. End date
+
+```text
+Answer from this document only. Give the date on which this document's own effect ends, as
+YYYY-MM-DD: the end of a fixed term, the end of the period a letter or schedule covers, the
+date on which a termination or notice takes effect, or the delivery date of an order. Where
+the end is the earlier of a date and an event, give the date. If the document continues until
+terminated, or renews automatically with no fixed end, answer Rolling. If it ends only on an
+event with no date, such as practical completion, answer Event followed by the event. If no
+end is stated, answer None.
+```
+
+### 12. Parent agreement
 
 ```text
 Answer from this document only. If this document sits under, forms part of, or alters another
-agreement, begin with exactly one relation below, then a vertical bar, then that agreement's
-reference number if printed, its title and its date as printed. Where there is more than one
-parent, give one per line with the principal first.
+agreement, begin with exactly one relation word, then give that agreement's title and date as
+printed in this document, and its reference number if one is printed. One line per parent,
+the principal first.
 Forms part of: a schedule, exhibit or annex of the parent.
 Accedes to: a participation or joinder under a global master.
 Placed under: an order, call-off, quote or acknowledgement issued under an agreement.
@@ -253,6 +284,7 @@ Governed by: standard terms incorporated by reference.
 Amends, Extends, Renews, Supersedes, Terminates: the effect on the parent's text or term.
 Varies: a pricing, rebate or incentive letter that changes the commercial outcome under the
 parent without amending its text.
+Confirms: a letter confirming that trading continues under the parent.
 If the document stands alone, answer None. Do not say whether the parent exists elsewhere.
 ```
 
@@ -262,48 +294,72 @@ The output is one folder per ERP account, and inside it the status folders of
 `stage1/sorting-rules.md` section B: `1-governs-trade`, `2-governs-part-of-trade`,
 `3-live-not-trade`, `4-not-live`, `5-orders-drafts-duplicates`, `6-business-practice` and
 `unsure`. Every file gets a row, holding folders keep unmatched names, and byte-identical copies
-are detected by hash.
+are detected by hash. The script records the export's hash and date and the as-at date at
+import.
 
-1. **Account.** Customer entity is matched exactly to an ERP account, then through the entity
-   map. Anything else goes to the model once, as names only, and comes back as provisional
-   entity-map rows. Each Additional customer entity that matches receives a copy of the document
-   in its own account; unmatched ones are flagged on the row, not dropped.
-2. **Instrument gate.** Only Global master agreement, Master or supply agreement, Local
+1. **Account.** Customer entity is matched to an ERP account by company number where both
+   sides have one, then by name after normalising case, punctuation and Ltd, Limited, plc and
+   Inc, then through the entity map. A customer entity that is one of our own entities means the
+   sides are reversed: the row goes to a holding folder under the supplier's name. Anything else
+   goes to the model once, as names only, and comes back as provisional entity-map rows. Each
+   Additional customer entity that matches receives a copy of the document in its own account;
+   unmatched ones are flagged on the row, not dropped.
+2. **Same document, several files.** Byte-identical files are copies. Rows with the same
+   customer, the same instrument and the same title are versions of one document: a Draft with a
+   non-draft version present goes to folder 5, and a scanned or image copy of a signed version
+   goes to folder 5 marked as a copy, the best copy being the one with the strongest Signed
+   answer and native text.
+3. **Instrument gate.** Only Global master agreement, Master or supply agreement, Local
    participation agreement, Standard terms or account form, Project agreement or statement of
    work, Schedule or exhibit and Amendment or side letter can reach folders 1 or 2.
-3. **Governing instruments.** Current and signed: folder 1 for All supply between the parties
-   and Substantially all supply; folder 2 for Part of supply and Named division or site.
-   Expired or Terminated: folder 4. Signing not established, Unsigned without a signed twin, or
-   Status Unclear: unsure.
-4. **Non-governing instruments.** Pricing or rebate letters, NDA, MOU, guarantees, certificates
-   and other overlays: folder 3 when Current, folder 4 when Expired or Terminated, unsure when
-   Unclear. Their Supply coverage cell does not route them.
-5. **Transactions.** Purchase orders, call-offs, quotes and acknowledgements: folder 5, with
-   drafts that have a signed twin and byte-identical copies. An order carrying standard terms
-   is still folder 5; when an account has nothing in folders 1 or 2, the account README notes
-   that it trades on order terms, which `/analyse` should then examine.
-6. **Linking.** A schedule, amendment or participation inherits its parent's place between
-   folders 1 and 2 only when the parent is found in the same account by reference number, or by
-   a unique title and date, and only when the child is itself Current. A child that is Expired
-   or Terminated goes to folder 4 whatever its parent's status. An unresolved parent sends the
-   child to unsure.
-7. **Contradictions go to review.** A non-governing instrument whose Supply coverage says it
-   governs, a governing instrument answering Varies commercials only, or a Global master
-   agreement with Group mechanism None, goes to unsure with both cells quoted. Global master
-   agreement with Part of supply is consistent and is filed normally.
-8. **One signature.** Signed by one party is accepted as live for letters, orders, quotes and
-   certificates, and sends masters, participations and project agreements to unsure.
-9. **Run metadata.** The script records the export's file hash and its date at import, so the
-   Status answers stay interpretable later without a paid review-date column.
-10. **Playbooks.** A local list of filenames files internal guidance into folder 6 without
-    sending it to the review tool. Not yet built.
+4. **Current or not.** When End date is a date, the script compares it with the as-at date;
+   Rolling and Event count as continuing. The vendor's Status label decides only when End date
+   is None. A child that has ended goes to folder 4 whatever its parent does.
+5. **Governing instruments.** Current: folder 1 for All supply between the parties and
+   Substantially all supply; folder 2 for Part of supply and Named division or site. Ended:
+   folder 4. Unsigned without a signed version, or Draft without one: unsure. Signature not
+   established routes nothing by itself; it is flagged for `/analyse`. When an account has no
+   folder 1 candidate but exactly one current master or supply agreement answering Part of
+   supply, that agreement goes to folder 1 with a scope note, as rule 6 provides.
+6. **Non-governing instruments.** Pricing or rebate letters, notice letters, NDA, MOU,
+   guarantees, certificates and other overlays: folder 3 when current, folder 4 when ended,
+   unsure when Unclear. Their Supply coverage cell does not route them.
+7. **Transactions.** Purchase orders, call-offs, quotes and acknowledgements: folder 5. When an
+   account has nothing in folders 1 or 2, the account README notes that it trades on order
+   terms, which `/analyse` should then examine.
+8. **Linking.** The Parent agreement text is matched to a row in the same account by the date
+   it quotes against Document date, with title similarity as the tiebreak, then by a unique
+   title. A schedule, amendment, participation or notice that finds its parent inherits the
+   parent's place between folders 1 and 2 unless its own coverage is narrower. A Supersedes or
+   Terminates child whose End date, or Document date when there is none, is on or before the
+   as-at date sends its parent to folder 4; a future date leaves the parent live and flagged.
+   An unresolved parent sends the child to unsure.
+9. **Contradictions go to review.** A non-governing instrument whose Supply coverage says it
+   governs, a master answering Varies commercials only, or a Global master agreement with Group
+   mechanism None, goes to unsure with both cells quoted. Global master agreement with Part of
+   supply is consistent and is filed normally.
+10. **Rows that are not contracts.** A row for the ERP file or the review table itself is
+    ignored. A readable file with no row goes to a holding folder with the review tool's
+    rejection code when its error log is supplied. Playbooks come from a local list into
+    folder 6. Not yet built.
+
+## What the first export showed (9 September 2026, messy pile)
+
+The review tool processed 30 of 33 documents, rejecting the zero-byte PDF, the text file with a
+PDF extension and the .msg. It read the xlsx and the jpg. Single-select fields exported labels
+only, so every reason and every parent target was lost, and empty selections came back as an
+em dash. The model's sense of today was earlier than 2026: five current instruments dated in
+2026 came back Not yet effective. Signature detection on image signature pages was
+inconsistent. Two all-purchases masters came back Part of supply. Entities, titles, instrument
+types, drafts, the reversed sides on a supplier-paper framework and the additional customer on
+a three-party letter came back right. The questions above are the revision that followed.
 
 ## Sorting-rule edits this design requires
 
 - Rule 3, `unsure`: delete the clause sending a rolling agreement with no later evidence to
   unsure. An evergreen or rolling agreement is current unless something records its end.
 - Rule 5, `3-live-not-trade`: add pricing, rebate, bonus and incentive letters that vary
-  commercials under terms that govern elsewhere.
+  commercials under terms that govern elsewhere, and notice letters.
 - Rule 6, `1-governs-trade`: the sentence excluding a period-only pricing or rebate letter now
   points it to folder 3.
 - Rule 7, `2-governs-part-of-trade`: delete "or a period (this year's pricing or rebate

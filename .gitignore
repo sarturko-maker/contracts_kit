@@ -16,3 +16,5 @@ memory/
 # OS
 .DS_Store
 Thumbs.db
+# vendor drop folder: exports and error logs, never committed
+Hagora/
