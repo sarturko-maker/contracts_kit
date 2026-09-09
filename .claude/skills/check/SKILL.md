@@ -20,6 +20,10 @@ and the ERP record); it may be empty.
    If the user also typed `--erp <file>` (to name the ERP record), pass it through unchanged.
    Also pass `--review-table "<file>"` when given. A reserved Review_Table.csv/xlsx in the pile
    is discovered automatically; its ten analysis columns are checked without model calls.
+   Also pass --review-table-light for a custom light filename; Review_Table_Light.csv/xlsx is
+   discovered separately and checked against its five fields. With --light-only, defer full-table
+   validation, Poppler and Mermaid checks so unused analysis dependencies cannot block /sort.
+   --light-sheet selects the light sheet.
 2. Put every line the script printed in your reply, as printed: `ok  ...`, `skip ...`, `FAIL ...`.
 3. If any line starts with `FAIL`: tell the user what to fix (the line says how) and stop. Run
    nothing else; do not go on to `/prepare`.

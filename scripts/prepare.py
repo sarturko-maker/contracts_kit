@@ -795,6 +795,7 @@ def main():
     parser.add_argument("pile", help="folder with the contract files and the ERP record (read only)")
     parser.add_argument("--erp", help="path to the ERP record if its name does not contain 'erp'")
     parser.add_argument("--review-table", help="CSV/XLSX review export; otherwise discover Review_Table.csv/xlsx")
+    parser.add_argument("--review-table-light", help="CSV/XLSX filing export; otherwise discover Review_Table_Light.csv/xlsx")
     parser.add_argument("--account-column", help="ERP column holding the account name")
     parser.add_argument("--side", choices=["customers", "suppliers"], help="which side this run sorts")
     parser.add_argument("--force", action="store_true", help="redo files already done")
@@ -817,18 +818,25 @@ def main():
     say(f"Pile: {pile} ({len(files)} files)")
 
     from review_table import find_review_table, SOURCE as REVIEW_SOURCE
+    light_source = WORK / "review-light-source.json"
     try:
         review_path = find_review_table(pile, args.review_table)
+        light_path = find_review_table(pile, args.review_table_light, light=True)
     except ValueError as err:
         fail(str(err))
-    erp_path = find_erp_record(pile, [p for p in files if p.resolve() != review_path], args.erp)
-    if erp_path == review_path:
-        fail("ERP and Review_Table must be separate files.")
+    if review_path and review_path == light_path:
+        fail("Review_Table and Review_Table_Light must be separate files.")
+    controls = {review_path, light_path} | {
+        p.resolve() for p in files if p.stem.casefold() in {"review_table", "review_table_light"}
+        and p.suffix.casefold() in {".csv", ".xlsx"} and not p.is_symlink()}
+    erp_path = find_erp_record(pile, [p for p in files if p.resolve() not in controls], args.erp)
+    if erp_path in controls:
+        fail("ERP, Review_Table and Review_Table_Light must be separate files.")
     previous_erp = read_json(ERP_JSON)
     erp = prepare_erp(erp_path, args)
 
     # numbering: everything but the ERP record, stable sorted order
-    others = [p for p in files if p.resolve() not in {erp_path, review_path}]
+    others = [p for p in files if p.resolve() not in {erp_path, *controls}]
     others.sort(key=lambda p: p.relative_to(pile).as_posix().lower())
 
     previous = {r["doc_id"]: r for r in read_csv(INVENTORY_CSV)} if INVENTORY_CSV.exists() else {}
@@ -839,6 +847,14 @@ def main():
             review_config = {}
         write_json(REVIEW_SOURCE, {**review_config, "source_path": str(review_path), "sha256": sha256_of(review_path)})
         message = f"Review_Table input: {review_path}; registered in work/review-source.json, not numbered as a contract"
+        say(message)
+        log.append(message)
+    if light_path:
+        light_config = read_json(light_source) or {}
+        if light_config.get("source_path") != str(light_path):
+            light_config = {}
+        write_json(light_source, {**light_config, "source_path": str(light_path), "sha256": sha256_of(light_path)})
+        message = f"Review_Table_Light input: {light_path}; registered separately, not numbered as a contract"
         say(message)
         log.append(message)
     WORK_LOGS.mkdir(parents=True, exist_ok=True)
@@ -869,7 +885,7 @@ def main():
     # Removed originals retain their numbers and an explicit audit row; numbers are never reused.
     present_ids = {r['doc_id'] for r in rows}
     for doc_id, old in previous.items():
-        if review_path and old.get("original_path") == str(review_path):
+        if old.get("original_path") in {str(p) for p in controls if p}:
             continue  # the control file is audited in review-source.json, not as a contract
         if doc_id != 'erp' and doc_id not in present_ids:
             rows.append({**old, 'readable': 'no', 'note': 'source no longer in pile; previous number retained'})

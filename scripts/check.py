@@ -5,6 +5,7 @@ Exits 1 if any check fails, so nothing else runs on a broken setup.
 """
 
 import argparse
+import csv
 import os
 import shutil
 import subprocess
@@ -91,6 +92,9 @@ def main():
     parser.add_argument("--pile", help="folder holding the contract files and the ERP record")
     parser.add_argument("--erp", help="the ERP record, if its name does not contain 'erp'")
     parser.add_argument("--review-table", help="CSV/XLSX review export; otherwise discover Review_Table in the pile")
+    parser.add_argument("--review-table-light", help="CSV/XLSX light export; otherwise discover Review_Table_Light")
+    parser.add_argument("--light-sheet", help="worksheet to check in the Review_Table_Light XLSX")
+    parser.add_argument("--light-only", action="store_true", help="check the light workflow without validating the optional full export")
     parser.add_argument("--sheet", help="worksheet to check in the Review_Table XLSX")
     args = parser.parse_args()
 
@@ -174,7 +178,9 @@ def main():
         skip("openpyxl: only needed if the ERP record is .xlsx")
 
     # Review_Table is a control input; validate its format without invoking a model.
-    if args.review_table or (args.pile and Path(args.pile).expanduser().is_dir()):
+    if args.light_only:
+        skip("Review_Table: full analysis validation deferred; light filing does not use it")
+    elif args.review_table or (args.pile and Path(args.pile).expanduser().is_dir()):
         try:
             from review_table import find_review_table, read_table
             review = find_review_table(Path(args.pile or ".").expanduser(), args.review_table)
@@ -188,15 +194,33 @@ def main():
     else:
         skip("Review_Table: supply a pile path or --review-table to check the export")
 
+    if args.review_table_light or (args.pile and Path(args.pile).expanduser().is_dir()):
+        try:
+            from review_table import find_review_table
+            from sort_light import read_export
+            light = find_review_table(Path(args.pile or ".").expanduser(), args.review_table_light, light=True)
+            if light:
+                light_rows, _ = read_export(light, args.light_sheet)
+                ok(f"Review_Table_Light: {len(light_rows)} rows; filing input, separate from full analysis")
+            else:
+                skip("Review_Table_Light: not supplied; /sort requires this export")
+        except (ValueError, OSError, ImportError, csv.Error, zipfile.BadZipFile) as err:
+            fail(f"Review_Table_Light: {err}; see docs/review-table-light.md")
+
     # 5. Claude Code's PDF page/image reads need an external renderer, not just pypdf.
-    error = check_poppler()
-    if error:
-        fail(f"Poppler: {error}")
+    if args.light_only:
+        skip("Poppler: light filing does not open page images")
     else:
-        ok("Poppler pdftoppm on PATH; invented PDF rendered to JPEG")
+        error = check_poppler()
+        if error:
+            fail(f"Poppler: {error}")
+        else:
+            ok("Poppler pdftoppm on PATH; invented PDF rendered to JPEG")
 
     # 6. mermaid.min.js
-    if MERMAID_JS.is_file() and MERMAID_JS.stat().st_size > 1_000_000:
+    if args.light_only:
+        skip("Mermaid: light filing produces no diagrams")
+    elif MERMAID_JS.is_file() and MERMAID_JS.stat().st_size > 1_000_000:
         ok(f"assets/mermaid.min.js present ({MERMAID_JS.stat().st_size // 1024} KB)")
     elif MERMAID_JS.is_file():
         fail(f"assets/mermaid.min.js is only {MERMAID_JS.stat().st_size} bytes: "

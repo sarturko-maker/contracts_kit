@@ -39,17 +39,19 @@ def digest(path):
     return value.hexdigest()
 
 
-def find_review_table(pile, explicit=None):
-    """Only the reserved Review_Table name is auto-discovered; ambiguity stops preparation."""
+def find_review_table(pile, explicit=None, *, light=False):
+    """Discover one exact reserved export name, independently for each workflow."""
+    label = "Review_Table_Light" if light else "Review_Table"
+    flag = "--review-table-light" if light else "--review-table"
     if explicit:
         path = Path(explicit).expanduser().resolve()
         if not path.is_file() or path.is_symlink() or path.suffix.lower() not in {".csv", ".xlsx"}:
-            raise ValueError("--review-table must name a regular CSV or XLSX file")
+            raise ValueError(f"{flag} must name a regular CSV or XLSX file")
         return path
     candidates = [p for p in Path(pile).rglob("*") if p.is_file() and not p.is_symlink()
-                  and p.stem.casefold() == "review_table" and p.suffix.lower() in {".csv", ".xlsx"}]
+                  and p.stem.casefold() == label.casefold() and p.suffix.lower() in {".csv", ".xlsx"}]
     if len(candidates) > 1:
-        raise ValueError("Multiple Review_Table files found; pass --review-table with the intended file")
+        raise ValueError(f"Multiple {label} files found; pass {flag} with the intended file")
     return candidates[0].resolve() if candidates else None
 
 
@@ -57,7 +59,7 @@ def header(value):
     return re.sub(r"[\s-]+", "_", str(value or "").strip().casefold())
 
 
-def read_table(path, sheet=None):
+def read_table(path, sheet=None, *, columns=COLUMNS, label="Review_Table"):
     """Read literal exported answers. Reject formulas and ambiguous sheets/headers."""
     if path.suffix.lower() == ".xlsx":
         import openpyxl
@@ -97,10 +99,10 @@ def read_table(path, sheet=None):
         names.pop()
     if not all(names) or len(set(names)) != len(names):
         raise ValueError("Review_Table has blank or duplicate column names")
-    missing = set(("file_name",) + COLUMNS) - set(names)
+    missing = set(("file_name",) + columns) - set(names)
     if missing:
-        raise ValueError("Review_Table is missing columns: " + ", ".join(sorted(missing))
-                         + ". Row 1 must use the short field names in inputs/Review_Table.example.csv; "
+        raise ValueError(f"{label} is missing columns: " + ", ".join(sorted(missing))
+                         + f". Row 1 must use the short field names in inputs/{label}.example.csv; "
                          "full question headings are not mapped automatically. Rename the matching headers "
                          "in a copy of the export, preserving the original and cell values.")
     rows = []
@@ -118,7 +120,7 @@ def portable(value):
     return str(value).replace("\\", "/").casefold()
 
 
-def match_rows(rows, inventory):
+def match_rows(rows, inventory, *, columns=COLUMNS, version=VERSION, allow_unreadable=False):
     """Resolve exact metadata, never fuzzy filenames or an LLM's guess."""
     by_name = {}
     for item in inventory:
@@ -140,17 +142,20 @@ def match_rows(rows, inventory):
         doc = item["doc_id"]
         if doc in matched:
             raise ValueError(f"Multiple Review_Table rows map to doc {doc}")
-        if item["readable"] != "yes":
+        if item["readable"] != "yes" and not allow_unreadable:
             raise ValueError(f"doc {doc} is not readable in the local inventory; resolve preparation first")
-        for source in (Path(item["original_path"]), WORK_FILES / f'{doc}.{item["ext"]}'):
-            if not source.is_file() or digest(source) != item["sha256"]:
+        sources = [Path(item["original_path"])]
+        if item["readable"] == "yes":
+            sources.append(WORK_FILES / f'{doc}.{item["ext"]}')
+        for source in sources:
+            if source.is_symlink() or not source.is_file() or digest(source) != item["sha256"]:
                 raise ValueError(f"doc {doc}: original/copy changed or missing; rerun /prepare and review")
-        checked = COLUMNS + ((CONTENTS,) if CONTENTS in row else ())
+        checked = columns + ((CONTENTS,) if CONTENTS in row else ())
         flags = [f"{column}: blank" for column in checked if not row[column].strip()]
         flags += [f"{column}: {token}" for column in checked
                   for token in sorted(set(re.findall(r"\b(?:NOT_REVIEWED|UNREADABLE|CONFLICTING)\b",
                                                     row[column])))]
-        packet = {"schema": VERSION, "doc_id": doc, "inventory": item, "answers": row,
+        packet = {"schema": version, "doc_id": doc, "inventory": item, "answers": row,
                   "flags": flags}
         packet["row_hash"] = hashlib.sha256(json.dumps(packet, sort_keys=True).encode()).hexdigest()
         matched[doc] = packet
@@ -264,6 +269,11 @@ def show_contents(doc):
         say("(blank)")
 
 
+def analysis_matching_rows():
+    """Account scope for /analyse: the sort log, written by /sort (light) or by /match."""
+    return read_csv(WORK / "logs/sort.csv")
+
+
 def selected_ids(account=None):
     active = read_json(ACTIVE)
     if not active:
@@ -275,9 +285,9 @@ def selected_ids(account=None):
         erp = read_json(WORK / "erp.json") or {}
         if account not in {a["account"] for a in erp.get("accounts", [])}:
             raise ValueError("Account is not an ERP row")
-        ids = {r["doc_id"] for r in read_csv(WORK / "logs/sort.csv") if r["account"] == account}
+        ids = {r["doc_id"] for r in analysis_matching_rows() if r["account"] == account and r["doc_id"] in ids}
         if not ids:
-            raise ValueError("Account-only review needs an earlier matching run; run /analyse all first")
+            raise ValueError("Account-only review needs an earlier matching run; run /sort or /analyse all first")
     inventory = {r["doc_id"]: r for r in read_csv(INVENTORY_CSV)}
     for doc in ids:
         packet = packet_for(doc)
@@ -349,7 +359,7 @@ def assign(path, account=None):
                          "original_path": inventory[doc]["original_path"]})
     if {r["doc_id"] for r in produced} != ids:
         raise ValueError("Assignments must cover every selected index row, including unresolved documents")
-    previous = read_csv(WORK / "logs/sort.csv")
+    previous = analysis_matching_rows() if account else read_csv(WORK / "logs/sort.csv")
     kept = [r for r in previous if r["doc_id"] not in ids] if account else []
     if not account:
         kept = [{"doc_id": d, "original_path": r["original_path"], "account": "_unreadable",

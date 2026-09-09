@@ -3,6 +3,7 @@
 - This folder is the DCG intake kit. The contract files, the ERP record, and everything under
   `work/` and `out/` are confidential, never leave this machine, and are never committed.
   The same applies to Review_Table exports; only invented examples are tracked.
+  Review_Table_Light and Review_Table are separate control files; neither is a contract.
 - Copy, never move or rename an original file. `work/files/` holds numbered copies.
 - Documents are referred to by number (doc 017), never by filename.
 - Every file in the pile gets a row somewhere. Nothing is skipped silently.
@@ -40,15 +41,18 @@
 - Cards, forms, imported review rows, logged source findings and filing records are the source; `out/` is generated. Hand-edit only `inputs/entity-map.csv`
   and `inputs/corrections.csv` for user overrides. Agents write only the work artifacts their
   workflow specifies. Never hand-edit generated `out/`.
-- Four user commands, each stopping on its own: `/sort` files by identity (optional triage),
+- Four user commands, each stopping on its own: `/sort` files Review_Table_Light by script into
+  account and status folders; its one model step is a names-only turn for customers the
+  script cannot match. It never reads contract content.
   `/analyse` consumes Review_Table when supplied, otherwise reads fully; it matches, judges and writes the position notes and diagrams (the
-  minimum deliverable), `/deep-dive` fills the forms, proposes families and exports the graph,
+  optional governing analysis), `/deep-dive` fills the forms, proposes families and exports the graph,
   `/visualise` re-renders existing reports for free. Only those four chain their components,
   and only the user types them. Never advance to the next stage unasked.
 - Every stage logs one `work/logs/cost.csv` row per spawned agent and ends with its cost report
   and the reminder to type `/cost` for the main session's own tokens.
-- Cheap `work/filing/` records are not sort cards: at most 3 pages or 20 Word paragraphs per
-  document. Unclear identity stays unresolved; legal status remains unassessed.
+- /sort writes work/review-table-light/ state, work/logs/sort.csv and out/sort/ reports. Its
+  folders are the export's answers applied to section B, never verified against the paper;
+  /analyse makes the governing judgment. The retired source-filer workflow is not a fallback.
 - Full-reading budget: read the body fully; schedules get title and first page unless needed;
   return one line, not a summary. Consult the relevant full instrument for substantive answers.
 - `README.md` also documents explicit components: `/read`, `/match`, `/judge`, `/extract`,

@@ -391,10 +391,21 @@ a three-party letter came back right. The questions above are the revision that 
 
 These edits are not yet applied to `stage1/sorting-rules.md`.
 
-## Implementation status
+## Implementation and results
 
-No script reads this schema yet. A five-column prototype of light filing exists locally and is
-not committed; it files by account and document type and uses a Haiku turn for name matching,
-which this design removes. The next build step is the deterministic script described above,
-importing this fourteen-column export, plus the rule edits. Until then this file is the prompt
-set for the review tool and the specification for that script.
+`scripts/sort_light.py` implements the filing above: `--import FILE [--error-log FILE]
+[--as-at DATE]`, `--unmatched` (the names for the one model turn), `--file` and `--status`.
+`eval/messy/score_light.py` scores a filing against the messy pile's key; it is for the
+evaluator only. On the second export of the messy pile (9 September 2026, as at 2026-09-09):
+
+| run | in an accepted folder and account |
+| --- | --- |
+| first export (no dates, no parent words), with the entity map | 20 of 33 |
+| second export, script alone, empty entity map | 22 of 33 |
+| second export, after the names-only turn filled the entity map | 26 of 33 |
+
+The remaining seven: the executed Ardleigh master came back Draft because its cover says
+"execution version", so it and its three drafts and the agreement it supersedes are wrong
+until the Signed question excludes such labels; the detached signature page cannot be tied to
+its body without a Title column; the file holding two agreements is Mixed and goes to unsure
+by design. The sorting-rule edits above are still to be applied to `stage1/sorting-rules.md`.

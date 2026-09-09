@@ -122,7 +122,9 @@ def main(argv=None):
     if args.account and args.account not in accounts:
         fail(f"{args.account!r} is not an ERP account. Accounts: " + "; ".join(accounts))
     if not (OUT / side / "ACCOUNTS.csv").is_file() or not (OUT / "INDEX.md").is_file():
-        fail("Filing tables and INDEX.md are missing. Run /sort first.")
+        if (OUT / "sort/INDEX.md").is_file():
+            fail("Light sorting has no diagram. Run /analyse for governing-position diagrams.")
+        fail("Analysis tables and INDEX.md are missing. Run /analyse first.")
     account_rows = {row.get("account"): row for row in read_csv(OUT / side / "ACCOUNTS.csv")}
     selected = [args.account] if args.account else accounts
     ctx = None

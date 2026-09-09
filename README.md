@@ -5,14 +5,15 @@ There are four commands, and **each stops after its own stage**:
 
 | command | runs | models | delivers |
 | --- | --- | --- | --- |
-| `/sort <pile>` (optional triage) | `/check`, `/prepare`, one filer per document, name matching, filing report | Haiku filers; main session matches | account folders with renamed copies, per-folder `documents.csv` and `README.md`, global `CORPUS.csv`/`ACCOUNTS.csv`, `INDEX.md` |
-| `/analyse [all \| account "<name>"]` | With Review_Table: import, main-session account analysis, rare targeted checks, reports. Otherwise full readers and judges | Main session on table rows; otherwise Sonnet readers and Opus judges | status folders, short bullet position, per-account/global CSV, `README.md`, full `ANALYSIS.md`, diagrams and `INDEX.html` |
+| `/sort <pile>` | Prepare, import Review_Table_Light, match names, file by account and status folder | Scripts; one names-only model turn for customers the script cannot match | account and status folders with copies, CSV/Markdown under `out/sort/`; no contract reads or diagrams |
+| `/analyse [all \| account "<name>"]` (optional) | With Review_Table: import, account analysis, rare targeted checks, reports. Otherwise full readers and judges | Opus main session on table rows; otherwise Sonnet readers and Opus judges | status folders, short bullet position, per-account/global CSV, `README.md`, full `ANALYSIS.md`, diagrams and `INDEX.html` |
 | `/deep-dive [--topics ...] [--force]` | prerequisite check, `/extract`, `/map`, `/report --graph` | Sonnet extractors, Opus mappers | validated forms, `TREES.md`, `out/FORM-HEALTH.md`, `out/DIDNT-FIT.md`, `out/graph/` |
 | `/visualise [all \| "account"] [--analysis]` | scripts only | none | re-rendered Mermaid HTML after corrections; free |
 
-`/analyse` is the minimum deliverable: the documents in the right folders, a short CSV and note per
-account, and the diagram beside them. `/sort` is **not** on the path to it — it is for a large or
-unfamiliar pile where you want to fix the entity map and drop junk before paying for a full read.
+Stop at `/sort` when folders and a short inventory are enough. It applies section B of the
+sorting rules to the export's answers and verifies nothing against the paper. Request `/analyse` for governing status and diagrams,
+for all accounts or a selected account. It can also run directly without prior sorting.
+See [the five light questions and output layout](docs/review-table-light.md).
 `/deep-dive` never rereads cards or judgments: it requires them and stops if they are missing.
 
 ## Setup and inputs
@@ -25,13 +26,16 @@ ERP controls account names; Review_Table supplies cited document facts. See the
 ```text
 corpus/
   ERP.xlsx
+  Review_Table_Light.xlsx
   Review_Table.xlsx
   contracts/
     ...original contract files...
 ```
 
-After installing the dependencies below, run `/check <corpus>` then `/prepare <corpus>` then
-`/analyse`. Preparation registers Review_Table separately. The main session uses its rows
+For cheap filing, run `/sort <corpus>`; it checks and prepares the corpus and uses only the light
+table. Both exports are registered separately and excluded from numbering. For governing analysis,
+run `/check <corpus>` then `/prepare <corpus>` then `/analyse`, or request /analyse after /sort.
+The full analysis session uses the full Review_Table rows
 and ERP directly to decide folders and governing relationships. There is no per-document model
 conversion or card-validation pass. It rarely opens a relevant contract excerpt when a specific
 material doubt could change the conclusion, recording the reason, scope and finding. Minor blanks
@@ -52,8 +56,8 @@ This table route covers `/analyse`; it does not create the native cards required
 `/deep-dive`. Stage 2 integration remains separate work.
 For a local comparison using existing invented extraction, follow the
 [fresh Opus test and evaluation handover](docs/review-table-handover.md).
-For the proposed three-column filing route and the next cost comparison, see
-[the next-pilot design](docs/index-first-next-pilot.md). That light route is not yet implemented.
+For the unchanged-full-table cost comparison, see [the pilot instructions](docs/index-first-next-pilot.md).
+The implemented light route now has its own [schema and commands](docs/review-table-light.md).
 
 Use Python 3.10 or later and Claude Code, opened from this kit's root. Clone
 `https://github.com/sarturko-maker/contracts_kit.git` or download the zip, then install:
@@ -66,7 +70,8 @@ On Windows, if only the Python launcher is available, use `py -m pip install -r 
 and use `py` wherever these instructions say `python`. Claude should retain the interpreter that
 passed `/check`, rather than retrying an unavailable command at every step.
 
-Also install **Poppler** separately. Claude Code's PDF page/image reading can use its `pdftoppm`
+For analysis with source image checks, also install **Poppler** separately. Light `/sort` skips
+Poppler and Mermaid preflight checks because it does not use them. Claude Code's PDF page/image reading can use its `pdftoppm`
 program; `pypdf` extracts text and does not supply that program. The kit requires `pdftoppm` on
 PATH with JPEG output support, including for visually checking signature pages.
 
@@ -125,7 +130,7 @@ and never modifies, moves or renames them. Keep real piles outside the repositor
   extra holding entries, and a reader is likelier to put your own company in a counterparty slot.
   Example entity maps and corrections are formats, never decisions to import.
 
-## 1. Optional triage: /sort
+## 1. Cheap filing: /sort
 
 ```
 /sort <path to pile>
@@ -134,37 +139,31 @@ and never modifies, moves or renames them. Keep real piles outside the repositor
 This includes `/check` and `/prepare`: inventory, stable document numbers, hashes, native text and
 ERP setup. Alternatively run those commands separately and then `/sort` without a path.
 
-Each new document gets an identity pass configured for Haiku: the opening two pages or twelve Word
-paragraphs, up to 1,200 native-text words. If identity is unclear, it may inspect one extra page or
-up to eight extra paragraphs. The ceiling is **three distinct pages or twenty Word paragraphs**.
-Scanned pages count towards that ceiling. It records title, preliminary type and printed company
-names with brief exact evidence. An unresolved identity stays unresolved; it never triggers a full
-reader. The main session matches those names to ERP rows and records basis and confidence.
+Review_Table_Light supplies fourteen answers per file: title, reference, document date, the
+contracting customer and supplier entities, instrument, supply coverage, group mechanism,
+signed, status, end date, and the relation to and words identifying a parent agreement. See
+[the copyable questions](docs/review-table-light.md). `scripts/sort_light.py` imports the
+export, matches customer entities to ERP accounts by company number, name and the entity map,
+links children to parents by the dates they quote, and files every document by section B.
+The only model step is one names-only turn for customers the script cannot match; its
+proposals land in the entity map for you to confirm. No contract text or image enters the
+model, and the full Review_Table is not used. A missing light export stops /sort.
 
-Existing filing records or full sort cards are reused unless `/sort --force` is requested. The
-`filer` role returns one line per document, in batches of at most five. This bounds source reading;
-it is not a guaranteed currency cap. Actual cost on your Claude account has not been benchmarked.
+Open `out/sort/INDEX.md`, then `out/sort/<side>/CORPUS.csv`. Each ERP account has a README,
+documents.csv and the status folders that apply: `1-governs-trade` to `6-business-practice`
+and `unsure`, each with its own documents.csv. Every row carries the export's answers, the
+parent it was linked to, the flags the script raised and the basis of the account match.
+Files the review tool refused sit in `_unreadable` with its error code. No governing position
+or diagram is generated; nothing is verified against the contracts.
 
-Open `out/INDEX.md`, then `out/<side>/CORPUS.csv`. Each account folder contains:
+Shared documents may appear under multiple accounts. Unknown names stay in holding folders.
+Fix account matches in inputs/entity-map.csv with decided_by=user, then rerun /sort. User rows
+win. An explicitly named ERP stream keeps its own folder unless a user mapping sends it to a
+parent; light filing does not infer unnamed stream consolidation from prior analysis.
 
-- `files/`: renamed document copies (see "Renamed copies" below).
-- `documents.csv`: identity, preliminary kind, account, match basis/confidence, original path/hash,
-  reading status and uncertainty. It is the account's exact slice of the global table.
-- `README.md`: a short list of what is filed there and what remains unclear.
-
-There are **no status folders, position judgments, node/edge tables, HTMLs or diagrams** at this stage.
-Execution, current validity and governing terms are unassessed. A company name found on an opening
-page is sufficient for preliminary filing; it does not establish that the company signed.
-
-Holding folders retain names not matched to the list, uncertain matches and files with no name;
-`_needs-reading` retains failed/missing reads and `_unreadable` lists unsupported files. Stream ERP
-rows get a README pointing to the main account unless a document explicitly names that stream;
-a named stream keeps its own ERP folder. An explicit user mapping to the parent wins. Shared documents may appear under multiple accounts,
-so the global CSV has one row per document/account, not necessarily one row per original.
-
-Fix matches in `inputs/entity-map.csv`, set `decided_by` to `user`, then rerun `/sort`. User decisions
-win. Rerunning cheap filing archives the old generated `out/` under `work/history/` and produces a
-fresh filing report. Existing full cards, forms and judgments remain available for later reuse.
+Only earlier light reports are archived under work/review-table-light/history. Existing full
+analysis is preserved. A subsequent account-only /analyse can use current light matching to
+select documents, then decide governing status from the separate full table.
 
 ## 2. The deliverable: /analyse
 
@@ -263,7 +262,7 @@ Copies the kit generates are named so that a folder listing reads like an index:
 022 unidentified 42pp.pdf
 ```
 
-After `/sort` the name comes from the filing record (kind, first counterparty entity, date if found);
+After `/sort` the name comes from the light type, ERP account and document number;
 after `/analyse` it comes from the card (kind, first signing entity, start date) and the placement
 (status folder, "duplicate of"). Spaces become hyphens, path-hostile characters and trailing dots are
 stripped, the name is ASCII and capped at 120 characters, and it is Windows-safe. No agent ever
@@ -284,8 +283,8 @@ then rerun the affected full workflow. Cite document numbers, never ambiguous fi
 `/visualise` is the free re-render: a script-only pass over the existing CSVs and Markdown that
 starts no reader, extractor or mapper and rewrites no CSV, Markdown or graph row. Open
 `out/INDEX.html` and an account's `position.html`; the Mermaid source is beside it as `position.mmd`
-and the bundled renderer works offline. After `/sort` alone the diagram shows **account → filed
-documents**, with arrows meaning "filed under" and nothing about legal status. After `/analyse`,
+and the bundled renderer works offline. The new `/sort` has no diagrams. For previous source-filing
+reports the legacy renderer still supports a filing map. After `/analyse`,
 `/visualise --analysis` draws the document and part relationships and the status folders. It refuses
 to combine old placements with a newer filing table. `/visualise "Exact ERP Account"` renders one
 account.

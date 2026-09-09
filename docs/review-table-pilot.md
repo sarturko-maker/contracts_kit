@@ -1,5 +1,9 @@
 # Review_Table is the /analyse index
 
+For cheaper filing without governing analysis or diagrams, use `/sort` with the separate
+[Review_Table_Light](review-table-light.md). Both exports may coexist in the same corpus.
+This document describes the full Review_Table; /sort does not consume these full answers.
+
 Hagora supplies one row per file. Claude uses those rows and ERP directly to decide account
 folders, governing relationships, bullet positions and diagrams. It opens a relevant contract
 excerpt only when the orchestrator identifies a material doubt; most files should need no source

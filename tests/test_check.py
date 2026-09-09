@@ -97,6 +97,20 @@ class PopplerPreflightTest(unittest.TestCase):
     def test_installed_poppler_actually_renders_probe(self):
         self.assertIsNone(check.check_poppler())
 
+    def test_light_preflight_does_not_require_or_probe_visual_tools(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = io.StringIO()
+            with patch.object(check.sys, "argv", ["check.py", "--light-only"]), \
+                    patch.object(check, "WORK", root / "work"), \
+                    patch.object(check, "OUT", root / "out"), \
+                    patch.object(check, "MERMAID_JS", root / "absent-mermaid.js"), \
+                    patch.object(check, "check_poppler", side_effect=AssertionError("no image probe in light filing")), \
+                    contextlib.redirect_stdout(output):
+                self.assertEqual(0, check.main())
+            self.assertIn("skip Poppler", output.getvalue())
+            self.assertIn("skip Mermaid", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

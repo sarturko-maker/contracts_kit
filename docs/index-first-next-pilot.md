@@ -1,9 +1,9 @@
 # Next pilot: spend on decisions that need source reading
 
-The implemented command is still `/analyse` with the ten required analysis columns and optional
-contents map. The fixes described below refine that route. **`/analyse-light` is a proposal,
-not an installed command or an importer option.** A three-column table will not yet pass the
-existing importer. Do not pad it with invented answers to make it pass.
+The light route is now `/sort`, a script over the fourteen-question
+[Review_Table_Light schema](review-table-light.md). `/analyse` optionally uses the full Review_Table.
+There is no additional /analyse-light command. The Windows unchanged-full-table rerun instructions
+below still test /analyse; they do not exercise the revised vendor prompts or the new light sort.
 
 ## Improvements to test in the current route
 
@@ -23,34 +23,14 @@ The scripts can validate IDs, preserve results and expose uncertainty. They cann
 decide whether every free-text claim warrants a read. The source-check and question-selection
 instructions still need a fresh Claude pilot; local tests do not establish their model accuracy.
 
-## Proposed light input
+## Light filing is implemented separately
 
-Use exact `file_name` metadata plus three short free-text queries. Existing export facts may be
-reused; do not pay to extract them again merely to change their layout.
-
-| Field | Proposed question | Why retain it |
-| --- | --- | --- |
-| document | Give the printed title, function and own agreement/reference number. Flag distinct instruments combined in the file. | Distinguishes masters, amendments, orders and non-trade documents without trusting filenames. |
-| parties | Give exact contracting entity names and their customer/supplier/other roles; distinguish mentioned affiliates. State ambiguity instead of guessing group membership. | Matches the ERP while keeping identity uncertainty visible. |
-| trade_scope | Briefly state what this instrument does to purchasing terms or prices, its product/service/site/territory limits, and affiliate/adoption conditions. For an amendment/adoption, preserve the target reference and effect. Say unclear where the file does not establish these facts. | Helps select relevant masters and modifying instruments; prevents dropping a short but material amendment. |
-
-Prefer brief labelled answers, with page pointers when supplied. Do not impose a word cap that
-loses a party, target or scope condition. A complete clause map, execution assessment and full
-term/precedence extraction would be optional later work in this proposed route.
-
-The light stage should stop with account folders, short CSV/Markdown, a provisional trade /
-non-trade / unclear description and a reading plan. It must not label an instrument as governing
-or draw legal-effect arrows. Its filing output can use an ordinary folder diagram if wanted.
-
-The next authorised analysis would select likely governing instruments and relevant amendments,
-adoptions and schedules. It would read those sources as needed, including signatures and material
-appendices. Unclear scope or linkage remains a selection reason, not grounds for automatic
-exclusion. Only identical hashes prove byte duplicates. A complex account may still need most
-of its documents read: no fixed percentage should manufacture savings by hiding uncertainty.
-
-This could extend the existing cheap `/sort` command instead of adding another stage name.
-It needs a distinct minimal import profile and output boundary; renaming the current `/analyse`
-or silently accepting incomplete governance input would not implement it.
+The new /sort consumes the review tool's fourteen answers per file and files every document
+into account and status folders by section B, with one names-only model turn for customers the
+script cannot match. It creates CSV/Markdown and copies under out/sort; no contract reads or
+diagrams. Folders are export claims applied to the rules, not legal judgments. /analyse uses the
+full table and can reuse the light matching for account selection. The schema, questions,
+commands and the messy-pile score live in [the light guide](review-table-light.md).
 
 ## Model and retrieval experiment
 

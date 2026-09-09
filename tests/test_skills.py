@@ -179,10 +179,16 @@ class ScriptFlagTest(unittest.TestCase):
     def test_cost_report_is_wired_into_every_stage(self):
         for stage in ("sort", "analyse", "deep-dive"):
             body = (SKILLS / stage / "SKILL.md").read_text()
-            self.assertIn("scripts/cost.py --append", body, stage)
-            self.assertIn(f"scripts/cost.py --stage {stage}", body, stage)
+            if stage != "sort":  # Light sort has only main-session usage, no spawned agents.
+                self.assertIn("scripts/cost.py --append", body, stage)
+                self.assertIn(f"scripts/cost.py --stage {stage}", body, stage)
             self.assertIn("/cost", body, stage)
             self.assertIn("cache read", body, f"{stage} must name the four /cost figures")
+
+    def test_light_and_analysis_request_their_budgeted_models(self):
+        for stage, model in (("sort", "haiku"), ("analyse", "opus")):
+            frontmatter, _ = split_frontmatter((SKILLS / stage / "SKILL.md").read_text(), stage)
+            self.assertEqual(model, frontmatter.get("model"))
 
 
 class ReferencedPathTest(unittest.TestCase):
