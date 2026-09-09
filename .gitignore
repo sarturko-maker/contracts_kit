@@ -5,6 +5,7 @@ inputs/*.xlsx
 [Rr]eview_[Tt]able*.csv
 [Rr]eview_[Tt]able*.xlsx
 !inputs/Review_Table.example.csv
+!inputs/Review_Table_Light.example.csv
 work/
 out/
 # Python
