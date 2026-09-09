@@ -1,4 +1,4 @@
-# Review_Table_Light: twelve questions for filing by script
+# Review_Table_Light: fourteen questions for filing by script
 
 Review_Table_Light is the export that a script turns into account folders and status folders.
 No model reads a contract at this stage. The only model call is for customer names that
@@ -9,9 +9,10 @@ stage for the accounts the user picks, and it uses the separate full Review_Tabl
 
 What the script needs from each row, in order of importance: the nature of the instrument,
 whether it is current, what supply it covers, and which customer contracts. Reference numbers
-are rare in real piles and nothing depends on them. Dates are the anchor instead: the date a
-document bears links a draft to its executed version, an amendment or notice to its parent, and
-a superseding agreement to the one it replaces.
+are rare in real piles; the Reference column is kept because it costs little and the script
+uses a reference only when it finds one. Dates are the anchor instead: the date a document
+bears links a draft to its executed version, an amendment or notice to its parent, and a
+superseding agreement to the one it replaces.
 
 Keep the export beside the ERP and the original contracts:
 
@@ -32,13 +33,22 @@ from a local list into the business practice folder (to do).
 Use [the invented example](../inputs/Review_Table_Light.example.csv) as a header and format
 guide only. Its rows are invented and must not be imported into a real corpus.
 
-## Field types in the review tool
+## Column types in the review tool
 
-Set the closed questions (Instrument, Supply coverage, Group mechanism, Signed, Status) as
-single-select fields with exactly the permitted values, and require an answer so that None is
-chosen rather than left blank. A single-select field exports only its label: anything the
-model writes after the value is lost, so the questions no longer ask for a reason. Set every
-other column as free text. Replace `[AS-AT DATE]` in the Status question with the date of the
+The review tool offers free text (a model summary), classify (one of a fixed list), date (one
+date), verbatim (words copied from the document), currency and number. Use them like this:
+
+| type | columns |
+| --- | --- |
+| classify | Instrument, Supply coverage, Group mechanism, Signed, Status, Relation to parent |
+| date | Document date, End date |
+| verbatim | Parent agreement |
+| free text | Title, Reference, Customer entity, Additional customer entities, Supplier entity |
+
+A classify field exports only its label, so the closed questions do not ask for a reason, and
+an unanswered one exports as an em dash: require an answer so that None is chosen. A date
+field holds one date and is blank when the document states none; the script reads a blank End
+date together with Status. Replace `[AS-AT DATE]` in the Status question with the date of the
 run, in the form 2026-09-10, every time the table is generated; the model's own sense of today
 cannot be trusted and the script needs the same date.
 
@@ -58,21 +68,23 @@ one product line is a normal combination.
 
 ## Columns and permitted answers
 
-| column | field | permitted answers |
+| column | type | permitted answers |
 | --- | --- | --- |
 | File name | metadata | exact filename with extension, supplied by the export |
 | Title | free text | short normalised title |
-| Document date | free text | YYYY-MM-DD, YYYY-MM, or None |
+| Reference | free text | the document's own reference number, or None |
+| Document date | date | the date the document bears; blank if none |
 | Customer entity | free text | one legal name as printed, with company number if printed, or Not found |
 | Additional customer entities | free text | None, or legal names one per line |
 | Supplier entity | free text | one legal name as printed, with company number if printed, or Not found |
-| Instrument | single-select | Global master agreement; Master or supply agreement; Local participation agreement; Standard terms or account form; Project agreement or statement of work; Schedule or exhibit; Amendment or side letter; Pricing or rebate letter; Notice letter; Purchase order or call-off; Purchase order or call-off carrying standard terms; Quote or acknowledgement; Quote or acknowledgement carrying standard terms; NDA, MOU or letter of intent; Guarantee or security; Certificate or evidence; Other overlay; Mixed; Other; Unclear |
-| Supply coverage | single-select | All supply between the parties; Substantially all supply; Part of supply; Named division or site; Varies commercials only; No supply coverage; Unclear |
-| Group mechanism | single-select | Contracting for affiliates; Adoption agreement; Entity schedule; Ordering entitlement; None; Unclear |
-| Signed | single-select | Signed by all parties; Signed by one party; Unsigned; Draft; Signature not established |
-| Status | single-select | Current; Expired; Terminated; Not yet effective; Unclear |
-| End date | free text | YYYY-MM-DD, Rolling, Event, or None |
-| Parent agreement | free text | None, or a relation word followed by the parent's title and date as printed |
+| Instrument | classify | Global master agreement; Master or supply agreement; Local participation agreement; Standard terms or account form; Project agreement or statement of work; Schedule or exhibit; Amendment or side letter; Pricing or rebate letter; Notice letter; Purchase order or call-off; Purchase order or call-off carrying standard terms; Quote or acknowledgement; Quote or acknowledgement carrying standard terms; NDA, MOU or letter of intent; Guarantee or security; Certificate or evidence; Other overlay; Mixed; Other; Unclear |
+| Supply coverage | classify | All supply between the parties; Substantially all supply; Part of supply; Named division or site; Varies commercials only; No supply coverage; Unclear |
+| Group mechanism | classify | Contracting for affiliates; Adoption agreement; Entity schedule; Ordering entitlement; None; Unclear |
+| Signed | classify | Signed by all parties; Signed by one party; Unsigned; Draft; Signature not established |
+| Status | classify | Current; Expired; Terminated; Not yet effective; Unclear |
+| End date | date | the date the document's own effect ends; blank if none is stated |
+| Relation to parent | classify | None; Forms part of; Accedes to; Placed under; Agreed under; Governed by; Amends; Extends; Renews; Supersedes; Terminates; Varies; Confirms |
+| Parent agreement | verbatim | the words in this document that identify the parent: title, date and any reference |
 
 ## The questions
 
@@ -87,16 +99,20 @@ Supply Agreement, Amendment No. 2 to Master Supply Agreement, Local Participatio
 Rebate Letter 2026, Purchase Order, Notice of Termination, Mutual Non-Disclosure Agreement.
 ```
 
-### 2. Document date
+### 2. Reference
+
+Unchanged from the first export: the document's own contract, agreement or reference number
+if one is printed, never the numbers of agreements it refers to; None if there is none.
+
+### 3. Document date
 
 ```text
 Answer from this document only. Give the date this document bears: the date it states it is
-made or dated, or the latest signature date if there is no dated line. Write it as
-YYYY-MM-DD. If only a month and year appear, write YYYY-MM. If no date appears in the
-reviewed content, answer None.
+made or dated, or the latest signature date if there is no dated line. Not its commencement
+or effective date, which can be later. If the document bears no date, leave the answer blank.
 ```
 
-### 3. Customer entity
+### 4. Customer entity
 
 ```text
 Answer from this document only. Give the one legal entity that contracts as the customer,
@@ -108,7 +124,7 @@ contracting party, not the affiliates, sites or divisions permitted to use the a
 no customer entity can be identified, answer Not found.
 ```
 
-### 4. Additional customer entities
+### 5. Additional customer entities
 
 ```text
 Answer from this document only. Apart from the entity you gave as the customer entity, list
@@ -119,7 +135,7 @@ parties in a schedule of signatories. Exclude affiliates, sites or divisions tha
 permitted to use the agreement. If there are none, answer None.
 ```
 
-### 5. Supplier entity
+### 6. Supplier entity
 
 ```text
 Answer from this document only. Give the one legal entity that contracts as the supplier,
@@ -130,7 +146,7 @@ printed. This is the contracting party, not supplier group companies permitted t
 it. If none can be identified, answer Not found.
 ```
 
-### 6. Instrument
+### 7. Instrument
 
 ```text
 Answer from this document only. Classify the document by what it does, not by its title, as
@@ -177,7 +193,7 @@ Mixed: distinct instruments bound into one file.
 Other. Unclear.
 ```
 
-### 7. Supply coverage
+### 8. Supply coverage
 
 ```text
 Answer from this document only. Governing supply means setting the terms on which goods,
@@ -207,7 +223,7 @@ or site schedule, not from the title. A clause saying this document prevails ove
 orders does not by itself mean all supply.
 ```
 
-### 8. Group mechanism
+### 9. Group mechanism
 
 ```text
 Answer from this document only. Does this agreement reach legal entities beyond the two
@@ -226,7 +242,7 @@ None: the agreement is limited to the two named entities or contains no such wor
 Unclear: the reviewed content does not establish the position.
 ```
 
-### 9. Signed
+### 10. Signed
 
 ```text
 Answer from this document only. Choose exactly one of the values below.
@@ -240,7 +256,7 @@ present, or not among the reviewed content. A typed name is not a signature, and
 of a signature from the reviewed content does not mean the document is unsigned.
 ```
 
-### 10. Status
+### 11. Status
 
 ```text
 Answer from this document only, as at [AS-AT DATE]. Choose exactly one of the values below.
@@ -257,25 +273,22 @@ terms.
 Do not assume anything about amendments or terminations in other documents.
 ```
 
-### 11. End date
+### 12. End date
 
 ```text
-Answer from this document only. Give the date on which this document's own effect ends, as
-YYYY-MM-DD: the end of a fixed term, the end of the period a letter or schedule covers, the
-date on which a termination or notice takes effect, or the delivery date of an order. Where
-the end is the earlier of a date and an event, give the date. If the document continues until
-terminated, or renews automatically with no fixed end, answer Rolling. If it ends only on an
-event with no date, such as practical completion, answer Event followed by the event. If no
-end is stated, answer None.
+Answer from this document only. Give the date on which this document's own effect ends: the
+end of a fixed term, the end of the period a letter or schedule covers, the date on which a
+termination or notice takes effect, or the delivery date of an order. Where the end is the
+earlier of a date and an event, give the date. If the document continues until terminated,
+renews automatically with no fixed end, ends only on an undated event such as practical
+completion, or states no end, leave the answer blank.
 ```
 
-### 12. Parent agreement
+### 13. Relation to parent
 
 ```text
 Answer from this document only. If this document sits under, forms part of, or alters another
-agreement, begin with exactly one relation word, then give that agreement's title and date as
-printed in this document, and its reference number if one is printed. One line per parent,
-the principal first.
+agreement, choose the relation that describes it; otherwise choose None.
 Forms part of: a schedule, exhibit or annex of the parent.
 Accedes to: a participation or joinder under a global master.
 Placed under: an order, call-off, quote or acknowledgement issued under an agreement.
@@ -285,7 +298,17 @@ Amends, Extends, Renews, Supersedes, Terminates: the effect on the parent's text
 Varies: a pricing, rebate or incentive letter that changes the commercial outcome under the
 parent without amending its text.
 Confirms: a letter confirming that trading continues under the parent.
-If the document stands alone, answer None. Do not say whether the parent exists elsewhere.
+None: the document stands alone.
+```
+
+### 14. Parent agreement
+
+```text
+Copy from this document the words that identify the agreement it sits under, forms part of, or
+alters: its title, its date and any reference number, as printed in the recital, definition or
+clause that refers to it. Where more than one agreement is referred to, copy the principal one
+first. Do not say whether that agreement exists elsewhere. Leave the answer blank if the
+document stands alone.
 ```
 
 ## How the script files from these answers
@@ -312,9 +335,9 @@ import.
 3. **Instrument gate.** Only Global master agreement, Master or supply agreement, Local
    participation agreement, Standard terms or account form, Project agreement or statement of
    work, Schedule or exhibit and Amendment or side letter can reach folders 1 or 2.
-4. **Current or not.** When End date is a date, the script compares it with the as-at date;
-   Rolling and Event count as continuing. The vendor's Status label decides only when End date
-   is None. A child that has ended goes to folder 4 whatever its parent does.
+4. **Current or not.** When End date holds a date, the script compares it with the as-at date.
+   When it is blank, the Status label decides, and Current with no end date means continuing.
+   A child that has ended goes to folder 4 whatever its parent does.
 5. **Governing instruments.** Current: folder 1 for All supply between the parties and
    Substantially all supply; folder 2 for Part of supply and Named division or site. Ended:
    folder 4. Unsigned without a signed version, or Draft without one: unsure. Signature not
@@ -327,9 +350,10 @@ import.
 7. **Transactions.** Purchase orders, call-offs, quotes and acknowledgements: folder 5. When an
    account has nothing in folders 1 or 2, the account README notes that it trades on order
    terms, which `/analyse` should then examine.
-8. **Linking.** The Parent agreement text is matched to a row in the same account by the date
-   it quotes against Document date, with title similarity as the tiebreak, then by a unique
-   title. A schedule, amendment, participation or notice that finds its parent inherits the
+8. **Linking.** Relation to parent says what the child does; the Parent agreement words are
+   matched to a row in the same account by the date they quote against Document date, with
+   title similarity as the tiebreak, then by a unique title, and by reference whenever one is
+   quoted and present. A schedule, amendment, participation or notice that finds its parent inherits the
    parent's place between folders 1 and 2 unless its own coverage is narrower. A Supersedes or
    Terminates child whose End date, or Document date when there is none, is on or before the
    as-at date sends its parent to folder 4; a future date leaves the parent live and flagged.
@@ -372,5 +396,5 @@ These edits are not yet applied to `stage1/sorting-rules.md`.
 No script reads this schema yet. A five-column prototype of light filing exists locally and is
 not committed; it files by account and document type and uses a Haiku turn for name matching,
 which this design removes. The next build step is the deterministic script described above,
-importing this twelve-column export, plus the rule edits. Until then this file is the prompt
+importing this fourteen-column export, plus the rule edits. Until then this file is the prompt
 set for the review tool and the specification for that script.
