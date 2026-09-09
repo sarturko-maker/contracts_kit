@@ -29,7 +29,7 @@ from kit_common import (  # noqa: E402
     account_folder, apply_corrections_to_card, counterparty_for, load_corrections, doc_label,
     entity_row_for, erp_account_names, fail, filed_name, group_key, join_multi, load_all_cards, load_entity_map,
     load_erp, load_inventory, load_our_entities, load_sort_log, names_from_card, naming_from_card, norm_name, rel,
-    WORK_CARDS, WORK_PLACEMENTS, read_csv, split_multi,
+    WORK_CARDS, WORK_PLACEMENTS, read_csv, read_json, split_multi,
     safe_folder_name, say, stream_map, unique_filed_name, warn, write_csv, write_text,
 )
 
@@ -234,7 +234,12 @@ def main():
     parser = argparse.ArgumentParser(description="Replay inputs/entity-map.csv into account folders.")
     parser.add_argument("--force", action="store_true", help="copy again even if the copy exists")
     parser.add_argument("--account", help="rematch only documents already filed to this ERP account")
+    parser.add_argument("--top", action="store_true",
+                        help="rematch only the documents in work/top/scope.json (the top accounts' documents "
+                             "and the unfiled ones); every other filing row is kept")
     args = parser.parse_args()
+    if args.account and args.top:
+        fail("Use --account or --top, not both.")
 
     if (WORK / "review-table/active.json").is_file():
         fail("Review_Table is the analysis index. Use /analyse and review_table.py --assign; "
@@ -257,15 +262,30 @@ def main():
     erp_names_by_norm = {norm_name(n): n for n in erp_names}
     previous = load_sort_log()
     selected = None
+    focus = set()
     if args.account:
         if args.account not in erp_names:
             fail(f"{args.account!r} is not an ERP account")
+        focus = {args.account}
         selected = {r['doc_id'] for r in previous if r.get('account') == args.account}
         if not selected:
             fail("This account has no filing rows. Run /sort first, or use /analyse all.")
         missing = {d for d in selected if d not in cards or not (WORK_CARDS / f'{d}.md').is_file()}
         if missing:
             fail("Account analysis is incomplete; missing full cards: " + ", ".join(sorted(missing)))
+    if args.top:
+        scope = read_json(WORK / "top" / "scope.json")
+        if not scope or not scope.get("docs"):
+            fail("No top scope. Run python scripts/top.py --scope first.")
+        focus = set(scope.get("accounts", []))
+        selected = set(scope["docs"])
+        missing = {d for d in selected if d not in cards or not (WORK_CARDS / f'{d}.md').is_file()}
+        if missing:
+            warn("top scope: no full card yet for " + ", ".join(sorted(missing)) + "; their filing rows are kept")
+            selected -= missing
+        if not selected:
+            fail("No document in the top scope has a full card yet. Run /read top first.")
+    if selected is not None:
         for row in inventory:
             if row.get('doc_id') in selected and not (WORK_FILES / f"{row['doc_id']}.{row.get('ext', '')}").is_file():
                 fail(f"doc {row['doc_id']}: prepared copy missing; run /prepare again")
@@ -382,7 +402,7 @@ def main():
                         history.mkdir(parents=True, exist_ok=True)
                         archive = Path(tempfile.mkdtemp(prefix='previous-', dir=history))
                     path.rename(archive / path.name)
-            if account != args.account:
+            if account not in focus:
                 say(f"{account}: shared or reassigned document changed; judgment must be refreshed explicitly.")
 
     # 5. the log and the summary

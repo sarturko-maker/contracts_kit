@@ -33,11 +33,11 @@ from urllib.parse import quote
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from kit_common import (  # noqa: E402
     ACCOUNTS_COLUMNS, CORPUS_COLUMNS, HOLDING_FOLDERS, MERMAID_JS, NOTE_TEMPLATE, NOT_FOUND, OUT,
-    PLACEMENT_COLUMNS, REVIEWER_COLUMNS, STATUS_FOLDERS, TO_JUDGE, WORK_FILES, WORK_PLACEMENTS,
+    PLACEMENT_COLUMNS, REVIEWER_COLUMNS, STATUS_FOLDERS, TO_JUDGE, WORK, WORK_FILES, WORK_PLACEMENTS,
     account_folder, apply_corrections_to_card, apply_corrections_to_placement, counterparty_for,
     doc_label, entity_row_for, erp_account_names, fail, filed_name, is_empty_answer, is_unsigned_draft, join_multi, load_all_cards,
     load_corrections, load_entity_map, load_erp, load_inventory, load_our_entities, load_sort_log,
-    names_from_card, naming_from_card, norm_name, read_csv, rel, safe_folder_name, say, split_multi,
+    names_from_card, naming_from_card, norm_name, read_csv, read_json, rel, safe_folder_name, say, split_multi,
     stream_map, strip_role, truncate, unique_filed_name, warn, write_csv, write_text,
 )
 
@@ -1037,19 +1037,23 @@ def settled_for_all_accounts(ctx):
     for account in ctx["accounts"]:
         if account in ctx["streams"]:
             continue
+        placements = load_placements(ctx, account)
+        if placements is None:
+            continue   # no judgment yet: filing only, or awaiting reading; the index says which
         missing = [r['doc_id'] for r in docs_sorted_to(ctx, account) if r['doc_id'] not in ctx['cards']]
         if missing:
             warn(f"{account}: awaiting full reading of " + ', '.join(missing) + '; no status judgment published')
-            continue
-        placements = load_placements(ctx, account)
-        if placements is None:
             continue
         result[account] = settle_placements(ctx, account, placements)
     return result
 
 
-def write_pending_account(ctx, account, all_rows):
-    """Keep known filing and copies visible while this account awaits reading/judgment."""
+def write_pending_account(ctx, account, all_rows, copies=True):
+    """Keep known filing and copies visible while this account awaits reading/judgment.
+
+    With copies=False (a top-accounts run) only the list and README are written: the copies of
+    a light-filed account stay in out/sort/, and nothing is duplicated for every other account.
+    """
     folder = account_folder(ctx['side'], account)
     rows = [r for r in all_rows if r['account'] == account]
     for name in [TO_JUDGE, 'files'] + STATUS_FOLDERS:
@@ -1059,19 +1063,25 @@ def write_pending_account(ctx, account, all_rows):
     for name in ('ANALYSIS.md',):
         if (folder / name).exists():
             (folder / name).unlink()
-    for row in rows:
-        inv = ctx['inventory'][row['doc_id']]
-        source = WORK_FILES / f"{row['doc_id']}.{inv.get('ext', '')}"
-        if source.is_file():
-            target = folder / 'files' / row['filed_as']
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, target)
+    if copies:
+        for row in rows:
+            inv = ctx['inventory'][row['doc_id']]
+            source = WORK_FILES / f"{row['doc_id']}.{inv.get('ext', '')}"
+            if source.is_file():
+                target = folder / 'files' / row['filed_as']
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
     write_csv(folder / 'documents.csv', rows, CORPUS_COLUMNS)
+    if not rows:
+        write_text(folder / 'README.md', f'# {account}\n\n{EMPTY_ACCOUNT_POSITION}\n')
+        retire_visuals(folder)
+        return
     lines = [f'# {account} — filed documents', '',
              f'{len(rows)} documents are filed here. Analysis is incomplete; governing status has not been judged.', '',
              'Run /analyse for this account to complete its reading and judgment. '
              'An account analysed separately does not establish which contracts govern this one.', '',
-             '[Documents, printed identities and matching decisions](documents.csv)', '']
+             '[Documents, printed identities and matching decisions](documents.csv)'
+             + ('' if copies else ' — the copies are in out/sort/ (light filing)'), '']
     lines += [f"- {doc_label(r['doc_id'])}: {md_cell(r['title'])}" for r in rows[:20]]
     if len(rows) > 20:
         lines.append(f'- {len(rows) - 20} further documents are listed in documents.csv.')
@@ -1190,7 +1200,7 @@ def needs_a_decision(all_rows):
     return lines
 
 
-def write_index(ctx, settled_by_account, all_rows, visuals=False):
+def write_index(ctx, settled_by_account, all_rows, visuals=False, copies=True):
     """CSV/Markdown index and account lists; optional HTML and offline visual assets."""
     side = ctx["side"]
     if ctx.get("review_rows"):
@@ -1222,7 +1232,7 @@ def write_index(ctx, settled_by_account, all_rows, visuals=False):
                        + "\n\nSee [documents.csv](documents.csv) for the table answers and match reasons.\n")
     for account in ctx['accounts']:
         if account not in ctx['streams'] and account not in settled_by_account:
-            write_pending_account(ctx, account, all_rows)
+            write_pending_account(ctx, account, all_rows, copies=copies)
     if visuals:
         ensure_visual_assets()
     else:
@@ -1319,6 +1329,9 @@ def main():
     group.add_argument("--account", help="rebuild one account (name exactly as the ERP row)")
     group.add_argument("--index", action="store_true", help="rebuild CORPUS.csv, ACCOUNTS.csv, INDEX.md")
     group.add_argument("--all", action="store_true", help="rebuild every judged account, then the index")
+    group.add_argument("--top", action="store_true",
+                       help="rebuild the accounts in work/top/scope.json, then the index; other accounts get "
+                            "their list and README without copies")
     group.add_argument("--accounts-with-documents", action="store_true",
                        help="list the ERP accounts a document was sorted to, one per line "
                             "(the accounts a judge is worth spending on)")
@@ -1345,6 +1358,21 @@ def main():
             fail(f"work/placements/{safe_folder_name(account)}.csv is missing. Run /judge \"{account}\" first.")
         settled, prose = settled_by_account[account]
         write_account(ctx, account, settled, prose, all_rows, visuals=args.visuals)
+        return 0
+
+    if args.top:
+        scope = read_json(WORK / "top" / "scope.json")
+        if not scope or not scope.get("accounts"):
+            fail("No top scope. Run python scripts/top.py --scope first.")
+        for account in scope["accounts"]:
+            if account not in ctx["accounts"]:
+                fail(f"{account!r} is not an ERP account; register ERP_Top again.")
+            if account not in settled_by_account:
+                fail(f"work/placements/{safe_folder_name(account)}.csv is missing. Run /judge \"{account}\" first.")
+        for account in scope["accounts"]:
+            settled, prose = settled_by_account[account]
+            write_account(ctx, account, settled, prose, all_rows, visuals=args.visuals)
+        write_index(ctx, settled_by_account, all_rows, visuals=args.visuals, copies=False)
         return 0
 
     if args.all:

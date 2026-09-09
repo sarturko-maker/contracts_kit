@@ -185,6 +185,17 @@ class ScriptFlagTest(unittest.TestCase):
             self.assertIn("/cost", body, stage)
             self.assertIn("cache read", body, f"{stage} must name the four /cost figures")
 
+    def test_top_accounts_scope_is_wired_through_the_stages(self):
+        analyse = (SKILLS / "analyse" / "SKILL.md").read_text()
+        deep = (SKILLS / "deep-dive" / "SKILL.md").read_text()
+        for body, name in ((analyse, "analyse"), (deep, "deep-dive")):
+            self.assertIn("scripts/top.py --scope", body, name)
+            self.assertIn("ERP_Top", body, name)
+        self.assertIn("scripts/place.py --top", analyse)
+        self.assertIn("scripts/sort.py --top", (SKILLS / "match" / "SKILL.md").read_text())
+        for component in ("read", "match", "extract"):
+            self.assertIn("work/top/scope.json", (SKILLS / component / "SKILL.md").read_text(), component)
+
     def test_light_and_analysis_request_their_budgeted_models(self):
         for stage, model in (("sort", "haiku"), ("analyse", "opus")):
             frontmatter, _ = split_frontmatter((SKILLS / stage / "SKILL.md").read_text(), stage)

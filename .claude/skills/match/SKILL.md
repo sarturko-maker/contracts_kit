@@ -1,9 +1,9 @@
 ---
 name: match
-description: Matches documents to ERP accounts, writes the entity map, then replays filing. Usage /match [account "<name>"] [--force].
+description: Matches documents to ERP accounts, writes the entity map, then replays filing. Usage /match [account "<name>" | top] [--force].
 ---
 
-# /match [account "<name>"] [--force]
+# /match [account "<name>" | top] [--force]
 
 Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
 targeted maintenance. It stops after its own step and never starts the next.
@@ -52,6 +52,10 @@ With `account "<name>"`, first capture that account's doc ids from `work/logs/so
 Require a full card for every selected id; stop if any is missing. Read other existing cards
 only as matching context. Re-decide only names found in the selected cards, preserving all
 other entity-map rows. Do not read other source documents or start readers for other accounts.
+With `top`, the selected ids are the `docs` list of `work/top/scope.json`; ids without a card
+are reported and keep their filing rows. Decide only the names on those cards, then replay
+with `python scripts/sort.py --top` in step 5: it rewrites the rows of the selected documents
+from their cards and keeps every other account's light filing row as it is.
 
 1. Read `work/erp.json` (accounts, side, stream candidates), `inputs/our-entities.csv` if present,
    the `q2_*` fields of every `work/cards/<id>.json`, and the existing `inputs/entity-map.csv`
@@ -79,8 +83,9 @@ other entity-map rows. Do not read other source documents or start readers for o
    Say which rows you treated as one and which named streams retain their own folders.
 4. Append your new rows with `decided_by` = `claude`. Never change a `user` row. With `--force`,
    replace the `claude` rows you re-decided.
-5. Run `python scripts/sort.py` for all, or `python scripts/sort.py --account "<name>"` for the
-   selected account (with `--force` if it was typed). Never drop `--account` on a scoped run.
+5. Run `python scripts/sort.py` for all, `python scripts/sort.py --account "<name>"` for the
+   selected account, or `python scripts/sort.py --top` for the top scope (with `--force` if it
+   was typed). Never drop `--account` or `--top` on a scoped run.
    Put its output in your reply:
    documents per account, holding folders, streams.
 6. List the names that need the user's decision (no row, or confidence `not sure`). Say: edit

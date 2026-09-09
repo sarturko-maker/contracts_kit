@@ -14,6 +14,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import check
 
 
+class ErpDiscoveryTest(unittest.TestCase):
+    def test_erp_top_is_not_an_erp_record_candidate(self):
+        with tempfile.TemporaryDirectory() as temp:
+            pile = Path(temp)
+            for name in ("ERP_record.csv", "ERP_Top.csv", "erp-top.xlsx", "Review_Table_Light.xlsx"):
+                (pile / name).write_bytes(b"")
+            self.assertEqual(["ERP_record.csv"], [p.name for p in check.find_erp_candidates(pile)])
+
+
 class PopplerPreflightTest(unittest.TestCase):
     def test_missing_program_gives_platform_install_instructions(self):
         for platform, command in (

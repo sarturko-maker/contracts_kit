@@ -15,7 +15,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from kit_common import ASSETS, MERMAID_JS, OUT, WORK, ERP_EXTS  # noqa: E402
+from kit_common import ASSETS, MERMAID_JS, OUT, WORK, ERP_EXTS, is_erp_top  # noqa: E402
 
 
 def find_erp_candidates(pile):
@@ -23,7 +23,7 @@ def find_erp_candidates(pile):
     found = []
     for path in sorted(pile.rglob("*")):
         if path.is_file() and not path.is_symlink():
-            if path.suffix.lower().lstrip(".") in ERP_EXTS and "erp" in path.name.lower():
+            if path.suffix.lower().lstrip(".") in ERP_EXTS and "erp" in path.name.lower() and not is_erp_top(path):
                 found.append(path)
     return found
 

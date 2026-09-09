@@ -1,10 +1,10 @@
 ---
 name: deep-dive
-description: Fills the fixed stage 2 forms, proposes DCG families and exports the graph from completed cards and judgments. Usage /deep-dive [--topics all|off|names] [--force].
+description: Fills the fixed stage 2 forms, proposes DCG families and exports the graph from completed cards and judgments; top scopes it to the ERP_Top accounts. Usage /deep-dive [top] [--topics all|off|names] [--force].
 disable-model-invocation: true
 ---
 
-# /deep-dive [--topics all|off|names] [--force]
+# /deep-dive [top] [--topics all|off|names] [--force]
 
 Commands are written `python`; use `python3` where that is the installed name.
 
@@ -83,3 +83,24 @@ or manufacture cards from the table to satisfy the prerequisite.
    the stage is fresh, and to note all four figures (input, output, cache write, cache read).
 
 9. Stop. Do not run `/eval`. Mention `/visualise --analysis` as the free re-render.
+
+## With `top`: the ERP_Top accounts only
+
+`/deep-dive top` runs the same stage for the accounts of `work/top/scope.json` after
+`/analyse top`, and for nothing else. Every rule above holds; only the selection changes.
+
+1. Run `python scripts/top.py --scope` to refresh the scope from the current filing log, then
+   check the prerequisites for the scope only: every readable document in it has both
+   `work/cards/<id>.json` and `.md`; every top account with documents has placements; the sort
+   log is not older than those cards. Missing or stale: list exactly what, say to run
+   `/analyse top`, and stop. Documents outside the scope need no card here.
+2. Print the scope's ids with the count of existing forms that can be reused.
+3. Invoke `/extract top` with the topic argument written in full, as in step 3 above.
+4. Validate: `python scripts/validate_forms.py --all`.
+5. Invoke `/map "<account>"` for each account printed by `python scripts/top.py --accounts`
+   that has placements, with `--force` when forms were replaced. Accounts outside ERP_Top are
+   not mapped; the graph reports them as accounts without forms.
+6. Invoke `/report --graph top`: it keeps the top accounts' diagrams current with
+   `python scripts/place.py --top --visuals` and merges the proposals that exist with
+   `python scripts/graph.py --all`.
+7. Summarise and report cost exactly as in steps 7 and 8 above, then stop.

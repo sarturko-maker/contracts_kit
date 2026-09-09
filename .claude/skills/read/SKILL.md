@@ -1,9 +1,9 @@
 ---
 name: read
-description: Spawns one reader sub-agent per document to fill the sort cards. Usage /read all | <ids> | account "<name>" [--force].
+description: Spawns one reader sub-agent per document to fill the sort cards. Usage /read all | <ids> | account "<name>" | top [--force].
 ---
 
-# /read all | <ids> | account "<name>" [--force]
+# /read all | <ids> | account "<name>" | top [--force]
 
 Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
 targeted maintenance. It stops after its own step and never starts the next.
@@ -14,12 +14,16 @@ Run from the kit root. `$ARGUMENTS` says which documents. Build the list of doc 
 If `work/review-source.json` or `work/review-table/active.json` exists, this source-reading skill
 is not the table route. Stop and direct the user to `/analyse`; never spend on document readers
 to repair an imported row. /analyse itself may make rare, logged, targeted source checks;
-it does not use this full-card reading skill for those checks.
+it does not use this full-card reading skill for those checks. The `top` scope is the
+exception: `/analyse top` is the user's authorisation to read exactly the documents in
+`work/top/scope.json`, and a light export (`work/review-light-source.json`) does not stop it.
 
 - `all`: every row of `work/inventory.csv` with `readable` = `yes`, except the `erp` row.
 - `<ids>`: the numbers typed (`003 007 012`; pad to three digits).
 - `account "<name>"`: the `doc_id` of every row in `work/logs/sort.csv` whose `account` is that
   name (needs an earlier `/sort`).
+- `top`: the `docs` list of `work/top/scope.json`, written by `python scripts/top.py --scope`
+  (needs `/analyse top` to have computed it); nothing outside that list.
 
 Drop every id that already has both `work/cards/<id>.json` and `.md` unless `--force` was typed; count those as
 skipped. Print the list before starting. Then, in batches of five:

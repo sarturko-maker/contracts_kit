@@ -44,12 +44,16 @@
 - Four user commands, each stopping on its own: `/sort` files Review_Table_Light by script into
   account and status folders; its one model step is a names-only turn for customers the
   script cannot match. It never reads contract content.
-  `/analyse` consumes Review_Table when supplied, otherwise reads fully; it matches, judges and writes the position notes and diagrams (the
-  optional governing analysis), `/deep-dive` fills the forms, proposes families and exports the graph,
+  `/analyse` consumes Review_Table when supplied, otherwise reads fully; `/analyse top` reads in full only
+  the ERP_Top accounts after `/sort`, plus files dropped in since the light export; it matches, judges and writes the position notes and diagrams (the
+  optional governing analysis), `/deep-dive [top]` fills the forms, proposes families and exports the graph,
   `/visualise` re-renders existing reports for free. Only those four chain their components,
   and only the user types them. Never advance to the next stage unasked.
 - Every stage logs one `work/logs/cost.csv` row per spawned agent and ends with its cost report
   and the reminder to type `/cost` for the main session's own tokens.
+- ERP_Top is a control file naming the ERP accounts for `/analyse top`; every name must be an ERP
+  row and it is never numbered as a contract. `work/top/scope.json`, written by script, is the
+  only list of documents the top route reads; nothing outside it is opened.
 - /sort writes work/review-table-light/ state, work/logs/sort.csv and out/sort/ reports. Its
   folders are the export's answers applied to section B, never verified against the paper;
   /analyse makes the governing judgment. The retired source-filer workflow is not a fallback.

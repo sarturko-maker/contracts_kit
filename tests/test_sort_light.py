@@ -48,47 +48,57 @@ class ParsingTest(unittest.TestCase):
         self.assertEqual("relation_to_parent", header_key("11. Relation to Parent"))
 
 
+COLUMNS = ["Name", "1. Title", "2. Reference", "3. Document Date", "4. Customer Entity",
+           "5. Additional Customer Entities", "6. Supplier Entity", "7. Instrument", "8. Supply Coverage",
+           "9. Group Mechanism", "10. Signed", "11. Status", "12. End Date", "13. Relation to Parent",
+           "14. Parent Agreement"]
+NORTH_PRINTED = "Tallowfield Industries (North) Limited (No. 07654321)"
+PELLMONT_PRINTED = "Pellmont Logistics Group"
+
+
+def light_row(name, title, customer, instrument, coverage, signed, status, dated="", end="",
+              relation="—", parent="—", reference="—", extra="—"):
+    return dict(zip(COLUMNS, [name, title, reference, dated, customer, extra, "Marrowgate Supply Ltd (No. 01234567)",
+                              instrument, coverage, "—", signed, status, end, relation, parent]))
+
+
+def light_export():
+    """An invented fourteen-column export over the sample pile (test_top.py reuses it)."""
+    north, pellmont = NORTH_PRINTED, PELLMONT_PRINTED
+    return [
+        light_row("01 Supply Agreement.pdf", "Supply Agreement", north, "Master or supply agreement",
+                  "All supply between the parties", "Signed by all parties", "Current", "March 14, 2019"),
+        light_row("02 Amendment 1.pdf", "Amendment 1 to Supply Agreement", north, "Amendment or side letter",
+                  "Varies commercials only", "Signed by all parties", "Current", "February 1, 2026",
+                  relation="Amends", parent="the Supply Agreement dated 14 March 2019"),
+        light_row("03 NDA scan.pdf", "Mutual Non-Disclosure Agreement", "Quillbeck Fasteners plc",
+                  "NDA, MOU or letter of intent", "No supply coverage", "Signed by all parties", "Current",
+                  "May 1, 2019", "April 30, 2029"),
+        light_row("04 MSA draft.docx", "Master Services Agreement", pellmont, "Master or supply agreement",
+                  "All supply between the parties", "Draft", "Not yet effective", "January 15, 2026"),
+        light_row("05 Purchase Order.pdf", "Purchase Order", pellmont, "Purchase order or call-off",
+                  "Part of supply", "Signature not established", "Current", "April 6, 2026", "April 20, 2026"),
+        light_row("06 Rebate Letter.pdf", "Rebate Letter 2026", pellmont, "Pricing or rebate letter",
+                  "Varies commercials only", "Signed by one party", "Current", "January 1, 2026", "December 31, 2026",
+                  relation="Varies", parent="our Master Services Agreement"),
+        light_row("07 scan_0032.jpg", "Master Services Agreement signature page", pellmont, "Other",
+                  "Unclear", "Signed by all parties", "Unclear", "February 2, 2026"),
+        light_row("08 Hexley Works Site Agreement.pdf", "Hexley Works Site Agreement", north,
+                  "Project agreement or statement of work", "Part of supply", "Signed by all parties", "Current",
+                  "March 1, 2026", "Event: practical completion", relation="Agreed under",
+                  parent="the Supply Agreement dated 14 March 2019"),
+        light_row("09 Internal Account Playbook.docx", "Internal Account Playbook", "Not found", "Other",
+                  "Varies commercials only", "Draft", "Unclear", "February 1, 2026"),
+    ]
+
+
 class LightFilingTest(KitFixture):
     """The sample pile with an invented export: every folder rule that the pile can exercise."""
 
-    COLUMNS = ["Name", "1. Title", "2. Reference", "3. Document Date", "4. Customer Entity",
-               "5. Additional Customer Entities", "6. Supplier Entity", "7. Instrument", "8. Supply Coverage",
-               "9. Group Mechanism", "10. Signed", "11. Status", "12. End Date", "13. Relation to Parent",
-               "14. Parent Agreement"]
-
-    def row(self, name, title, customer, instrument, coverage, signed, status, dated="", end="",
-            relation="—", parent="—", reference="—", extra="—"):
-        return dict(zip(self.COLUMNS, [name, title, reference, dated, customer, extra, "Marrowgate Supply Ltd (No. 01234567)",
-                                       instrument, coverage, "—", signed, status, end, relation, parent]))
+    COLUMNS = COLUMNS
 
     def export(self):
-        north = "Tallowfield Industries (North) Limited (No. 07654321)"
-        pellmont = "Pellmont Logistics Group"
-        return [
-            self.row("01 Supply Agreement.pdf", "Supply Agreement", north, "Master or supply agreement",
-                     "All supply between the parties", "Signed by all parties", "Current", "March 14, 2019"),
-            self.row("02 Amendment 1.pdf", "Amendment 1 to Supply Agreement", north, "Amendment or side letter",
-                     "Varies commercials only", "Signed by all parties", "Current", "February 1, 2026",
-                     relation="Amends", parent="the Supply Agreement dated 14 March 2019"),
-            self.row("03 NDA scan.pdf", "Mutual Non-Disclosure Agreement", "Quillbeck Fasteners plc",
-                     "NDA, MOU or letter of intent", "No supply coverage", "Signed by all parties", "Current",
-                     "May 1, 2019", "April 30, 2029"),
-            self.row("04 MSA draft.docx", "Master Services Agreement", pellmont, "Master or supply agreement",
-                     "All supply between the parties", "Draft", "Not yet effective", "January 15, 2026"),
-            self.row("05 Purchase Order.pdf", "Purchase Order", pellmont, "Purchase order or call-off",
-                     "Part of supply", "Signature not established", "Current", "April 6, 2026", "April 20, 2026"),
-            self.row("06 Rebate Letter.pdf", "Rebate Letter 2026", pellmont, "Pricing or rebate letter",
-                     "Varies commercials only", "Signed by one party", "Current", "January 1, 2026", "December 31, 2026",
-                     relation="Varies", parent="our Master Services Agreement"),
-            self.row("07 scan_0032.jpg", "Master Services Agreement signature page", pellmont, "Other",
-                     "Unclear", "Signed by all parties", "Unclear", "February 2, 2026"),
-            self.row("08 Hexley Works Site Agreement.pdf", "Hexley Works Site Agreement", north,
-                     "Project agreement or statement of work", "Part of supply", "Signed by all parties", "Current",
-                     "March 1, 2026", "Event: practical completion", relation="Agreed under",
-                     parent="the Supply Agreement dated 14 March 2019"),
-            self.row("09 Internal Account Playbook.docx", "Internal Account Playbook", "Not found", "Other",
-                     "Varies commercials only", "Draft", "Unclear", "February 1, 2026"),
-        ]
+        return light_export()
 
     def setUp(self):
         super().setUp()
@@ -163,6 +173,33 @@ class LightFilingTest(KitFixture):
         self.assertEqual("1-governs-trade", master["folder"])
         self.assertIn("effective 2026-12-01, after the as-at date", master["flags"])
         self.assertTrue(list((self.root / "work/history").glob("sort-light-*")))
+
+    def test_versions_meet_by_reference_and_a_signature_page_joins_its_body(self):
+        table = self.export()
+        table[0]["2. Reference"] = "TAL/2019/01"
+        table[0]["10. Signed"] = "Signature not established"       # the body; its signature page is a separate scan
+        table[3].update({"4. Customer Entity": NORTH_PRINTED, "1. Title": "Master Supply Agreement (Tallowfield)",
+                         "2. Reference": "TAL/2019/01", "3. Document Date": "March 1, 2019", "11. Status": "Current"})
+        table[6].update({"7. Instrument": "Master or supply agreement", "1. Title": "Supply Agreement",
+                         "2. Reference": "TAL/2019/01", "4. Customer Entity": NORTH_PRINTED,
+                         "8. Supply Coverage": "All supply between the parties", "3. Document Date": "March 16, 2019"})
+        write_rows(self.table, table, self.COLUMNS)
+        self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        self.light("--file")
+        corpus = self.corpus()
+        tallow = self.erp_accounts[0]
+        body_id, page_id = self.inventory["01 Supply Agreement.pdf"], self.inventory["07 scan_0032.jpg"]
+        body = corpus[(body_id, tallow)]
+        draft = corpus[(self.inventory["04 MSA draft.docx"], tallow)]
+        page = corpus[(page_id, tallow)]
+        self.assertEqual("1-governs-trade", body["folder"])
+        self.assertIn(f"execution shown on doc {page_id}: Signed by all parties", body["notes"])
+        self.assertEqual("Signed by all parties", body["signed"])
+        self.assertEqual("5-orders-drafts-duplicates", page["folder"])            # one page of a four-page body
+        self.assertIn(f"signature page or partial copy of doc {body_id}", page["notes"])
+        self.assertEqual("5-orders-drafts-duplicates", draft["folder"])           # same reference, different title
+        self.assertIn(f"draft; executed version is doc {body_id}", draft["notes"])
+        self.assertNotIn("draft dated after", draft["flags"])
 
     def test_import_refuses_a_table_without_the_required_columns(self):
         write_rows(self.table, [{"Name": "01 Supply Agreement.pdf", "1. Title": "x"}], ["Name", "1. Title"])

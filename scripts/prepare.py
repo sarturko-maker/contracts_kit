@@ -30,7 +30,7 @@ from xml.etree import ElementTree
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from kit_common import (  # noqa: E402
     ERP_EXTS, ERP_JSON, ERP_RECORD_CSV, INVENTORY_COLUMNS, INVENTORY_CSV, NOT_FOUND,
-    READABLE_EXTS, KIT, WORK, OUT, WORK_FILES, WORK_LOGS, WORK_TEXT, fail, read_csv, read_json, rel, say, warn,
+    READABLE_EXTS, KIT, WORK, OUT, WORK_FILES, WORK_LOGS, WORK_TEXT, fail, is_erp_top, read_csv, read_json, rel, say, warn,
     safe_folder_name,
     write_csv, write_json, write_text,
 )
@@ -726,13 +726,19 @@ def invalidate_changed_sources(previous, rows, erp_changed=False):
     for doc in changed:
         paths += [WORK / sub / f'{doc}{ext}' for sub, extensions in
                   [('cards', ['.json', '.md']), ('forms', ['.json']), ('filing', ['.json'])] for ext in extensions]
-    # Placement prose and family proposals depend on the complete account population.
-    if previous:
+    # Placement prose and family proposals depend on the complete account population, so a
+    # changed or removed source, or a changed ERP, retires them with the filing log. Files that
+    # were only added keep everything: they have no filing row until /sort or /analyse top
+    # numbers them into an account, and the scoped replay retires the judgments they touch.
+    if previous and (changed or erp_changed):
         for sub in ('placements', 'trees', 'didnt-fit'):
             paths.extend((WORK / sub).glob('*'))
         paths.append(WORK_LOGS / 'sort.csv')
         if erp_changed:
             paths.extend((WORK / 'forms').glob('*.json'))
+    if added and not (changed or erp_changed) and (WORK_LOGS / 'sort.csv').is_file():
+        say(f"{len(added)} new files numbered; they have no filing row until /sort or /analyse top runs. "
+            "Existing filing rows and judgments are kept.")
     archive = WORK / 'history' / datetime.now().strftime('%Y%m%dT%H%M%S%f')
     archived = 0
     for path in dict.fromkeys(paths):
@@ -796,6 +802,7 @@ def main():
     parser.add_argument("--erp", help="path to the ERP record if its name does not contain 'erp'")
     parser.add_argument("--review-table", help="CSV/XLSX review export; otherwise discover Review_Table.csv/xlsx")
     parser.add_argument("--review-table-light", help="CSV/XLSX filing export; otherwise discover Review_Table_Light.csv/xlsx")
+    parser.add_argument("--erp-top", help="CSV/XLSX naming the ERP accounts for /analyse top; otherwise discover ERP_Top.csv/xlsx")
     parser.add_argument("--account-column", help="ERP column holding the account name")
     parser.add_argument("--side", choices=["customers", "suppliers"], help="which side this run sorts")
     parser.add_argument("--force", action="store_true", help="redo files already done")
@@ -818,20 +825,22 @@ def main():
     say(f"Pile: {pile} ({len(files)} files)")
 
     from review_table import find_review_table, SOURCE as REVIEW_SOURCE
+    from top import find_erp_top, register as register_top
     light_source = WORK / "review-light-source.json"
     try:
         review_path = find_review_table(pile, args.review_table)
         light_path = find_review_table(pile, args.review_table_light, light=True)
+        top_path = find_erp_top(pile, args.erp_top)
     except ValueError as err:
         fail(str(err))
     if review_path and review_path == light_path:
         fail("Review_Table and Review_Table_Light must be separate files.")
-    controls = {review_path, light_path} | {
-        p.resolve() for p in files if p.stem.casefold() in {"review_table", "review_table_light"}
-        and p.suffix.casefold() in {".csv", ".xlsx"} and not p.is_symlink()}
+    controls = {review_path, light_path, top_path} | {
+        p.resolve() for p in files if not p.is_symlink() and p.suffix.casefold() in {".csv", ".xlsx"}
+        and (p.stem.casefold() in {"review_table", "review_table_light"} or is_erp_top(p))}
     erp_path = find_erp_record(pile, [p for p in files if p.resolve() not in controls], args.erp)
     if erp_path in controls:
-        fail("ERP, Review_Table and Review_Table_Light must be separate files.")
+        fail("ERP, ERP_Top, Review_Table and Review_Table_Light must be separate files.")
     previous_erp = read_json(ERP_JSON)
     erp = prepare_erp(erp_path, args)
 
@@ -855,6 +864,12 @@ def main():
             light_config = {}
         write_json(light_source, {**light_config, "source_path": str(light_path), "sha256": sha256_of(light_path)})
         message = f"Review_Table_Light input: {light_path}; registered separately, not numbered as a contract"
+        say(message)
+        log.append(message)
+    if top_path:
+        top_data = register_top(top_path)
+        message = (f"ERP_Top input: {top_path}; {len(top_data['accounts'])} top accounts registered in "
+                   "work/erp-top.json, not numbered as a contract")
         say(message)
         log.append(message)
     WORK_LOGS.mkdir(parents=True, exist_ok=True)
@@ -889,7 +904,11 @@ def main():
             continue  # the control file is audited in review-source.json, not as a contract
         if doc_id != 'erp' and doc_id not in present_ids:
             rows.append({**old, 'readable': 'no', 'note': 'source no longer in pile; previous number retained'})
-    invalidate_changed_sources(previous, rows, previous_erp is not None and previous_erp != erp)
+    # Only a material ERP change retires the filing: the accounts, the account column or the
+    # side. A re-run that guesses the side column instead of being told it is the same ERP.
+    def material(record):
+        return (record.get("accounts"), record.get("account_column"), record.get("side"))
+    invalidate_changed_sources(previous, rows, previous_erp is not None and material(previous_erp) != material(erp))
 
     write_csv(INVENTORY_CSV, rows, INVENTORY_COLUMNS)
     print_table(rows)

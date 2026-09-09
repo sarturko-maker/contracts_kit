@@ -37,9 +37,11 @@ the ERP list alone.
    `ACCOUNTS.csv`, numbered copies in each status folder, and `work/logs/sort.csv`. Earlier
    light output is archived under `work/history/`.
 5. Report briefly: documents per status folder, names still in holding folders, files the
-   review tool refused, and the flags the script raised (draft with no executed version,
-   termination notice after the as-at date, two live masters, instrument and coverage
-   disagreeing). Say that folders are the export's answers applied to section B and are not
-   verified against the paper. Tell the user to type `/cost` and retain the four usage
-   figures (input, output, cache write and cache read). `/analyse` is optional, uses the full Review_Table, and may be scoped to one
-   account using this filing. Stop; never start it.
+   review tool refused, the versions and copies the script joined (drafts of an executed
+   version, byte-identical copies, a short signed scan filed as the signature page of its
+   body) and the flags it raised (draft with no executed version, termination notice after
+   the as-at date, two live masters, instrument and coverage disagreeing). Say that folders
+   are the export's answers applied to section B and are not verified against the paper. Tell
+   the user to type `/cost` and retain the four usage figures (input, output, cache write and
+   cache read). What comes next is the user's choice: `/analyse` with the full Review_Table,
+   or `/analyse top` to read the ERP_Top accounts in full. Stop; never start either.

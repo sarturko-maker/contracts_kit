@@ -580,7 +580,7 @@ def find_parent(d, siblings):
         if len(by_date) == 1:
             return by_date[0], "parent date"
         if len(by_date) > 1:
-            ranked = sorted(by_date, key=lambda s: (s.is_draft, bool(s.duplicate_of),
+            ranked = sorted(by_date, key=lambda s: (s.is_draft, bool(s.duplicate_of), bool(s.copy_of),
                                                     -title_similarity(s.title, d.parent_text), int(s.doc)))
             return ranked[0], "parent date (several candidates; best copy)"
     if d.reference or any(s.reference for s in others):
@@ -595,25 +595,63 @@ def find_parent(d, siblings):
     return None, ""
 
 
+def ref_key(reference):
+    """A reference normalised for comparison; empty when the cell is blank."""
+    if not reference or blank(reference):
+        return ""
+    return re.sub(r"[^a-z0-9]+", "", reference.casefold())
+
+
+def same_instrument(a, b):
+    """Two rows describe one instrument: the same reference, or titles that agree."""
+    ra, rb = ref_key(a.reference), ref_key(b.reference)
+    if ra and rb:
+        return ra == rb
+    if not a.title or not b.title:
+        return True
+    return norm_name(a.title) == norm_name(b.title) or title_similarity(a.title, b.title) >= 0.6
+
+
+def pages_of(d):
+    value = str(d.inventory.get("pages", "") or "")
+    return int(value) if value.isdigit() else 0
+
+
 def group_versions(docs):
-    """Rows that are versions or copies of one instrument: same account, family and anchor."""
-    groups = {}
+    """Rows that may be versions or copies of one instrument: same account and family, sharing
+    a reference or a title (or, with neither, the parent date they quote). Grouping is loose;
+    same_instrument() decides which rows are actually related."""
+    groups = []
     for d in docs:
         if d.no_row or d.instrument in TRANSACTIONS:
             continue
-        anchor = d.title.casefold() if d.title else (d.parent_dates[0] if d.parent_dates else "")
-        key = (d.account, family(d.instrument), anchor)
-        groups.setdefault(key, []).append(d)
-    return [g for g in groups.values() if len(g) > 1]
+        keys = set()
+        if ref_key(d.reference):
+            keys.add("ref:" + ref_key(d.reference))
+        if d.title:
+            keys.add("title:" + norm_name(d.title))
+        if not keys and d.parent_dates:
+            keys.add("parent:" + d.parent_dates[0])
+        if not keys:
+            continue
+        merged = [d.account, family(d.instrument), set(keys), [d]]
+        for g in [g for g in groups if g[0] == d.account and g[1] == merged[1] and g[2] & keys]:
+            merged[2].update(g[2])
+            merged[3].extend(g[3])
+            groups.remove(g)
+        groups.append(merged)
+    return [sorted(g[3], key=lambda x: int(x.doc)) for g in groups if len(g[3]) > 1]
+
+
+SIGN_ORDER = {"Signed by all parties": 4, "Signed by one party": 3, "Signature not established": 2,
+              "Unsigned": 1, "Draft": 0}
 
 
 def sign_rank(d):
-    order = {"Signed by all parties": 4, "Signed by one party": 3, "Signature not established": 2,
-             "Unsigned": 1, "Draft": 0}
     native = 1 if str(d.inventory.get("text_pages", "0")).isdigit() and int(d.inventory.get("text_pages") or 0) > 0 else 0
     path = norm_name(str(Path(d.inventory["original_path"]).parent))
     near = 1 if any(t in path for t in distinctive_tokens(d.account)) else 0
-    return (order.get(d.signed, 0), native, near, -int(d.doc))
+    return (SIGN_ORDER.get(d.signed, 0), native, near, -int(d.doc))
 
 
 def file_documents(as_at, decisions, packets, playbooks):
@@ -647,22 +685,33 @@ def file_documents(as_at, decisions, packets, playbooks):
     for siblings in by_account.values():
         for group in group_versions([d for d in siblings if not d.duplicate_of and not d.playbook]):
             executed = [d for d in group if not d.is_draft]
-            if executed:
-                best = max(executed, key=sign_rank)
-                for d in group:
-                    if d is best:
-                        continue
-                    same_title = not d.title or not best.title or norm_name(d.title) == norm_name(best.title)
-                    if d.is_draft:
-                        if same_title and (not d.document_date or not best.document_date or d.document_date <= best.document_date):
-                            d.draft_of = best.doc
-                        else:
-                            d.flags.append(f"draft dated after the executed doc {best.doc}; may be a later instrument")
-                    elif d.document_date and d.document_date == best.document_date and d.signed != "Signed by all parties":
-                        d.copy_of = best.doc
-            else:
+            if not executed:
                 for d in group:
                     d.flags.append("every version of this instrument is marked Draft; no executed copy found")
+                continue
+            # A one- or two-page signed copy beside a much longer executed body of the same
+            # instrument is its signature page or a partial copy; the body carries the execution
+            # that page shows.
+            body = max(executed, key=lambda d: (pages_of(d), sign_rank(d)))
+            fragments = [d for d in executed if d is not body and 0 < pages_of(d) <= 2
+                         and pages_of(body) >= max(3, 3 * pages_of(d)) and same_instrument(d, body)]
+            for d in fragments:
+                d.copy_of = body.doc
+                d.notes.append(f"signature page or partial copy of doc {body.doc} ({pages_of(d)} of {pages_of(body)} pages)")
+                if SIGN_ORDER.get(d.signed, 0) > SIGN_ORDER.get(body.signed, 0):
+                    body.notes.append(f"execution shown on doc {d.doc}: {d.signed}")
+                    body.signed = d.signed
+            best = max([d for d in executed if d not in fragments], key=sign_rank)
+            for d in group:
+                if d is best or d in fragments or not same_instrument(d, best):
+                    continue
+                if d.is_draft:
+                    if not d.document_date or not best.document_date or d.document_date <= best.document_date:
+                        d.draft_of = best.doc
+                    else:
+                        d.flags.append(f"draft dated after the executed doc {best.doc}; may be a later instrument")
+                elif d.document_date and d.document_date == best.document_date and d.signed != "Signed by all parties":
+                    d.copy_of = best.doc
 
     # 4. Parents.
     for siblings in by_account.values():
@@ -709,7 +758,8 @@ def file_documents(as_at, decisions, packets, playbooks):
             d.notes.append(f"draft; executed version is doc {d.draft_of}")
             return F5
         if d.copy_of:
-            d.notes.append(f"copy of doc {d.copy_of}")
+            if not any(f"doc {d.copy_of}" in n for n in d.notes):
+                d.notes.append(f"copy of doc {d.copy_of}")
             return F5
         state = "ended" if d.ended_by else ended_state(d, as_at)
         if d.instrument in ("Other overlay", "Other") and d.relation in AMENDING and d.parent is not None \

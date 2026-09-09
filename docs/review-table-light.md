@@ -327,11 +327,15 @@ import.
    goes to the model once, as names only, and comes back as provisional entity-map rows. Each
    Additional customer entity that matches receives a copy of the document in its own account;
    unmatched ones are flagged on the row, not dropped.
-2. **Same document, several files.** Byte-identical files are copies. Rows with the same
-   customer, the same instrument and the same title are versions of one document: a Draft with a
-   non-draft version present goes to folder 5, and a scanned or image copy of a signed version
-   goes to folder 5 marked as a copy, the best copy being the one with the strongest Signed
-   answer and native text.
+2. **Same document, several files.** Byte-identical files are copies. Rows in one account with
+   the same family of instrument that share a reference, or a title, are candidate versions of
+   one document; they are treated as one instrument when their references agree or, without a
+   reference on both, when their titles agree. A Draft dated on or before the executed version
+   goes to folder 5 as its draft; a scanned or image copy of a signed version goes to folder 5
+   marked as a copy, the best copy being the one with the strongest Signed answer and native
+   text. A one- or two-page signed copy beside a much longer executed body of the same
+   instrument is its signature page or a partial copy: it goes to folder 5 and the body carries
+   the execution that page shows, with a note.
 3. **Instrument gate.** Only Global master agreement, Master or supply agreement, Local
    participation agreement, Standard terms or account form, Project agreement or statement of
    work, Schedule or exhibit and Amendment or side letter can reach folders 1 or 2.
@@ -364,8 +368,8 @@ import.
    supply is consistent and is filed normally.
 10. **Rows that are not contracts.** A row for the ERP file or the review table itself is
     ignored. A readable file with no row goes to a holding folder with the review tool's
-    rejection code when its error log is supplied. Playbooks come from a local list into
-    folder 6. Not yet built.
+    rejection code when its error log is supplied. Playbooks come from a local list,
+    `inputs/business-practice.csv` (file name and account), into folder 6.
 
 ## What the first export showed (9 September 2026, messy pile)
 
@@ -378,7 +382,7 @@ inconsistent. Two all-purchases masters came back Part of supply. Entities, titl
 types, drafts, the reversed sides on a supplier-paper framework and the additional customer on
 a three-party letter came back right. The questions above are the revision that followed.
 
-## Sorting-rule edits this design requires
+## Sorting-rule edits this design required
 
 - Rule 3, `unsure`: delete the clause sending a rolling agreement with no later evidence to
   unsure. An evergreen or rolling agreement is current unless something records its end.
@@ -389,23 +393,47 @@ a three-party letter came back right. The questions above are the revision that 
 - Rule 7, `2-governs-part-of-trade`: delete "or a period (this year's pricing or rebate
   letter)". Folder 2 is for supply limited by product set, project, site, programme or division.
 
-These edits are not yet applied to `stage1/sorting-rules.md`.
+Applied to `stage1/sorting-rules.md` on 10 September 2026, so the judge in `/analyse` and the
+script in `/sort` follow the same rules. Rule 4 now says in terms that a rolling or evergreen
+agreement is current unless something in the pile records its end.
 
 ## Implementation and results
 
 `scripts/sort_light.py` implements the filing above: `--import FILE [--error-log FILE]
 [--as-at DATE]`, `--unmatched` (the names for the one model turn), `--file` and `--status`.
 `eval/messy/score_light.py` scores a filing against the messy pile's key; it is for the
-evaluator only. On the second export of the messy pile (9 September 2026, as at 2026-09-09):
+evaluator only. On the messy pile (33 documents, six ERP rows), as at the export date:
 
 | run | in an accepted folder and account |
 | --- | --- |
 | first export (no dates, no parent words), with the entity map | 20 of 33 |
 | second export, script alone, empty entity map | 22 of 33 |
 | second export, after the names-only turn filled the entity map | 26 of 33 |
+| third export (Title and Reference back, Signed reworded), script alone | 27 of 33 |
+| third export, after the names-only turn | 32 of 33 |
 
-The remaining seven: the executed Ardleigh master came back Draft because its cover says
-"execution version", so it and its three drafts and the agreement it supersedes are wrong
-until the Signed question excludes such labels; the detached signature page cannot be tied to
-its body without a Title column; the file holding two agreements is Mixed and goes to unsure
-by design. The sorting-rule edits above are still to be applied to `stage1/sorting-rules.md`.
+The third export (10 September 2026) settled the Ardleigh family: the executed master no longer
+reads as Draft, so it, its three drafts and the agreement it supersedes file correctly. Two
+script changes followed it. Versions and copies of one instrument now meet on the reference as
+well as the title, which files the Wexbury draft whose title is worded differently from the
+executed framework. And a one- or two-page signed copy beside a much longer executed body of
+the same instrument is filed as its signature page, the body carrying the execution it shows,
+which ties the detached Larkhall signature page to its body. The one remaining miss is the file
+holding two agreements: Mixed goes to unsure by design. The six script-alone misses are all
+names that the one model turn decides (the word-order variant of Trentmoor and the Wexbury
+trading name).
+
+Two things to know about the third export. The reworded Signed question made the model more
+cautious: five documents that read Signed by all parties in the second export now read
+Signature not established, which routes nothing but weakens the choice of best copy. And Group
+mechanism still exports as an em dash on most rows, so the required-answer setting either did
+not take effect or is not available; the script treats the dash as blank.
+
+## After the light filing: the top accounts
+
+The light folders are the whole ERP for the cost of a script. For the accounts that matter,
+`ERP_Top.csv` or `ERP_Top.xlsx` in the pile lists their ERP names, the business drops the
+contracts it has collected for them into the pile, and `/analyse top <pile>` reads those
+accounts in full (the documents `/sort` filed to them plus every readable file without a
+filing row), judges them and writes the notes and diagrams; `/deep-dive top` fills the forms and
+maps them. Everything else stays filing only. The README describes both commands.

@@ -7,13 +7,15 @@ There are four commands, and **each stops after its own stage**:
 | --- | --- | --- | --- |
 | `/sort <pile>` | Prepare, import Review_Table_Light, match names, file by account and status folder | Scripts; one names-only model turn for customers the script cannot match | account and status folders with copies, CSV/Markdown under `out/sort/`; no contract reads or diagrams |
 | `/analyse [all \| account "<name>"]` (optional) | With Review_Table: import, account analysis, rare targeted checks, reports. Otherwise full readers and judges | Opus main session on table rows; otherwise Sonnet readers and Opus judges | status folders, short bullet position, per-account/global CSV, `README.md`, full `ANALYSIS.md`, diagrams and `INDEX.html` |
-| `/deep-dive [--topics ...] [--force]` | prerequisite check, `/extract`, `/map`, `/report --graph` | Sonnet extractors, Opus mappers | validated forms, `TREES.md`, `out/FORM-HEALTH.md`, `out/DIDNT-FIT.md`, `out/graph/` |
+| `/analyse top [pile]` (optional) | After `/sort`: read in full the accounts listed in ERP_Top, plus files dropped in since; match, judge, report | Sonnet readers and Opus judges for those accounts only | the same deliverables for the top accounts; every other account stays filing only |
+| `/deep-dive [top] [--topics ...] [--force]` | prerequisite check, `/extract`, `/map`, `/report --graph`; with `top`, for the ERP_Top accounts only | Sonnet extractors, Opus mappers | validated forms, `TREES.md`, `out/FORM-HEALTH.md`, `out/DIDNT-FIT.md`, `out/graph/` |
 | `/visualise [all \| "account"] [--analysis]` | scripts only | none | re-rendered Mermaid HTML after corrections; free |
 
 Stop at `/sort` when folders and a short inventory are enough. It applies section B of the
 sorting rules to the export's answers and verifies nothing against the paper. Request `/analyse` for governing status and diagrams,
 for all accounts or a selected account. It can also run directly without prior sorting.
-See [the five light questions and output layout](docs/review-table-light.md).
+See [the fourteen light questions and output layout](docs/review-table-light.md). For the
+accounts that deserve a full reading, list them in ERP_Top and run `/analyse top`.
 `/deep-dive` never rereads cards or judgments: it requires them and stops if they are missing.
 
 ## Setup and inputs
@@ -26,6 +28,7 @@ ERP controls account names; Review_Table supplies cited document facts. See the
 ```text
 corpus/
   ERP.xlsx
+  ERP_Top.xlsx
   Review_Table_Light.xlsx
   Review_Table.xlsx
   contracts/
@@ -219,6 +222,32 @@ or judges are started for that account without your instruction.
 `/analyse` stops here and mentions `/deep-dive`. Rerun `/visualise --analysis` for free after
 corrections.
 
+### Top accounts: /analyse top and /deep-dive top
+
+```
+/analyse top <pile>
+/deep-dive top
+```
+
+The light filing covers the whole ERP for the cost of a script. For the customers that matter,
+list their ERP account names in `ERP_Top.csv` or `ERP_Top.xlsx` in the pile: one column, the
+names spelled as the ERP prints them (a stream row resolves to its main account). Drop any
+contracts the business has collected for them into the pile, in any folder. `/analyse top <pile>`
+then runs `/prepare` (new files get numbers, the filing log is kept, and ERP_Top is registered as
+a control file, never numbered), computes the reading scope by script into `work/top/scope.json`
+(the documents `/sort` filed to each top account, plus every readable file that has no filing
+row, which is where the dropped-in contracts and the files the review tool refused land), reads
+those documents in full with Sonnet readers, matches the names on their cards, judges each top
+account with an Opus judge and writes the same notes, `documents.csv`, `CORPUS.csv`, `INDEX.md`
+and diagrams as a full `/analyse`, for those accounts only. Every other account keeps its light
+filing rows and appears as filing only, with its list and README but no second set of copies.
+`--filed-only` leaves the unfiled documents out. Nothing outside the scope is read, and a
+registered full Review_Table makes this scope unavailable.
+
+`/deep-dive top` fills the forms for the scope's documents, maps the top accounts and exports
+the graph for them. Both stop after their own stage. `python scripts/top.py --status` shows what
+is registered, scoped, read and judged.
+
 ## 3. Full analysis: /deep-dive
 
 ```
@@ -300,13 +329,14 @@ For targeted maintenance, the component commands remain available. Each stops af
 | --- | --- |
 | `/check [pile]` | preflight only |
 | `/prepare <pile> [--erp <file>]` | inventory, numbering, native text, ERP record |
-| `/read all` or `/read <ids>` or `/read account "<name>"` `[--force]` | full sort cards, Sonnet readers |
-| `/match [--force]` | matches full-card names and replays the entity map |
+| `/read all` or `/read <ids>` or `/read account "<name>"` or `/read top` `[--force]` | full sort cards, Sonnet readers |
+| `/match [account "<name>" \| top] [--force]` | matches full-card names and replays the entity map; scoped runs keep the other rows |
 | `/judge all` or `/judge "account"` | full-card account judgments, Opus judges; accounts with no documents are skipped |
-| `/extract default` or `/extract all [--topics names] [--force]` | validated forms, Sonnet extractors; topics off unless supplied |
+| `/extract default` or `/extract all` or `/extract top [--topics names] [--force]` | validated forms, Sonnet extractors; topics off unless supplied |
 | `/map all [--force]` | Opus family mapping and graph export; requires complete valid forms |
 | `/report` | rebuild current CSV/Markdown reports only |
 | `/report --graph` | explicitly rebuild analysis CSV/Markdown and graph outputs |
+| `/report [--graph] top` | the same for the ERP_Top accounts only, other accounts left filing only |
 | `/visualise [all \| "account"] [--analysis]` | offline Mermaid HTML from existing reports |
 
 If corrections change names, rerun `/match` before judgments. Re-extract affected forms with

@@ -228,6 +228,13 @@ def split_multi(cell):
     return [part.strip() for part in str(cell).split("|") if part.strip()]
 
 
+def is_erp_top(path):
+    """ERP_Top.csv/.xlsx (any case, with or without the underscore): the top-accounts list."""
+    path = Path(path)
+    return (re.sub(r"[^a-z0-9]", "", path.stem.casefold()) == "erptop"
+            and path.suffix.casefold() in {".csv", ".xlsx"})
+
+
 def safe_folder_name(name):
     """Portable single path component; never let an ERP name escape the output folder."""
     result = re.sub(r'[\\/:*?"<>|\x00-\x1f]', "_", name).rstrip(' .')

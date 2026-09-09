@@ -1,9 +1,9 @@
 ---
 name: extract
-description: Fills validated stage 2 forms with one extractor per document. Usage /extract default | all | <ids> [--force] [--topics <names>].
+description: Fills validated stage 2 forms with one extractor per document. Usage /extract default | all | top | <ids> [--force] [--topics <names>].
 ---
 
-# /extract default | all | <ids> [--force] [--topics <names>]
+# /extract default | all | top | <ids> [--force] [--topics <names>]
 
 Normally invoked by a stage skill (`/sort`, `/analyse`, `/deep-dive`); run it directly only for
 targeted maintenance. It stops after its own step and never starts the next.
@@ -13,7 +13,9 @@ Run after stage 1 review and correction. Paths are relative to the kit root.
 
 1. Select unique document ids: omitted/`default` means placements in `1-governs-trade`,
    `2-governs-part-of-trade` or `unsure`; `all` or `--all` means every readable inventory row
-   except ERP; explicit numbers are padded to three digits. Every selected id needs a card.
+   except ERP; `top` means the `docs` list of `work/top/scope.json` (the ERP_Top accounts'
+   documents after `/analyse top`); explicit numbers are padded to three digits. Every
+   selected id needs a card.
 2. Skip existing forms unless `--force`; print selected, skipped and missing-card counts.
    Topics are off unless `--topics` names fixed topics from `stage2/topics.md`. When adding
    topics to existing forms, require `--force` to replace those forms; explain this if omitted.

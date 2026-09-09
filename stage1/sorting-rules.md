@@ -52,14 +52,15 @@ Two sets of rules, applied in this order: first every document is matched to an 
 >    document is in the pile; duplicates (the best copy is filed by the rules below, the others
 >    here, marked "duplicate of"). Documents that belong to another account are filing errors:
 >    note them and tell the main session.
-> 3. `unsure`: no dates readable; signature page missing so signing is unknown; a rolling
->    agreement with no evidence anyone still trades under it and nothing later confirming it;
->    an unsigned draft with no signed version in the pile ("draft, no signed copy found"); two
->    candidates for the same job and nothing on paper to choose between them.
+> 3. `unsure`: no dates readable; signature page missing so signing is unknown; an unsigned
+>    draft with no signed version in the pile ("draft, no signed copy found"); two candidates
+>    for the same job and nothing on paper to choose between them.
 > 4. `4-not-live`: end date passed and nothing extended it; terminated; replaced by a later
->    document in the pile; every part dead.
+>    document in the pile; every part dead. A rolling or evergreen agreement is current unless
+>    something in the pile records its end; the absence of later evidence does not end it.
 > 5. `3-live-not-trade`: in force but does not govern trade: NDA, guarantee, data terms, code of
->    conduct, EDI terms.
+>    conduct, EDI terms; pricing, rebate, bonus and incentive letters that vary the commercials
+>    of terms that govern elsewhere; notice letters.
 > 6. `1-governs-trade`: live, governs trade, and its scope is all purchases between the parties
 >    or as good as (a defined product set that looks like everything the account buys, or wording
 >    that puts all orders under it). Its amendments, adoption agreements and schedules go with
@@ -67,10 +68,11 @@ Two sets of rules, applied in this order: first every document is matched to an 
 >    you would rely on and why, or "unresolved". If the only live trade-governing document has
 >    a scope that reads as limited, it still goes here, with "scope on paper: …; confirm this is
 >    all the trade" in the note.
->    A pricing or rebate letter that sets only a period does not qualify under this rule.
-> 7. `2-governs-part-of-trade`: live, governs trade, but only for a project, site or programme,
->    a defined product set that is plainly not everything, or a period (this year's pricing or
->    rebate letter), while trade outside that limit runs, or could run, under something else.
+>    A pricing or rebate letter that sets only prices or a period does not qualify under this
+>    rule: it goes to `3-live-not-trade`, beside the agreement whose commercials it varies.
+> 7. `2-governs-part-of-trade`: live, governs trade, but only for a project, site, programme or
+>    named division, or a defined product set that is plainly not everything, while trade
+>    outside that limit runs, or could run, under something else.
 >
 > A layered document is filed by its live parts; the note says which parts are dead. Every
 > document goes in exactly one status folder; its tree number in the filename keeps the members
