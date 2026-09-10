@@ -116,21 +116,32 @@ def register(path, account_column=None):
     names = [n for n in names if n]
     by_norm = {norm_name(a): a for a in erp_account_names(erp)}
     entity_by_name, _ = load_entity_map()
-    streams = stream_map(erp, entity_by_name)
-    accounts, unknown, notes = [], [], []
+    streams = {s: main for s, (main, _) in stream_map(erp, entity_by_name).items()}
+    for stream, main in (erp.get("stream_candidates") or {}).items():
+        streams.setdefault(stream, main)
+    accounts, unknown, notes, members = [], [], [], {}
     for name in names:
         exact = by_norm.get(norm_name(name))
         if not exact:
             unknown.append(name)
             continue
+        listed = exact
         if exact in streams:
-            main = streams[exact][0]
-            notes.append(f'"{exact}" is a stream of "{main}"; that account is analysed')
+            main = streams[exact]
+            notes.append(f'"{exact}" is a stream of "{main}"; that account is analysed with the stream\'s documents')
             exact = main
         if exact not in accounts:
             accounts.append(exact)
+        # The documents of a top account are those filed to it and to every ERP row that is
+        # a stream of it; a stream the user listed is kept whichever way it was folded.
+        members.setdefault(exact, [exact])
+        for stream, main in streams.items():
+            if main == exact and stream not in members[exact]:
+                members[exact].append(stream)
+        if listed not in members[exact]:
+            members[exact].append(listed)
     data = {"source_path": str(path), "sha256": sha256_of(path), "column": column,
-            "accounts": accounts, "unknown": unknown, "notes": notes,
+            "accounts": accounts, "members": members, "listed": names, "unknown": unknown, "notes": notes,
             "registered_at": datetime.now(timezone.utc).isoformat()}
     write_json(ERP_TOP_JSON, data)
     say(f"ERP_Top: {len(accounts)} top accounts registered from {path.name} ({column})")
@@ -146,6 +157,12 @@ def load_top():
     if not data:
         fail("No ERP_Top registered. Put ERP_Top.csv or ERP_Top.xlsx in the pile and run /prepare, "
              "or run python scripts/top.py --register <file>.")
+    source = Path(data.get("source_path", ""))
+    if not source.is_file():
+        fail(f"ERP_Top {source} has disappeared since it was registered; register the current file.")
+    if sha256_of(source) != data.get("sha256"):
+        say(f"ERP_Top {source.name} changed since it was registered; registering it again")
+        data = register(source, data.get("column"))
     if data.get("unknown"):
         fail("ERP_Top names accounts that are not ERP rows: " + "; ".join(data["unknown"])
              + ". Spell them as the ERP record does, then register the file again.")
@@ -163,11 +180,12 @@ def build_scope(filed_only=False):
         fail("work/logs/sort.csv is missing or empty: run /sort first, or use /analyse all.")
     readable = {r["doc_id"] for r in inventory if r.get("doc_id") != "erp" and r.get("readable") == "yes"}
     filed = {r["doc_id"] for r in sort_rows if r.get("account", "") not in UNFILED_TARGETS}
-    per_account = {a: sorted({r["doc_id"] for r in sort_rows if r.get("account") == a and r["doc_id"] in readable})
+    members = top.get("members") or {a: [a] for a in top["accounts"]}
+    per_account = {a: sorted({r["doc_id"] for r in sort_rows if r.get("account") in members.get(a, [a]) and r["doc_id"] in readable})
                    for a in top["accounts"]}
     unfiled = [] if filed_only else sorted(d for d in readable if d not in filed)
     docs = sorted(set(unfiled) | {d for ids in per_account.values() for d in ids})
-    scope = {"accounts": top["accounts"], "docs": docs, "per_account": per_account, "unfiled": unfiled,
+    scope = {"accounts": top["accounts"], "members": members, "docs": docs, "per_account": per_account, "unfiled": unfiled,
              "filed_only": filed_only, "erp_top_sha256": top["sha256"],
              "written_at": datetime.now(timezone.utc).isoformat()}
     write_json(SCOPE_JSON, scope)
@@ -181,7 +199,9 @@ def has_card(doc):
 def describe(scope):
     ids = lambda docs: ", ".join(docs) if docs else "none"  # noqa: E731
     for account, docs in scope["per_account"].items():
-        say(f"{account}: {len(docs)} documents filed by /sort ({ids(docs)})")
+        streams = [m for m in scope.get("members", {}).get(account, []) if m != account]
+        say(f"{account}: {len(docs)} documents filed by /sort ({ids(docs)})"
+            + (f"; includes the stream rows {', '.join(streams)}" if streams else ""))
     if scope["filed_only"]:
         say("unfiled readable documents: left out (--filed-only)")
     else:

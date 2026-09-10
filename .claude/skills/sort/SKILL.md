@@ -39,8 +39,10 @@ the ERP list alone and written through the script, never by hand.
    its source, who it treats as our company, and the most frequent supplier and customer
    entities with the script's side check. A side warning stops the stage: report it and stop. A missing or unreadable export stops the stage; there is no fallback to
    source reading.
-4. Run `python scripts/sort_light.py --unmatched`. If `unmatched` is empty, go to step 5.
-   Otherwise decide each name from the names and ERP accounts printed, under
+4. Run `python scripts/sort_light.py --unmatched`. Its `unmatched` list holds the names nobody
+   has decided; `awaiting_the_user` holds names already decided into a holding folder, which
+   is a finished decision, not a failure: leave those alone. If `unmatched` is empty, go to
+   step 5. Otherwise decide each name in it from the names and ERP accounts printed, under
    `stage1/sorting-rules.md` section A, and write every decision with
 
    ```
@@ -59,9 +61,10 @@ the ERP list alone and written through the script, never by hand.
    `--account _ours` records it as a group member in `inputs/our-entities.csv` and its rows are
    refiled as sides reversed. Do not read documents, the full Review_Table or prior analysis
    to decide, and do not guess an account to empty the list.
-   Then run `--unmatched` again: every name you decided must have left the list and
-   `entity_map_ignored` must be empty. If not, read the reasons it gives and correct the
-   decision; a decision that did not take effect is not a result.
+   Then run `--unmatched` again: `unmatched` must now be empty and `entity_map_ignored` too
+   (a name you sent to `_not-sure` or `_not-on-the-list` now appears under
+   `awaiting_the_user`, which is correct). If a name is still in `unmatched`, read the reason
+   it gives and correct the decision; a decision that did not take effect is not a result.
 5. Run `python scripts/sort_light.py --file`. It writes `out/sort/INDEX.md`, per-account and
    per-status-folder `documents.csv` and README files, `out/sort/<side>/CORPUS.csv`,
    `ACCOUNTS.csv`, numbered copies in each status folder, and `work/logs/sort.csv`. Earlier

@@ -281,11 +281,18 @@ Signed by all parties: a visible signature, electronic signature certificate or 
 statement for every contracting party.
 Signed by one party: visible signature for one side only.
 Unsigned: signature blocks are visible and empty for every party.
-Draft: tracked changes, comments, a watermark, a version label or the word draft are present.
+Draft: tracked changes, comments, a draft watermark, or a version label such as v3 or draft
+are present. Labels such as execution version, final or signed are not draft markers.
 Signature not established: the signature page is missing, illegible, referred to but not
 present, or not among the reviewed content. A typed name is not a signature, and the absence
 of a signature from the reviewed content does not mean the document is unsigned.
 ```
+
+This is the wording used for the third export. It routes nothing on its own: only Unsigned and
+Draft move a document, and a governing instrument answered Signature not established is filed
+by the other answers and flagged for `/analyse` to look at the signature page. That is a
+deliberate light-stage exception to section B rule 3, which sends a missing signature page to
+unsure once a reader has looked for it.
 
 ### 11. Status
 
@@ -358,9 +365,12 @@ a warning, and without either the export file's date is used and said.
    Inc, then through the entity map. Our own companies are the entities whose names carry the
    group name given with `--our-group`, the rows of `inputs/our-entities.csv` (the names turn adds
    group members it recognises with `--decide --account _ours`), or, with neither, the entity that
-   dominates our side of the export. A customer entity that is one of ours means the sides are
-   reversed: the row is filed under the ERP account the supplier cell names, in unsure with a
-   flag, or in a holding folder under that name. Anything else
+   dominates our side of the export. On a suppliers-side run the supplier cell is the
+   counterparty and our company is expected in the customer cell. A counterparty cell that
+   names one of ours means the sides are reversed: the row is filed under the ERP account the
+   other cell names, in unsure with a flag, or in a holding folder under that name. A user
+   decision in the entity map wins over every automatic match, including an exact ERP name
+   and the company-number pass. Anything else
    goes to the model once, as names only, and comes back as entity-map rows written through
    `--decide` with `decided_by=claude`; a row whose account is not an ERP row, or whose basis is
    not one of the three permitted, is reported as ignored, never silently dropped. A name mapped
@@ -371,22 +381,27 @@ a warning, and without either the export file's date is used and said.
 2. **Same document, several files.** Byte-identical files are copies. Rows in one account with
    the same family of instrument that share a reference, or a title, are candidate versions of
    one document; they are treated as one instrument when their references agree or, without a
-   reference on both, when their titles agree. A Draft dated on or before the executed version
-   goes to folder 5 as its draft; a scanned or image copy of a signed version goes to folder 5
-   marked as a copy, the best copy being the one with the strongest Signed answer and native
-   text. A one- or two-page signed copy beside a much longer executed body of the same
-   instrument is its signature page or a partial copy: it goes to folder 5 and the body carries
-   the execution that page shows, with a note.
+   reference on both, when their titles agree. An executed version is one that is neither
+   Draft nor Unsigned; a Draft dated on or before it goes to folder 5 as its draft, and with no
+   executed version every copy is flagged. A scanned or image copy of a signed version goes to
+   folder 5 marked as a copy, the best copy being the one with the strongest Signed answer and
+   native text. A one- or two-page signed copy beside a much longer executed body of the same
+   instrument, dated with it or within forty-five days after it, is its signature page or a
+   partial copy: it goes to folder 5 and the body carries the execution that page shows, with
+   a note. A short agreement from another year with the same generic title is not paired.
 3. **Instrument gate.** Only Global master agreement, Master or supply agreement, Local
    participation agreement, Standard terms or account form, Project agreement or statement of
    work, Schedule or exhibit and Amendment or side letter can reach folders 1 or 2.
-4. **Current or not.** When End date holds a date, the script compares it with the as-at date.
-   When it is blank, the Status label decides, and Current with no end date means continuing.
-   A child that has ended goes to folder 4 whatever its parent does.
+4. **Current or not.** An End date before the as-at date ends the document whatever the label
+   says. Not yet effective stays not yet effective even when an end date lies ahead:
+   commencement and expiry are separate facts. Otherwise a future End date means live; with
+   no date the Status label decides, and Current with no end date means continuing. A child
+   that has ended goes to folder 4 whatever its parent does.
 5. **Governing instruments.** Current: folder 1 for All supply between the parties and
    Substantially all supply; folder 2 for Part of supply and Named division or site. Ended:
    folder 4. Unsigned without a signed version, or Draft without one: unsure. Signature not
-   established routes nothing by itself; it is flagged for `/analyse`. When an account has no
+   established routes nothing by itself; on a governing instrument it is flagged for
+   `/analyse`. When an account has no
    folder 1 candidate but exactly one current master or supply agreement answering Part of
    supply, that agreement goes to folder 1 with a scope note, as rule 6 provides.
 6. **Non-governing instruments.** Pricing or rebate letters, notice letters, NDA, MOU,
@@ -396,12 +411,17 @@ a warning, and without either the export file's date is used and said.
    account has nothing in folders 1 or 2, the account README notes that it trades on order
    terms, which `/analyse` should then examine.
 8. **Linking.** Relation to parent says what the child does; the Parent agreement words are
-   matched to a row in the same account by the date they quote against Document date, with
-   title similarity as the tiebreak, then by a unique title, and by reference whenever one is
-   quoted and present. A schedule, amendment, participation or notice that finds its parent inherits the
-   parent's place between folders 1 and 2 unless its own coverage is narrower. A Supersedes or
-   Terminates child whose End date, or Document date when there is none, is on or before the
-   as-at date sends its parent to folder 4; a future date leaves the parent live and flagged.
+   matched to a row in the same account first by a reference they quote, then by the date they
+   quote against Document date, then by a unique title. Several documents on one quoted date
+   are one instrument only when the others are its drafts or copies; otherwise the title words
+   must decide, and if they cannot the target is ambiguous, nothing is linked and the child is
+   flagged. A schedule, amendment, participation or notice that finds its parent inherits the
+   parent's place between folders 1 and 2 unless its own coverage is narrower; chains of
+   amendments settle whatever the document numbers are. A Terminates child ends its parent on
+   the End date it states (or its Document date); a Supersedes child ends its parent from its
+   own Document date, never from its own expiry. A date on or before the as-at date sends the
+   parent to folder 4; a future date leaves the parent live and flagged. An Extends or Renews
+   child that is itself live carries its parent on past the parent's own end date.
    An unresolved parent sends the child to unsure. When the export names no parent at all and
    the relation is one that attaches rather than ends (amends, extends, renews, forms part of,
    agreed under, accedes to, governed by, placed under, varies, confirms), and the account holds
@@ -414,7 +434,10 @@ a warning, and without either the export file's date is used and said.
 10. **Rows that are not contracts.** A row for the ERP file or the review table itself is
     ignored. A readable file with no row goes to a holding folder with the review tool's
     rejection code when its error log is supplied. Playbooks come from a local list,
-    `inputs/business-practice.csv` (file name and account), into folder 6.
+    `inputs/business-practice.csv` (file name and account), into folder 6. Two export rows for
+    one file with different answers keep the first row, flag the conflict and send the file to
+    unsure; identical repeats are ignored with a count. A document added to the pile after the
+    import appears as a row without answers until a fresh export is imported.
 
 ## What the first export showed (9 September 2026, messy pile)
 

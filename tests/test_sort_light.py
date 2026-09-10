@@ -308,6 +308,32 @@ class LightFilingTest(KitFixture):
         self.assertEqual("_no-name-found", nda["account"])                    # both parties are ours
         self.assertIn("only our own companies", nda["notes"])
 
+    def test_two_rows_for_one_file_are_kept_as_a_conflict_not_overwritten(self):
+        export = self.export()
+        export.append({**export[0], "11. Status": "Expired", "12. End Date": "December 31, 2020"})
+        export.append(dict(export[1]))                                     # an identical repeat
+        write_rows(self.table, export, self.COLUMNS)
+        out = self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        self.assertIn("2 rows repeat a file", out)
+        self.assertIn("different answers (status, end_date)", out)
+        self.light("--file")
+        corpus = self.corpus()
+        supply = corpus[(self.inventory["01 Supply Agreement.pdf"], self.erp_accounts[0])]
+        self.assertEqual("unsure", supply["folder"])
+        self.assertIn("two rows with different answers", supply["flags"])
+        amendment = corpus[(self.inventory["02 Amendment 1.pdf"], self.erp_accounts[0])]
+        self.assertEqual("unsure", amendment["folder"])                     # follows its conflicted parent
+        self.assertIn("is in unsure", amendment["flags"])
+
+    def test_a_document_added_after_the_import_still_gets_a_row_on_refiling(self):
+        self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        (self.pile / "11 New Contract.pdf").write_bytes((self.pile / "01 Supply Agreement.pdf").read_bytes())
+        self.command("prepare.py", str(self.pile), "--account-column", "customer_account", "--side", "customers")
+        out = self.light("--file")
+        self.assertIn("added to the pile after the import", out)
+        expected = {r["doc_id"] for r in rows(self.root / "work/inventory.csv") if r["doc_id"].isdigit()}
+        self.assertEqual(expected, {r["doc_id"] for r in rows(self.root / "out/sort/customers/CORPUS.csv")})
+
     def test_import_refuses_a_table_without_the_required_columns(self):
         write_rows(self.table, [{"Name": "01 Supply Agreement.pdf", "1. Title": "x"}], ["Name", "1. Title"])
         self.assertIn("missing columns", self.light("--import", str(self.table), success=False))

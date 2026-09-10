@@ -277,7 +277,7 @@ def main():
         scope = read_json(WORK / "top" / "scope.json")
         if not scope or not scope.get("docs"):
             fail("No top scope. Run python scripts/top.py --scope first.")
-        focus = set(scope.get("accounts", []))
+        focus = set(scope.get("accounts", [])) | {m for ms in (scope.get("members") or {}).values() for m in ms}
         selected = set(scope["docs"])
         missing = {d for d in selected if d not in cards or not (WORK_CARDS / f'{d}.md').is_file()}
         if missing:

@@ -68,12 +68,30 @@ def main():
             fol_ok = (folder in want_f) or (folder == "_unreadable" and "holding" in want_f) or ("holding" in want_f and account.startswith("_"))
             if acc_ok and fol_ok:
                 ok = "ok (revised rule)" if revised and folder == revised and revised not in expected_folders(entry["status_folder"]) else "ok"
+        # Every expected ERP account must be present (a shared document needs both rows), and
+        # no row may sit in an ERP account the key does not name.
+        expected_erp = [a for a in want_a if a != "holding"]
+        # The key names alternatives ("holding, or account X on a known-group basis") as well
+        # as shared documents ("SHARED: X and Y"); only the shared ones require every account.
+        # A stream row named beside its main account is a note in the key, not a second folder.
+        shared = "SHARED" in (entry.get("account") or "")
+        required = {a for a in expected_erp if not any(o != a and a.startswith(o + " ") for o in expected_erp)} \
+            if shared else set()
+        got_erp = {a for a, _ in got if not a.startswith("_")}
+        if ok and required and not required <= got_erp:
+            ok = False
+            got.append(("MISSING " + ", ".join(sorted(required - got_erp)), ""))
+        extra = got_erp - set(expected_erp)
+        if ok and expected_erp and extra:
+            ok = False
+            got.append(("EXTRA " + ", ".join(sorted(extra)), ""))
         right += bool(ok)
         wrong += not ok
         name = Path(entry["path"]).name[:46]
         print(f"{rows[0]['doc_id'] if rows else '---':4} {name:46} {(', '.join(want_f) + ' @ ' + (want_a[0] if want_a else 'any'))[:34]:34} "
               f"{'; '.join(f'{a[:22]}/{f}' for a, f in got)[:44]:44} {ok or 'MISS'}")
-    print(f"\n{right} documents in an accepted folder and account, {wrong} not, of {right + wrong}.")
+    print(f"\n{right} documents in an accepted folder with every expected account and no extra one, "
+          f"{wrong} not, of {right + wrong}. (Placement only: parent links and signature claims are not scored.)")
 
 
 if __name__ == "__main__":

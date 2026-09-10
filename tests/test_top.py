@@ -4,6 +4,7 @@ keeps every other account's light filing row, and the report marks those account
 import json
 import unittest
 
+from kit_common import ENTITY_MAP_COLUMNS
 from make_expected import ACCOUNT1, ACCOUNT2
 from test_place import KitFixture, rows, write_rows
 import test_sort_light as light
@@ -132,6 +133,27 @@ class TopScope(TopFixture):
         index = (self.root / "out/INDEX.md").read_text(encoding="utf-8")
         self.assertIn(f"| {ACCOUNT2} | not judged |", index)
         self.assertIn("1 accounts judged of 2", out)
+
+    def test_a_stream_folded_into_its_account_keeps_its_documents_in_scope(self):
+        stream_docs = {r["doc_id"] for r in rows(self.root / "work/logs/sort.csv") if r["account"] == ACCOUNT2}
+        decisions = rows(self.root / "inputs/entity-map.csv")
+        for row in decisions:
+            if row["name_as_printed"] == ACCOUNT2:
+                row.update(account=ACCOUNT1, decided_by="user")   # the user says ACCOUNT2 is a stream of ACCOUNT1
+        write_rows(self.root / "inputs/entity-map.csv", decisions, ENTITY_MAP_COLUMNS)
+        write_rows(self.top_file, [{"customer_account": ACCOUNT2}], ["customer_account"])
+        out = self.command("top.py", "--register", str(self.top_file))
+        self.assertIn("is a stream of", out)
+        out, scope = self.scope()
+        self.assertEqual([ACCOUNT1], scope["accounts"])
+        self.assertTrue(stream_docs <= set(scope["docs"]), f"stream docs {stream_docs} omitted: {out}")
+        self.assertIn("includes the stream rows", out)
+
+    def test_a_changed_erp_top_is_registered_again_before_scoping(self):
+        write_rows(self.top_file, [{"customer_account": ACCOUNT2}], ["customer_account"])
+        out, scope = self.scope()
+        self.assertIn("changed since it was registered", out)
+        self.assertEqual([ACCOUNT2], scope["accounts"])
 
     def test_place_top_needs_the_judgment_first(self):
         self.scope()

@@ -383,7 +383,7 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
     by_name = {}
     for item in inventory:
         by_name.setdefault(item["file_name"].casefold(), []).append(item)
-    packets, ignored, unknown = {}, [], []
+    packets, ignored, unknown, repeated = {}, [], [], []
     for row in rows:
         name = row.get("file_name", "")
         if name.casefold() in control or not name:
@@ -402,10 +402,21 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
         if not item["doc_id"].isdigit():
             ignored.append(name)
             continue
-        packet = {"doc_id": item["doc_id"], "raw": row, "flags": []}
         answers = {}
         for key in KEYS:
             answers[key] = row.get(key, "")
+        if item["doc_id"] in packets:
+            first = packets[item["doc_id"]]
+            differing = [k for k in KEYS if first["answers"].get(k, "") != answers.get(k, "")]
+            if differing:
+                first["flags"].append("the export has another row for this file with different answers ("
+                                      + ", ".join(differing) + "); the first row is kept and the file is not filed by rule")
+                first["conflict"] = True
+            else:
+                first["flags"].append("the export repeats this file's row; identical, ignored")
+            repeated.append(name)
+            continue
+        packet = {"doc_id": item["doc_id"], "raw": row, "flags": []}
         parsed = {}
         for key, labels in CLOSED.items():
             found, leftover = parse_closed(key, answers.get(key, ""))
@@ -455,12 +466,14 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
                         "inferred_ours": inferred,
                         "error_log": str(Path(error_log).resolve()) if error_log else "",
                         "imported_at": datetime.now(timezone.utc).isoformat(),
-                        "ignored_rows": ignored, "unknown_rows": unknown,
+                        "ignored_rows": ignored, "unknown_rows": unknown, "repeated_rows": repeated,
                         "rows": sorted(packets)})
     write_json(SOURCE, {"source_path": str(path), "sha256": source_hash, "sheet": sheet})
     with_rows = len([p for p in packets.values() if not p.get("no_row")])
     say(f"Review_Table_Light: {with_rows} rows matched to documents; {len(missing)} documents without a row; "
         f"{len(ignored)} control rows ignored; {len(unknown)} rows for unknown files; as-at {as_at} ({source}).")
+    if repeated:
+        say(f"{len(repeated)} rows repeat a file already in the export: " + ", ".join(repeated))
     if missing and not error_log:
         say("no error log supplied: whether the review tool refused the documents without a row is unknown")
     for line in side_check(packets, erp.get("side", ""), inferred):
@@ -485,6 +498,15 @@ def load_packets():
         item = inventory.get(doc)
         if not item or item["sha256"] != packet["inventory"]["sha256"]:
             raise ValueError(f"doc {doc}: inventory changed since import; rerun /prepare and --import")
+    added = [d for d in inventory if d.isdigit() and d not in packets]
+    for doc in added:
+        item = inventory[doc]
+        note = "added to the pile after the export was imported; no row"
+        packets[doc] = {"doc_id": doc, "raw": {}, "answers": {}, "parsed": {}, "inventory": item,
+                        "flags": [f"no row: {note}"], "no_row": note}
+    if added:
+        warn(f"{len(added)} documents were added to the pile after the import and have no row: "
+             + ", ".join(added) + ". They are listed as unreadable by the review tool; reimport a fresh export to file them.")
     return active, packets
 
 
@@ -539,47 +561,63 @@ def match_accounts(packets, playbooks=None):
         by_group.setdefault(group_key(account), []).append(account)
         by_core.setdefault(core_name(account), []).append(account)
     entities, _ = load_entity_map()
+    side = erp.get("side") or "customers"
     is_ours = ours_matcher((read_json(ACTIVE) or {}).get("inferred_ours", ""))
 
+    def apply_row(name, row):
+        """(target, basis, confidence) from an entity-map row, or None when it cannot be applied."""
+        target = row.get("account", "").strip()
+        basis, confidence = row.get("basis", "").strip(), row.get("confidence", "").strip().lower()
+        if not target:
+            report["ignored"][name] = "the entity-map row has no account"
+            return None
+        if target in HOLDING_TARGETS:
+            report["applied"][name] = target
+            return holding(target, name), basis, confidence
+        hits = [by_norm[norm_name(target)]] if norm_name(target) in by_norm else \
+            (by_group.get(group_key(target), []) or by_core.get(core_name(target), []))
+        if len(hits) != 1:
+            report["ignored"][name] = (f"mapped to {target!r}, which is not an ERP account row; "
+                                       "spell the account as the ERP record does")
+            return None
+        if basis not in BASES:
+            report["ignored"][name] = (f"basis {basis!r} is not one of {', '.join(BASES)}; "
+                                       "left in _not-sure for the user")
+            return holding("_not-sure", name), basis, confidence
+        if confidence != "not sure" and confidence in CONFIDENCES:
+            report["applied"][name] = hits[0]
+            return hits[0], basis, confidence
+        report["applied"][name] = "_not-sure"
+        return holding("_not-sure", name), basis, confidence or "not sure"
+
     def resolve(name):
-        """(account or holding target, basis, confidence) for one printed name."""
+        """(target, basis, confidence, decided_by) for one printed name.
+
+        A user decision in the entity map wins over every automatic match; then the ERP name
+        itself; then a claude decision; then the token heuristics that pick a holding folder.
+        """
         if not name:
-            return "_no-name-found", "", ""
+            return "_no-name-found", "", "", ""
+        row = entity_row_for(entities, name)
+        by_user = row is not None and row.get("decided_by", "").strip().lower() == "user"
+        if by_user:
+            applied = apply_row(name, row)
+            if applied:
+                return (*applied, "user")
         if norm_name(name) in by_norm:
-            return by_norm[norm_name(name)], "same name", "sure"
+            return by_norm[norm_name(name)], "same name", "sure", ""
         hits = by_group.get(group_key(name), []) or by_core.get(core_name(name), [])
         if len(hits) == 1:
-            return hits[0], "same name", "sure"
-        row = entity_row_for(entities, name)
-        if row is not None:
-            target = row.get("account", "").strip()
-            basis, confidence = row.get("basis", "").strip(), row.get("confidence", "").strip().lower()
-            if not target:
-                report["ignored"][name] = "the entity-map row has no account"
-            elif target in HOLDING_TARGETS:
-                report["applied"][name] = target
-                return holding(target, name), basis, confidence
-            else:
-                hits = [by_norm[norm_name(target)]] if norm_name(target) in by_norm else \
-                    (by_group.get(group_key(target), []) or by_core.get(core_name(target), []))
-                if len(hits) != 1:
-                    report["ignored"][name] = (f"mapped to {target!r}, which is not an ERP account row; "
-                                               "spell the account as the ERP record does")
-                elif basis not in BASES:
-                    report["ignored"][name] = (f"basis {basis!r} is not one of {', '.join(BASES)}; "
-                                               "left in _not-sure for the user")
-                    return holding("_not-sure", name), basis, confidence
-                elif confidence != "not sure" and confidence in CONFIDENCES:
-                    report["applied"][name] = hits[0]
-                    return hits[0], basis, confidence
-                else:
-                    report["applied"][name] = "_not-sure"
-                    return holding("_not-sure", name), basis, confidence or "not sure"
+            return hits[0], "same name", "sure", ""
+        if row is not None and not by_user:
+            applied = apply_row(name, row)
+            if applied:
+                return (*applied, "claude")
         tokens = distinctive_tokens(name)
         candidates = [a for a in accounts if tokens & distinctive_tokens(a)]
         if candidates:
-            return holding("_not-sure", name), "", ""
-        return holding("_not-on-the-list", name), "", ""
+            return holding("_not-sure", name), "", "", ""
+        return holding("_not-on-the-list", name), "", "", ""
 
     # First pass: names. Learn company numbers from the rows that matched an ERP account.
     numbers = {}
@@ -597,41 +635,45 @@ def match_accounts(packets, playbooks=None):
                                "confidence": "sure" if target else "", "names": [],
                                "note": "internal guidance listed in inputs/business-practice.csv"}]
             continue
-        customer, number = parsed.get("customer", ""), parsed.get("customer_number", "")
+        customer, c_number = parsed.get("customer", ""), parsed.get("customer_number", "")
         supplier, s_number = parsed.get("supplier", ""), parsed.get("supplier_number", "")
+        # The counterparty sits in the customer cell on a customers-side run and in the
+        # supplier cell on a suppliers-side run; our own company is expected in the other.
+        if side == "suppliers":
+            counterparty, number, own_cell, own_number, cp_label, own_label = supplier, s_number, customer, c_number, "supplier", "customer"
+        else:
+            counterparty, number, own_cell, own_number, cp_label, own_label = customer, c_number, supplier, s_number, "customer", "supplier"
         note = ""
-        if customer and is_ours(customer):
-            # Sides reversed: the export puts our company in the customer cell. Either the tool
-            # swapped the parties or we really are the buyer; neither is filed by rule.
-            counterparty, number = supplier, s_number
-            note = ("sides reversed in the export: our company is the customer cell and "
-                    f"{counterparty or 'nobody'} the supplier; confirm which way the paper runs")
-            if not counterparty or is_ours(counterparty):
-                decisions[doc] = [{"target": "_no-name-found", "basis": "", "confidence": "", "names": [customer],
-                                   "note": "only our own companies are named"}]
+        if counterparty and is_ours(counterparty):
+            # Sides reversed: the export puts our company in the counterparty cell. Either the
+            # tool swapped the parties or the trade runs the other way; neither is filed by rule.
+            candidate, number = own_cell, own_number
+            note = (f"sides reversed in the export: our company is in the {cp_label} cell and "
+                    f"{candidate or 'nobody'} in the {own_label} cell; confirm which way the paper runs")
+            if not candidate or is_ours(candidate):
+                decisions[doc] = [{"target": "_no-name-found", "basis": "", "confidence": "", "names": [counterparty],
+                                   "note": "only our own companies are named", "decided_by": ""}]
                 continue
-            target, basis, confidence = resolve(counterparty)
-            if target.startswith("_"):
-                target = holding("_not-on-the-list", counterparty)
-            decisions[doc] = [{"target": target, "basis": basis, "confidence": confidence,
-                               "names": [counterparty], "note": note, "reversed": True}]
+            target, basis, confidence, decided_by = resolve(candidate)
+            decisions[doc] = [{"target": target, "basis": basis, "confidence": confidence, "names": [candidate],
+                               "note": note, "reversed": True, "decided_by": decided_by}]
             continue
-        if not customer and supplier and not is_ours(supplier):
-            customer, number = supplier, s_number
-            note = "customer not identified; the supplier cell names a counterparty, sides unclear"
-        target, basis, confidence = resolve(customer)
-        row = {"target": target, "basis": basis, "confidence": confidence, "names": [customer] if customer else [],
-               "note": note, "number": number}
+        if not counterparty and own_cell and not is_ours(own_cell):
+            counterparty, number = own_cell, own_number
+            note = f"{cp_label} not identified; the {own_label} cell names a counterparty, sides unclear"
+        target, basis, confidence, decided_by = resolve(counterparty)
+        row = {"target": target, "basis": basis, "confidence": confidence, "names": [counterparty] if counterparty else [],
+               "note": note, "number": number, "decided_by": decided_by}
         if number and not target.startswith("_"):
             numbers.setdefault(number, target)
         decisions[doc] = [row]
-        for name, extra_number in parsed.get("additional", []):
-            if norm_name(name) == norm_name(customer) or is_ours(name):
+        for name, extra_number in (parsed.get("additional", []) if side != "suppliers" else []):
+            if norm_name(name) == norm_name(counterparty) or is_ours(name):
                 continue
-            extra_target, extra_basis, extra_conf = resolve(name)
+            extra_target, extra_basis, extra_conf, extra_by = resolve(name)
             decisions[doc].append({"target": extra_target, "basis": extra_basis or "co-contracting party",
                                    "confidence": extra_conf, "names": [name], "number": extra_number,
-                                   "note": "additional contracting customer"})
+                                   "note": "additional contracting customer", "decided_by": extra_by})
             if extra_number and not extra_target.startswith("_"):
                 numbers.setdefault(extra_number, extra_target)
     for targets in decisions.values():
@@ -643,7 +685,7 @@ def match_accounts(packets, playbooks=None):
     for doc, targets in decisions.items():
         for row in targets:
             number = row.get("number", "")
-            if number and row["target"].startswith("_") and number in numbers:
+            if number and row["target"].startswith("_") and number in numbers and row.get("decided_by") != "user":
                 row.update(target=numbers[number], basis="company number in the document",
                            confidence="sure", note=(row["note"] + " " if row["note"] else "")
                            + f"company number {number} matches a document filed under this account")
@@ -724,11 +766,23 @@ def map_report_lines(report):
 
 
 def unmatched_names(decisions, packets):
+    """Holding names nobody has decided yet: the names the one model turn must decide."""
     names = {}
     for doc, targets in decisions.items():
         for row in targets:
-            if row["target"].startswith(("_not-sure/", "_not-on-the-list/")):
+            if row["target"].startswith(("_not-sure/", "_not-on-the-list/")) and row.get("decided_by") not in ("user", "claude"):
                 names.setdefault(row["names"][0], []).append(doc)
+    return names
+
+
+def awaiting_user_names(decisions):
+    """Holding names already decided (by the user or by claude) and left for the user to settle."""
+    names = {}
+    for doc, targets in decisions.items():
+        for row in targets:
+            if row["target"].startswith(("_not-sure/", "_not-on-the-list/")) and row.get("decided_by") in ("user", "claude"):
+                entry = names.setdefault(row["names"][0], {"target": row["target"], "decided_by": row["decided_by"], "docs": []})
+                entry["docs"].append(doc)
     return names
 
 
@@ -762,6 +816,7 @@ class Doc:
         self.flags = list(packet.get("flags", []))
         self.parent = None
         self.ended_by = None
+        self.extended_by = None
         self.folder = ""
         self.duplicate_of = ""
         self.copy_of = ""
@@ -779,16 +834,26 @@ class Doc:
 
 
 def ended_state(d, as_at):
-    """'ended', 'live', 'future' or 'unknown' from End date first, then the Status label."""
+    """'ended', 'live', 'future' or 'unknown' for the document on its own.
+
+    An End date in the past ends it whatever the label says. Not yet effective is not live
+    merely because an end date lies ahead: commencement and expiry are separate facts.
+    """
+    if d.end_date and d.end_date < as_at:
+        return "ended"
+    if d.status == "Not yet effective":
+        return "future"
     if d.end_date:
-        return "ended" if d.end_date < as_at else "live"
+        return "live"
     if d.status in ("Expired", "Terminated"):
         return "ended"
     if d.status == "Current":
         return "live"
-    if d.status == "Not yet effective":
-        return "future"
     return "unknown"
+
+
+def days_between(earlier, later):
+    return (date.fromisoformat(later) - date.fromisoformat(earlier)).days
 
 
 def title_similarity(a, b):
@@ -799,26 +864,54 @@ def title_similarity(a, b):
     return len(ta & tb) / len(ta | tb)
 
 
+def best_copy(candidates, d):
+    """Among rows that are one instrument, the principal one: not a draft, duplicate or copy,
+    not itself a child, closest in title to the words quoted, lowest number."""
+    return sorted(candidates, key=lambda s: (s.is_draft, bool(s.duplicate_of), bool(s.copy_of), bool(s.draft_of),
+                                             bool(s.relation), -title_similarity(s.title, d.parent_text), int(s.doc)))[0]
+
+
 def find_parent(d, siblings):
-    """The row in the same account that the Parent agreement words point at, or None."""
+    """The row this child's Parent agreement words point at: (doc or None, how).
+
+    Identifiers first: a reference quoted in the words is decisive. Then the dates quoted:
+    several rows on one date are one instrument only when the others are its drafts or copies;
+    otherwise the title words must decide, and if they cannot the target is ambiguous and
+    nothing is linked (how starts with 'ambiguous'). Last, a unique title match.
+    """
     if not d.relation or not d.parent_text:
         return None, ""
-    others = [s for s in siblings if s is not d and not s.no_row]
-    # The verbatim citation often repeats the child's own date; the principal parent is the
-    # first quoted date that names another document in this account.
+    # A document is never its own parent: rows that are the same instrument as the child
+    # (same family, same reference) are its copies and versions, not candidates.
+    others = [s for s in siblings if s is not d and not s.no_row
+              and not (ref_key(d.reference) and ref_key(s.reference) == ref_key(d.reference)
+                       and family(s.instrument) == family(d.instrument))]
+    cited = ref_key(d.parent_text)
+    by_ref = [s for s in others if len(ref_key(s.reference)) >= 4 and ref_key(s.reference) in cited]
+    if by_ref:
+        distinct = {ref_key(s.reference) for s in by_ref}
+        if len(distinct) > 1:
+            # A/2021/114 sits inside A/2021/114/A1: the words quote the longer one, and the
+            # shorter matched only as its prefix. Keep the most specific reference quoted.
+            longest = max(len(r) for r in distinct)
+            if not all(r in c for r in distinct for c in distinct if len(c) == longest):
+                return None, "ambiguous: the words quote several references (" + ", ".join(
+                    sorted({s.reference for s in by_ref})) + ")"
+            by_ref = [s for s in by_ref if len(ref_key(s.reference)) == longest]
+        return best_copy(by_ref, d), "reference quoted"
     for quoted in [q for q in d.parent_dates if q != d.document_date]:
         by_date = [s for s in others if s.document_date == quoted]
-        if len(by_date) == 1:
-            return by_date[0], "parent date"
-        if len(by_date) > 1:
-            ranked = sorted(by_date, key=lambda s: (s.is_draft, bool(s.duplicate_of), bool(s.copy_of),
-                                                    -title_similarity(s.title, d.parent_text), int(s.doc)))
-            return ranked[0], "parent date (several candidates; best copy)"
-    if d.reference or any(s.reference for s in others):
-        by_ref = [s for s in others if s.reference and not blank(s.reference)
-                  and norm_name(strip_number(s.reference)) in norm_name(d.parent_text)]
-        if len(by_ref) == 1:
-            return by_ref[0], "reference quoted"
+        if not by_date:
+            continue
+        principal = [s for s in by_date if not s.is_draft and not s.duplicate_of and not s.copy_of and not s.draft_of]
+        if not principal:
+            return best_copy(by_date, d), "parent date (copies only)"
+        if len(principal) == 1:
+            return principal[0], "parent date"
+        scored = sorted(((title_similarity(s.title, d.parent_text), s) for s in principal), key=lambda x: (-x[0], int(x[1].doc)))
+        if scored[0][0] > 0 and (len(scored) == 1 or scored[0][0] > scored[1][0]):
+            return scored[0][1], "parent date; the title words decide between several documents on that date"
+        return None, "ambiguous: docs " + ", ".join(s.doc for s in principal) + f" share the quoted date {quoted}"
     scored = [(title_similarity(s.title, d.parent_text), s) for s in others if s.title]
     scored = [x for x in scored if x[0] >= 0.6]
     if len(scored) == 1:
@@ -915,17 +1008,24 @@ def file_documents(as_at, decisions, packets, playbooks):
     # 3. Versions and copies of one instrument.
     for siblings in by_account.values():
         for group in group_versions([d for d in siblings if not d.duplicate_of and not d.playbook]):
-            executed = [d for d in group if not d.is_draft]
+            executed = [d for d in group if not d.is_draft and d.signed != "Unsigned"]
             if not executed:
                 for d in group:
-                    d.flags.append("every version of this instrument is marked Draft; no executed copy found")
+                    d.flags.append("no executed copy of this instrument found (every version is Draft or Unsigned)")
                 continue
             # A one- or two-page signed copy beside a much longer executed body of the same
-            # instrument is its signature page or a partial copy; the body carries the execution
-            # that page shows.
+            # instrument, dated with it or within a few weeks after it, is its signature page
+            # or a partial copy; the body carries the execution that page shows. A short
+            # agreement from another year with the same generic title is not.
             body = max(executed, key=lambda d: (pages_of(d), sign_rank(d)))
+
+            def dated_with(fragment):
+                if not fragment.document_date or not body.document_date:
+                    return True
+                return fragment.document_date >= body.document_date and \
+                    days_between(body.document_date, fragment.document_date) <= 45
             fragments = [d for d in executed if d is not body and 0 < pages_of(d) <= 2
-                         and pages_of(body) >= max(3, 3 * pages_of(d)) and same_instrument(d, body)]
+                         and pages_of(body) >= max(3, 3 * pages_of(d)) and same_instrument(d, body) and dated_with(d)]
             for d in fragments:
                 d.copy_of = body.doc
                 d.notes.append(f"signature page or partial copy of doc {body.doc} ({pages_of(d)} of {pages_of(body)} pages)")
@@ -959,16 +1059,20 @@ def file_documents(as_at, decisions, packets, playbooks):
             if parent is not None:
                 d.parent = parent
                 d.notes.append(f"{d.relation.lower()} doc {parent.doc} ({how})")
+            elif how.startswith("ambiguous"):
+                d.flags.append(f"{d.relation}: parent {how}; nothing linked")
             elif blank(d.parent_text):
                 d.notes.append(f"{d.relation.lower()} an agreement the export does not name")
             else:
                 d.flags.append(f"{d.relation}: parent not found in this account: {d.parent_text[:80]!r}")
 
-    # 5. Terminations and supersessions take effect on the parent by date.
+    # 5. Terminations and supersessions take effect on the parent by date. A notice ends its
+    # target on the End date it states; a replacement supersedes from its own date, never
+    # from its own expiry.
     for d in docs:
-        if d.parent is None or d.relation not in ENDING or d.is_draft or d.draft_of:
+        if d.parent is None or d.relation not in ENDING or d.is_draft or d.draft_of or d.duplicate_of or d.copy_of:
             continue
-        effective = d.end_date or d.document_date
+        effective = d.document_date if d.relation == "Supersedes" else (d.end_date or d.document_date)
         if effective and effective <= as_at:
             d.parent.ended_by = d
             d.parent.notes.append(f"{'terminated' if d.relation == 'Terminates' else 'superseded'} by doc {d.doc} with effect from {effective}")
@@ -976,6 +1080,25 @@ def file_documents(as_at, decisions, packets, playbooks):
             d.parent.flags.append(f"{d.relation.lower()} notice served by doc {d.doc}, effective {effective}, after the as-at date")
         else:
             d.parent.flags.append(f"doc {d.doc} says it {d.relation.lower()} this document but gives no date")
+    # An extension or renewal that is itself live carries its parent on past the parent's own end.
+    for d in docs:
+        if d.parent is None or d.relation not in ("Extends", "Renews") or d.is_draft or d.draft_of or d.duplicate_of or d.copy_of:
+            continue
+        own = ended_state(d, as_at)
+        if own == "live":
+            d.parent.extended_by = d
+            d.parent.notes.append(f"extended by doc {d.doc}" + (f" to {d.end_date}" if d.end_date else ""))
+        elif own == "future":
+            d.parent.flags.append(f"doc {d.doc} extends this document but is not yet effective")
+        elif own == "unknown":
+            d.parent.flags.append(f"doc {d.doc} extends this document but its own end is unknown; extension not applied")
+
+    def state_of(d):
+        if d.ended_by:
+            return "ended"
+        if d.extended_by:
+            return "live"
+        return ended_state(d, as_at)
 
     # 6. Folders for standalone rows, then children, then the rule 6 fallback.
 
@@ -999,7 +1122,10 @@ def file_documents(as_at, decisions, packets, playbooks):
             if not any(f"doc {d.copy_of}" in n for n in d.notes):
                 d.notes.append(f"copy of doc {d.copy_of}")
             return F5
-        state = "ended" if d.ended_by else ended_state(d, as_at)
+        if d.packet.get("conflict"):
+            d.flags.append("the export holds two rows with different answers for this file; not filed by rule")
+            return UNSURE
+        state = state_of(d)
         if d.instrument in ("Other overlay", "Other") and d.relation in AMENDING and d.parent is not None \
                 and d.coverage in FULL | PARTIAL:
             d.notes.append(f"filed as an amendment: it {d.relation.lower()} doc {d.parent.doc} and covers supply")
@@ -1009,7 +1135,7 @@ def file_documents(as_at, decisions, packets, playbooks):
                 d.flags.append(f"{d.instrument} answered {d.coverage}: instrument and coverage disagree")
                 return UNSURE
             if state == "unknown" and d.parent is not None:
-                parent_state = "ended" if d.parent.ended_by else ended_state(d.parent, as_at)
+                parent_state = state_of(d.parent)
                 state = "ended" if parent_state == "ended" else "live"
                 d.notes.append(f"life taken from parent doc {d.parent.doc}")
             if state == "ended":
@@ -1053,9 +1179,12 @@ def file_documents(as_at, decisions, packets, playbooks):
     for d in docs:
         if d.instrument == "Global master agreement" and d.mechanism == ["None"]:
             d.flags.append("Global master agreement with Group mechanism None")
-    # Children inherit; two passes so an amendment of an amendment resolves.
-    for _ in range(2):
-        for d in docs:
+    # Children inherit. Iterate to a fixed point so a chain of amendments settles whatever the
+    # document numbers are: a child whose parent is still undecided waits for the next pass.
+    pending = [d for d in docs if d.folder == "child"]
+    for _ in range(len(pending) + 1):
+        progressed = False
+        for d in pending:
             if d.folder != "child":
                 continue
             if d.parent is None:
@@ -1065,17 +1194,27 @@ def file_documents(as_at, decisions, packets, playbooks):
                 else:
                     d.flags.append("child instrument with no parent found; placed in unsure")
                     d.folder = UNSURE
+                progressed = True
                 continue
             p = d.parent
+            if p.folder == "child":
+                continue
             if p.folder in (F1, F2):
                 d.folder = F2 if d.coverage in PARTIAL else p.folder
             elif p.folder == F4:
                 d.folder = F4
-            elif p.folder in (F5, UNSURE, "child", ""):
+            elif p.folder in (F5, UNSURE, ""):
                 d.folder = UNSURE
                 d.flags.append(f"parent doc {p.doc} is in {p.folder or 'a holding folder'}")
             else:
                 d.folder = UNSURE
+            progressed = True
+        if not progressed:
+            break
+    for d in pending:
+        if d.folder == "child":
+            d.folder = UNSURE
+            d.flags.append("chain of parents does not settle (a parent points back at a child); placed in unsure")
     # Rule 6 fallback: the only current master in an account governs, with a scope note.
     for account, siblings in by_account.items():
         if account.startswith("_"):
@@ -1083,7 +1222,7 @@ def file_documents(as_at, decisions, packets, playbooks):
         if any(d.folder == F1 for d in siblings):
             continue
         masters = [d for d in siblings if d.instrument in MASTERS and d.folder in (F2, UNSURE)
-                   and not d.ended_by and ended_state(d, as_at) == "live" and not d.is_draft
+                   and state_of(d) == "live" and not d.is_draft
                    and d.signed != "Unsigned" and d.coverage in PARTIAL | {"Unclear"}]
         if len(masters) == 1:
             m = masters[0]
@@ -1101,6 +1240,9 @@ def file_documents(as_at, decisions, packets, playbooks):
             for d in governing:
                 if d.instrument in MASTERS:
                     d.flags.append("two live masters claim the whole trade; unresolved")
+        for d in siblings:
+            if d.folder in (F1, F2) and d.signed == "Signature not established":
+                d.flags.append("signature not established on a governing instrument; check the signature page in /analyse")
         if not any(d.folder in (F1, F2) for d in siblings) and \
                 any(d.instrument.endswith("carrying standard terms") for d in siblings):
             for d in siblings:
@@ -1326,6 +1468,7 @@ def main():
                                   "also_the_supplier_entity_on": suppliers.get(norm_name(name), [])})
             say(json.dumps({"erp_accounts": erp_account_names(erp),
                             "unmatched": unmatched,
+                            "awaiting_the_user": [{"name": n, **info} for n, info in awaiting_user_names(decisions).items()],
                             "entity_map_ignored": [{"name": n, "reason": r} for n, r in report["ignored"].items()],
                             "permitted": {"account": "an ERP account row spelled as listed, _not-sure, "
                                                      "_not-on-the-list, or _ours for one of our own group companies",
