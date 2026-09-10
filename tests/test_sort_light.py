@@ -271,6 +271,43 @@ class LightFilingTest(KitFixture):
         self.assertEqual("1-governs-trade", amendment["folder"])
         self.assertIn("parent inferred", amendment["flags"])
 
+    def test_a_group_name_alone_says_who_we_are_and_reversed_rows_go_to_unsure(self):
+        write_rows(self.root / "inputs/our-entities.csv", [], ["name", "status", "note"])
+        self.assertIn("recorded", self.light("--our-group", "Marrowgate"))
+        table = self.export()
+        table[4].update({"4. Customer Entity": "Marrowgate Supply (Scotland) Ltd",
+                         "6. Supplier Entity": PELLMONT_PRINTED})            # the tool swapped the parties
+        write_rows(self.table, table, self.COLUMNS)
+        out = self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        self.assertIn("our group: Marrowgate", out)
+        self.assertIn("side customers: consistent", out)
+        self.light("--file")
+        po = self.corpus()[(self.inventory["05 Purchase Order.pdf"], self.erp_accounts[1])]
+        self.assertEqual("unsure", po["folder"])
+        self.assertIn("sides reversed", po["flags"])
+        self.assertIn("Marrowgate (group name)", (self.root / "out/sort/INDEX.md").read_text(encoding="utf-8"))
+
+    def test_without_any_our_entities_the_dominant_supplier_stands_in(self):
+        (self.root / "inputs/our-entities.csv").unlink()
+        out = self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        self.assertIn("treating Marrowgate Supply Ltd as our company", out)
+        self.assertIn("side customers: consistent", out)
+        self.assertEqual("Marrowgate Supply Ltd", json.loads(self.light("--unmatched"))["hints"]["inferred_ours"])
+
+    def test_a_group_member_decision_lands_in_our_entities_not_the_entity_map(self):
+        self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        self.assertIn("ERP account row", self.light("--decide", self.erp_accounts[1], "--account", "_ours", success=False))
+        self.light("--decide", "Quillbeck Fasteners plc", "--account", "_ours", "--basis", "known group",
+                   "--note", "invented group company")
+        ours = rows(self.root / "inputs/our-entities.csv")
+        self.assertIn(("Quillbeck Fasteners plc", "group member"), [(r["name"], r["status"]) for r in ours])
+        self.assertNotIn("Quillbeck", (self.root / "inputs/entity-map.csv").read_text(encoding="utf-8"))
+        self.assertEqual([], json.loads(self.light("--unmatched"))["unmatched"])
+        self.light("--file")
+        nda = next(r for (d, a), r in self.corpus().items() if d == self.inventory["03 NDA scan.pdf"])
+        self.assertEqual("_no-name-found", nda["account"])                    # both parties are ours
+        self.assertIn("only our own companies", nda["notes"])
+
     def test_import_refuses_a_table_without_the_required_columns(self):
         write_rows(self.table, [{"Name": "01 Supply Agreement.pdf", "1. Title": "x"}], ["Name", "1. Title"])
         self.assertIn("missing columns", self.light("--import", str(self.table), success=False))

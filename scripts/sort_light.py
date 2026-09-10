@@ -271,27 +271,77 @@ def read_error_log(path):
     return errors
 
 
-def side_check(packets, side):
+OUR_ENTITY_COLUMNS = ["name", "status", "note"]
+
+
+def our_entity_rows():
+    """inputs/our-entities.csv rows: name, status (current, former, group, group member), note."""
+    return [r for r in read_csv(OUR_ENTITIES) if r.get("name", "").strip()] if OUR_ENTITIES.is_file() else []
+
+
+def write_our_entity_rows(rows):
+    write_csv(OUR_ENTITIES, [{c: r.get(c, "") for c in OUR_ENTITY_COLUMNS} for r in rows], OUR_ENTITY_COLUMNS)
+
+
+def our_group_names(rows=None):
+    """The group names as printed in inputs/our-entities.csv (rows with status `group`)."""
+    rows = our_entity_rows() if rows is None else rows
+    return [r["name"].strip() for r in rows if r.get("status", "").strip().lower() == "group"]
+
+
+def ours_matcher(inferred=""):
+    """is_ours(name): a listed entity, a name carrying the group name, or the inferred entity.
+
+    The user need not list entities. One row with status `group` (the group name) makes every
+    entity whose name contains that word ours; the names turn adds group members it recognises
+    with --decide --account _ours; and with no rows at all the entity that dominates our side
+    of the export (inferred at import) stands in.
+    """
+    rows = our_entity_rows()
+    listed = [r["name"] for r in rows if r.get("status", "").strip().lower() != "group"]
+    keys = {norm_name(n) for n in listed} | {group_key(n) for n in listed}
+    groups = [re.compile(r"(?<![a-z0-9])" + re.escape(norm_name(g)) + r"(?![a-z0-9])")
+              for g in our_group_names(rows) if norm_name(g)]
+    if inferred:
+        keys |= {norm_name(inferred), group_key(inferred)}
+
+    def is_ours(name):
+        if not name:
+            return False
+        n = norm_name(strip_number(name))
+        return n in keys or group_key(name) in keys or any(g.search(n) for g in groups)
+    return is_ours
+
+
+def infer_ours(packets, side):
+    """With no our-entities rows at all: the entity that dominates our side's column."""
+    parsed = [p.get("parsed") or {} for p in packets.values() if not p.get("no_row")]
+    column = "supplier" if side == "customers" else "customer"
+    counts = Counter(p.get(column, "") for p in parsed if p.get(column))
+    return counts.most_common(1)[0][0] if counts else ""
+
+
+def side_check(packets, side, inferred=""):
     """Lines saying which entities dominate each column and whether that fits the side."""
     parsed = [p.get("parsed") or {} for p in packets.values() if not p.get("no_row")]
     suppliers = Counter(p.get("supplier", "") for p in parsed if p.get("supplier"))
     customers = Counter(p.get("customer", "") for p in parsed if p.get("customer"))
     if not suppliers and not customers:
         return []
-    ours = load_our_entities()
-    keys = {group_key(n) for n in ours} | {norm_name(n) for n in ours}
-
-    def is_ours(name):
-        return bool(name) and (norm_name(name) in keys or group_key(name) in keys)
+    is_ours = ours_matcher(inferred)
     top_s = suppliers.most_common(1)[0] if suppliers else ("", 0)
     top_c = customers.most_common(1)[0] if customers else ("", 0)
     lines = [f"most frequent supplier entity: {top_s[0] or 'none'} ({top_s[1]} of {len(parsed)} rows); "
              f"most frequent customer entity: {top_c[0] or 'none'} ({top_c[1]} of {len(parsed)} rows)"]
-    if not ours:
-        lines.append("inputs/our-entities.csv is missing: the script cannot tell your own companies from "
-                     "counterparties. If the most frequent supplier entity is your company, list it there "
-                     "(current and former names of every group company that signs) before filing.")
-        return lines
+    rows = our_entity_rows()
+    groups = our_group_names(rows)
+    if groups:
+        lines.append("our group: " + ", ".join(groups) + f"; {len(rows) - len(groups)} entities listed")
+    elif rows:
+        lines.append(f"our entities: {len(rows)} listed in inputs/our-entities.csv (no group name given)")
+    elif inferred:
+        lines.append(f"no group name given and no inputs/our-entities.csv: treating {inferred} as our company "
+                     "(the entity that dominates our side of the export). Pass --our-group to name the group.")
     expected_ours = "supplier" if side == "customers" else "customer"
     other = "customer" if side == "customers" else "supplier"
     ours_top = top_s if side == "customers" else top_c
@@ -302,9 +352,22 @@ def side_check(packets, side):
         lines.append(f"WARNING: side {side} looks wrong: the {other} column is mostly our own entity "
                      f"({theirs_top[0]}). Re-run /prepare with the other --side.")
     else:
-        lines.append(f"side {side}: neither column's most frequent entity is in inputs/our-entities.csv; "
-                     "check that file lists your contracting entities as the export prints them")
+        lines.append(f"side {side}: neither column's most frequent entity is ours by the group name or the "
+                     "listed entities; check the group name given with --our-group")
     return lines
+
+
+def set_our_group(name):
+    """Record the group name as a `group` row in inputs/our-entities.csv (never in the repo)."""
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("--our-group needs the group name")
+    rows = [r for r in our_entity_rows()
+            if not (r.get("status", "").strip().lower() == "group" and norm_name(r["name"]) == norm_name(name))]
+    rows.append({"name": name, "status": "group", "note": "group name given to /sort; every entity whose name "
+                                                            "carries it is ours"})
+    write_our_entity_rows(rows)
+    say(f"our group: {name!r} recorded in inputs/our-entities.csv")
 
 
 def import_export(path, sheet=None, error_log=None, as_at=None):
@@ -373,6 +436,7 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
         packets[item["doc_id"]] = {"doc_id": item["doc_id"], "raw": {}, "answers": {}, "parsed": {},
                                    "inventory": item, "flags": [f"no row: {item_note}"], "no_row": item_note}
     export_date = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).date().isoformat()
+    inferred = "" if our_entity_rows() else infer_ours(packets, erp.get("side", ""))
     stated = as_at_in_headers(headers)
     if as_at:
         source = "--as-at"
@@ -388,6 +452,7 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
     write_json(ACTIVE, {"schema": VERSION, "source_path": str(path), "source_hash": source_hash,
                         "snapshot": str(snapshot), "sheet": sheet, "columns": keys,
                         "export_date": export_date, "as_at": as_at, "as_at_source": source,
+                        "inferred_ours": inferred,
                         "error_log": str(Path(error_log).resolve()) if error_log else "",
                         "imported_at": datetime.now(timezone.utc).isoformat(),
                         "ignored_rows": ignored, "unknown_rows": unknown,
@@ -398,7 +463,7 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
         f"{len(ignored)} control rows ignored; {len(unknown)} rows for unknown files; as-at {as_at} ({source}).")
     if missing and not error_log:
         say("no error log supplied: whether the review tool refused the documents without a row is unknown")
-    for line in side_check(packets, erp.get("side", "")):
+    for line in side_check(packets, erp.get("side", ""), inferred):
         say(line)
     for name in unknown:
         warn(f"export row for a file not in the inventory: {name}")
@@ -474,10 +539,7 @@ def match_accounts(packets, playbooks=None):
         by_group.setdefault(group_key(account), []).append(account)
         by_core.setdefault(core_name(account), []).append(account)
     entities, _ = load_entity_map()
-    ours = {group_key(n) for n in load_our_entities()} | {norm_name(n) for n in load_our_entities()}
-
-    def is_ours(name):
-        return bool(name) and (norm_name(name) in ours or group_key(name) in ours)
+    is_ours = ours_matcher((read_json(ACTIVE) or {}).get("inferred_ours", ""))
 
     def resolve(name):
         """(account or holding target, basis, confidence) for one printed name."""
@@ -539,15 +601,20 @@ def match_accounts(packets, playbooks=None):
         supplier, s_number = parsed.get("supplier", ""), parsed.get("supplier_number", "")
         note = ""
         if customer and is_ours(customer):
-            # Sides reversed: we are the buyer. A customer-side ERP has no row for this paper.
+            # Sides reversed: the export puts our company in the customer cell. Either the tool
+            # swapped the parties or we really are the buyer; neither is filed by rule.
             counterparty, number = supplier, s_number
-            note = "sides reversed: our company is the customer on this paper"
+            note = ("sides reversed in the export: our company is the customer cell and "
+                    f"{counterparty or 'nobody'} the supplier; confirm which way the paper runs")
             if not counterparty or is_ours(counterparty):
                 decisions[doc] = [{"target": "_no-name-found", "basis": "", "confidence": "", "names": [customer],
                                    "note": "only our own companies are named"}]
                 continue
-            decisions[doc] = [{"target": holding("_not-on-the-list", counterparty), "basis": "", "confidence": "",
-                               "names": [counterparty], "note": note}]
+            target, basis, confidence = resolve(counterparty)
+            if target.startswith("_"):
+                target = holding("_not-on-the-list", counterparty)
+            decisions[doc] = [{"target": target, "basis": basis, "confidence": confidence,
+                               "names": [counterparty], "note": note, "reversed": True}]
             continue
         if not customer and supplier and not is_ours(supplier):
             customer, number = supplier, s_number
@@ -593,6 +660,20 @@ def decide_name(name, account, basis, confidence, note=""):
     by_norm = {norm_name(a): a for a in accounts}
     target = (account or "").strip()
     basis, confidence = (basis or "").strip().lower(), (confidence or "").strip().lower()
+    if target == "_ours":
+        if norm_name(name) in by_norm:
+            raise ValueError(f"{name!r} is an ERP account row; a customer account cannot be one of our companies")
+        rows = our_entity_rows()
+        for row in rows:
+            if norm_name(row["name"]) == norm_name(name) and "decided_by=claude" not in row.get("note", ""):
+                raise ValueError(f"{name!r} is already in inputs/our-entities.csv ({row.get('status')}); not changed")
+        rows = [r for r in rows if norm_name(r["name"]) != norm_name(name)]
+        rows.append({"name": name, "status": "group member",
+                     "note": "decided_by=claude; " + (basis or "known group") + ("; " + note.strip() if note else "")})
+        write_our_entity_rows(rows)
+        say(f"our entities: {name!r} recorded as a group member in inputs/our-entities.csv "
+            "(decided by claude; the user can delete the row). Run --unmatched to confirm.")
+        return rows[-1]
     if target in HOLDING_TARGETS:
         confidence = confidence or "not sure"
     else:
@@ -606,7 +687,7 @@ def decide_name(name, account, basis, confidence, note=""):
             near = [a for a in accounts if distinctive_tokens(target) & distinctive_tokens(a)][:5]
             raise ValueError(f"{target!r} is not an ERP account row (or matches several); spell it as the ERP does"
                              + (": nearest rows " + "; ".join(near) if near else "")
-                             + ". Holding targets are _not-sure and _not-on-the-list.")
+                             + ". Other targets are _not-sure, _not-on-the-list and _ours.")
         target = hits[0]
         if basis not in BASES:
             raise ValueError(f"--basis must be one of: {', '.join(BASES)}")
@@ -903,6 +984,9 @@ def file_documents(as_at, decisions, packets, playbooks):
             return "_unreadable"
         if d.playbook:
             return F6
+        if d.target.get("reversed"):
+            d.flags.append("sides reversed in the export; not filed by rule")
+            return UNSURE
         if d.duplicate_of:
             d.notes.append(f"byte-identical duplicate of doc {d.duplicate_of}")
             return F5
@@ -1111,6 +1195,12 @@ def write_reports(active, docs, report=None):
              "no status is assigned there, and the status columns below show zero for them. Status folders "
              "(`1-governs-trade` to `6-business-practice` and `unsure`) are section B applied within an "
              "account: `unsure` is a status, `_not-sure` is an account question.", "",
+             "Our companies: " + (", ".join(our_group_names()) + " (group name)" if our_group_names() else
+                                  (f"{active.get('inferred_ours')} (inferred: the entity that dominates our side of the "
+                                   "export; no group name given)" if active.get("inferred_ours") else
+                                   "the entities listed in inputs/our-entities.csv"))
+             + f"; {len([r for r in our_entity_rows() if r.get('status', '').lower() != 'group'])} entities listed. "
+             "A row whose customer cell is one of ours is filed as sides reversed, in unsure.", "",
              f"Documents without a row in the export: {len(no_row)}"
              + (". The review tool's error log was supplied; its codes are on the rows." if active.get("error_log")
                 else ". No error log was supplied, so whether the review tool refused them is unknown."), "",
@@ -1177,7 +1267,7 @@ def load_playbooks():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    action = parser.add_mutually_exclusive_group(required=True)
+    action = parser.add_mutually_exclusive_group(required=False)
     action.add_argument("--import", dest="import_path", nargs="?", const="auto", help="light export CSV/XLSX")
     action.add_argument("--unmatched", action="store_true", help="names for the one model decision turn")
     action.add_argument("--file", action="store_true", help="write account and status folders under out/sort")
@@ -1188,11 +1278,19 @@ def main():
     parser.add_argument("--basis", help="with --decide: same name | in the document | known group")
     parser.add_argument("--confidence", help="with --decide: sure | fairly sure | not sure")
     parser.add_argument("--note", default="", help="with --decide: why")
+    parser.add_argument("--our-group", metavar="NAME", help="our group name: every entity whose name carries it is ours "
+                                                             "(recorded in inputs/our-entities.csv, which git ignores)")
     parser.add_argument("--sheet")
     parser.add_argument("--error-log", help="the review tool's error workbook for files it refused")
     parser.add_argument("--as-at", help="YYYY-MM-DD used for current/ended; default: export file date")
     args = parser.parse_args()
+    if not (args.import_path or args.unmatched or args.file or args.status or args.decide or args.our_group):
+        parser.error("one of --import, --unmatched, --file, --status, --decide or --our-group is required")
     try:
+        if args.our_group:
+            set_our_group(args.our_group)
+            if not (args.import_path or args.unmatched or args.file or args.status or args.decide):
+                return 0
         if args.import_path:
             path = args.import_path
             if path == "auto":
@@ -1229,13 +1327,19 @@ def main():
             say(json.dumps({"erp_accounts": erp_account_names(erp),
                             "unmatched": unmatched,
                             "entity_map_ignored": [{"name": n, "reason": r} for n, r in report["ignored"].items()],
-                            "permitted": {"account": "an ERP account row spelled as listed, _not-sure or _not-on-the-list",
+                            "permitted": {"account": "an ERP account row spelled as listed, _not-sure, "
+                                                     "_not-on-the-list, or _ours for one of our own group companies",
                                           "basis": list(BASES), "confidence": list(CONFIDENCES)},
                             "hints": {"our_entities_file": "present" if OUR_ENTITIES.is_file() else "missing",
+                                      "our_group": our_group_names(),
+                                      "our_entities": [r["name"] for r in our_entity_rows()
+                                                       if r.get("status", "").lower() != "group"][:40],
+                                      "inferred_ours": active.get("inferred_ours", ""),
                                       "side": erp.get("side", ""),
-                                      "note": "a name that is also the supplier entity on other rows is probably one "
-                                              "of our own companies: it belongs in inputs/our-entities.csv, not in "
-                                              "the entity map; a separate legal entity of a group is _not-sure"}},
+                                      "note": "a name that carries our group name, that you know is one of our "
+                                              "group companies, or that is also the supplier entity on other rows "
+                                              "is ours: --decide NAME --account _ours. A separate legal entity of "
+                                              "a customer's group is _not-sure."}},
                            ensure_ascii=False, indent=1))
         elif args.file:
             docs = file_documents(active["as_at"], decisions, packets, load_playbooks())

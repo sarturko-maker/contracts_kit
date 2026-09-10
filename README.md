@@ -127,11 +127,11 @@ and never modifies, moves or renames them. Keep real piles outside the repositor
   ambiguous columns or sides need your answer before filing.
 - Readable: PDF, DOCX and page images (PNG, JPG, TIF). Native text is extracted locally; scans are
   viewed as pictures. There is no OCR dependency. Other formats retain inventory/report rows and paths.
-- Optional `inputs/our-entities.csv` (`name,status,note`) helps distinguish your companies from theirs.
-  Copy the shape in `inputs/our-entities.example.csv` and replace every example. Supplying your
-  own names is recommended for cheap filing: otherwise ambiguous supplier names can become
-  extra holding entries, and a reader is likelier to put your own company in a counterparty slot.
-  Example entity maps and corrections are formats, never decisions to import.
+- Optional `inputs/our-entities.csv` (`name,status,note`) says which companies are yours. For
+  cheap filing, `/sort --our-group "<name>"` writes it for you: one `group` row, and the names
+  turn adds `group member` rows it recognises. Listing entities by hand (`current`, `former`)
+  remains possible and helps the full readers keep your own company out of a counterparty
+  slot. Example entity maps and corrections are formats, never decisions to import.
 
 ## 1. Cheap filing: /sort
 
@@ -152,10 +152,12 @@ The only model step is one names-only turn for customers the script cannot match
 each decision through `python scripts/sort_light.py --decide`, which checks the account against
 the ERP and the basis and confidence, and the rows land in the entity map for you to confirm.
 No contract text or image enters the model, and the full Review_Table is not used. A missing
-light export stops /sort. So does a missing `inputs/our-entities.csv`: copy the example to that
-name and list your contracting entities first, or the script cannot tell your own companies
-from counterparties. The side follows the ERP column name; the as-at date comes from the Status
-question in the export.
+light export stops /sort. Tell it who you are with `/sort <pile> --our-group "<group name>"`: every
+entity whose name carries that word is yours, the names turn records group companies it
+recognises, and the file this lands in (`inputs/our-entities.csv`) is ignored by git. Without a
+group name the script treats the entity that dominates your side of the export as your company
+and says so. The side follows the ERP column name; the as-at date comes from the Status question
+in the export.
 
 Open `out/sort/INDEX.md`, then `out/sort/<side>/CORPUS.csv`. Each ERP account has a README,
 documents.csv and the status folders that apply: `1-governs-trade` to `6-business-practice`

@@ -211,8 +211,8 @@ def main():
     if OUR_ENTITIES_CSV.is_file():
         ok(f"{OUR_ENTITIES_CSV.relative_to(OUR_ENTITIES_CSV.parents[1])} present")
     else:
-        skip("inputs/our-entities.csv missing: /sort stops without it; copy inputs/our-entities.example.csv "
-             "to that name and list your contracting entities, current and former names")
+        skip("inputs/our-entities.csv absent: /sort takes our group name from --our-group, or treats the "
+             "entity that dominates our side of the export as our company and says so")
 
     # 5. Claude Code's PDF page/image reads need an external renderer, not just pypdf.
     if args.light_only:

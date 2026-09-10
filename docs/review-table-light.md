@@ -37,8 +37,8 @@ guide only. Its rows are invented and must not be imported into a real corpus.
 
 `/sort <pile>` is the cheap filing stage. Its inputs are the ERP extract (the only source of
 account folder names), the fourteen-column Review_Table_Light that the review tool exports after
-answering the questions below on every file, the tool's error workbook, and two local lists:
-`inputs/our-entities.csv` (our own contracting entities, required) and, optionally,
+answering the questions below on every file, the tool's error workbook, our group name
+(`--our-group`, recorded in the git-ignored `inputs/our-entities.csv`) and, optionally,
 `inputs/business-practice.csv` (playbooks). `scripts/sort_light.py` imports the export, takes
 the as-at date from the Status question, matches each customer entity to an ERP account by
 company number, normalised name and the entity map, links children to parents by the dates
@@ -355,8 +355,12 @@ a warning, and without either the export file's date is used and said.
 
 1. **Account.** Customer entity is matched to an ERP account by company number where both
    sides have one, then by name after normalising case, punctuation and Ltd, Limited, plc and
-   Inc, then through the entity map. A customer entity that is one of our own entities means the
-   sides are reversed: the row goes to a holding folder under the supplier's name. Anything else
+   Inc, then through the entity map. Our own companies are the entities whose names carry the
+   group name given with `--our-group`, the rows of `inputs/our-entities.csv` (the names turn adds
+   group members it recognises with `--decide --account _ours`), or, with neither, the entity that
+   dominates our side of the export. A customer entity that is one of ours means the sides are
+   reversed: the row is filed under the ERP account the supplier cell names, in unsure with a
+   flag, or in a holding folder under that name. Anything else
    goes to the model once, as names only, and comes back as entity-map rows written through
    `--decide` with `decided_by=claude`; a row whose account is not an ERP row, or whose basis is
    not one of the three permitted, is reported as ignored, never silently dropped. A name mapped

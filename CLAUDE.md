@@ -44,7 +44,8 @@
 - Four user commands, each stopping on its own: `/sort` files Review_Table_Light by script into
   account and status folders; its one model step is a names-only turn for customers the
   script cannot match, written through `sort_light.py --decide`, never by hand. It never reads
-  contract content. It needs `inputs/our-entities.csv`; the side follows the ERP column.
+  contract content. Who we are comes from `--our-group` (a group name), not a list the model
+  writes; the side follows the ERP column.
   `/analyse` consumes Review_Table when supplied, otherwise reads fully; `/analyse top` reads in full only
   the ERP_Top accounts after `/sort`, plus files dropped in since the light export; it matches, judges and writes the position notes and diagrams (the
   optional governing analysis), `/deep-dive [top]` fills the forms, proposes families and exports the graph,
