@@ -33,6 +33,37 @@ from a local list into the business practice folder (to do).
 Use [the invented example](../inputs/Review_Table_Light.example.csv) as a header and format
 guide only. Its rows are invented and must not be imported into a real corpus.
 
+## Overview: the light sort on one page
+
+`/sort <pile>` is the cheap filing stage. Its inputs are the ERP extract (the only source of
+account folder names), the fourteen-column Review_Table_Light that the review tool exports after
+answering the questions below on every file, the tool's error workbook, and two local lists:
+`inputs/our-entities.csv` (our own contracting entities, required) and, optionally,
+`inputs/business-practice.csv` (playbooks). `scripts/sort_light.py` imports the export, takes
+the as-at date from the Status question, matches each customer entity to an ERP account by
+company number, normalised name and the entity map, links children to parents by the dates
+they quote, detects byte-identical copies, drafts, copies and detached signature pages, applies
+section B of `stage1/sorting-rules.md` to the answers and writes one folder per ERP account with
+the status folders inside, plus `INDEX.md`, `CORPUS.csv`, `ACCOUNTS.csv` and
+`work/logs/sort.csv`. Every file gets a row. Names it cannot match go to holding folders grouped
+by name, with no status. Nothing is verified against the paper, and the report says so.
+
+The one model step is a names-only turn. `sort_light.py --unmatched` prints the customer names
+the script could not match, the ERP account list, any entity-map row it could not apply and
+why, and hints (a name that is also the supplier entity on other rows is probably ours). The
+model decides each name under section A and writes the decision with `sort_light.py --decide`,
+which validates the account against the ERP, the basis and the confidence, caps known group at
+fairly sure, and never overwrites a user decision. The model sees no contract text. What the
+design does not do: it does not infer affiliate coverage from group membership (a sister
+company is `_not-sure` until a person decides), it does not treat a missing answer as an
+absence in the contract, and it does not judge. The governing judgment belongs to `/analyse`,
+or to `/analyse top` for the accounts in ERP_Top.
+
+Where to look: `scripts/sort_light.py` (the script), `.claude/skills/sort/SKILL.md` (the steps
+the model follows), `stage1/sorting-rules.md` (sections A and B), `tests/test_sort_light.py` and
+`tests/test_top.py` (behaviour on the invented sample), and `eval/messy/score_light.py` with
+`eval/messy/expected/` (the messy-pile key, for evaluators only, never for a runner).
+
 ## Column types in the review tool
 
 The review tool offers free text (a model summary), classify (one of a fixed list), date (one
@@ -318,15 +349,21 @@ The output is one folder per ERP account, and inside it the status folders of
 `3-live-not-trade`, `4-not-live`, `5-orders-drafts-duplicates`, `6-business-practice` and
 `unsure`. Every file gets a row, holding folders keep unmatched names, and byte-identical copies
 are detected by hash. The script records the export's hash and date and the as-at date at
-import.
+import. The as-at date is read from the Status question's header ("As at 2026-09-09"), so the
+Current answers and the date they were given as at travel together; `--as-at` overrides it with
+a warning, and without either the export file's date is used and said.
 
 1. **Account.** Customer entity is matched to an ERP account by company number where both
    sides have one, then by name after normalising case, punctuation and Ltd, Limited, plc and
    Inc, then through the entity map. A customer entity that is one of our own entities means the
    sides are reversed: the row goes to a holding folder under the supplier's name. Anything else
-   goes to the model once, as names only, and comes back as provisional entity-map rows. Each
-   Additional customer entity that matches receives a copy of the document in its own account;
-   unmatched ones are flagged on the row, not dropped.
+   goes to the model once, as names only, and comes back as entity-map rows written through
+   `--decide` with `decided_by=claude`; a row whose account is not an ERP row, or whose basis is
+   not one of the three permitted, is reported as ignored, never silently dropped. A name mapped
+   with confidence `not sure` stays in `_not-sure`. Each Additional customer entity that matches
+   receives a copy of the document in its own account; unmatched ones are flagged on the row,
+   not dropped. The import also prints the most frequent supplier and customer entities and,
+   with `inputs/our-entities.csv`, whether they fit the side.
 2. **Same document, several files.** Byte-identical files are copies. Rows in one account with
    the same family of instrument that share a reference, or a title, are candidate versions of
    one document; they are treated as one instrument when their references agree or, without a
@@ -361,7 +398,11 @@ import.
    parent's place between folders 1 and 2 unless its own coverage is narrower. A Supersedes or
    Terminates child whose End date, or Document date when there is none, is on or before the
    as-at date sends its parent to folder 4; a future date leaves the parent live and flagged.
-   An unresolved parent sends the child to unsure.
+   An unresolved parent sends the child to unsure. When the export names no parent at all and
+   the relation is one that attaches rather than ends (amends, extends, renews, forms part of,
+   agreed under, accedes to, governed by, placed under, varies, confirms), and the account holds
+   exactly one master that is not a draft or copy, the child is linked to that master with the
+   flag "parent inferred"; Terminates and Supersedes are never inferred.
 9. **Contradictions go to review.** A non-governing instrument whose Supply coverage says it
    governs, a master answering Varies commercials only, or a Global master agreement with Group
    mechanism None, goes to unsure with both cells quoted. Global master agreement with Part of

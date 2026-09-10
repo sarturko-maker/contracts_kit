@@ -15,7 +15,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from kit_common import ASSETS, MERMAID_JS, OUT, WORK, ERP_EXTS, is_erp_top  # noqa: E402
+from kit_common import ASSETS, MERMAID_JS, OUT, WORK, ERP_EXTS, OUR_ENTITIES_CSV, is_erp_top  # noqa: E402
 
 
 def find_erp_candidates(pile):
@@ -200,12 +200,19 @@ def main():
             from sort_light import read_export
             light = find_review_table(Path(args.pile or ".").expanduser(), args.review_table_light, light=True)
             if light:
-                light_rows, _ = read_export(light, args.light_sheet)
+                light_rows, _, _ = read_export(light, args.light_sheet)
                 ok(f"Review_Table_Light: {len(light_rows)} rows; filing input, separate from full analysis")
             else:
                 skip("Review_Table_Light: not supplied; /sort requires this export")
         except (ValueError, OSError, ImportError, csv.Error, zipfile.BadZipFile) as err:
             fail(f"Review_Table_Light: {err}; see docs/review-table-light.md")
+
+    # Our own contracting entities: the light sort cannot tell them from counterparties without the list.
+    if OUR_ENTITIES_CSV.is_file():
+        ok(f"{OUR_ENTITIES_CSV.relative_to(OUR_ENTITIES_CSV.parents[1])} present")
+    else:
+        skip("inputs/our-entities.csv missing: /sort stops without it; copy inputs/our-entities.example.csv "
+             "to that name and list your contracting entities, current and former names")
 
     # 5. Claude Code's PDF page/image reads need an external renderer, not just pypdf.
     if args.light_only:

@@ -148,9 +148,14 @@ signed, status, end date, and the relation to and words identifying a parent agr
 [the copyable questions](docs/review-table-light.md). `scripts/sort_light.py` imports the
 export, matches customer entities to ERP accounts by company number, name and the entity map,
 links children to parents by the dates they quote, and files every document by section B.
-The only model step is one names-only turn for customers the script cannot match; its
-proposals land in the entity map for you to confirm. No contract text or image enters the
-model, and the full Review_Table is not used. A missing light export stops /sort.
+The only model step is one names-only turn for customers the script cannot match; it writes
+each decision through `python scripts/sort_light.py --decide`, which checks the account against
+the ERP and the basis and confidence, and the rows land in the entity map for you to confirm.
+No contract text or image enters the model, and the full Review_Table is not used. A missing
+light export stops /sort. So does a missing `inputs/our-entities.csv`: copy the example to that
+name and list your contracting entities first, or the script cannot tell your own companies
+from counterparties. The side follows the ERP column name; the as-at date comes from the Status
+question in the export.
 
 Open `out/sort/INDEX.md`, then `out/sort/<side>/CORPUS.csv`. Each ERP account has a README,
 documents.csv and the status folders that apply: `1-governs-trade` to `6-business-practice`

@@ -258,6 +258,18 @@ def guess_side(columns, rows):
     return None, None
 
 
+def side_named_by_column(column):
+    """'customers' or 'suppliers' when the account column's own name says which, else None."""
+    words = set(column_tokens(column))
+    customer = bool(words & {"customer", "customers", "client", "clients"})
+    supplier = bool(words & {"supplier", "suppliers", "vendor", "vendors"})
+    if customer and not supplier:
+        return "customers"
+    if supplier and not customer:
+        return "suppliers"
+    return None
+
+
 def guess_number_column(columns, account_column):
     """First number/id/code column that is not the account column."""
     for col in columns:
@@ -305,11 +317,17 @@ def prepare_erp(erp_path, args):
         account_confirmed = account_column is not None and account_column.lower() in STRONG_ACCOUNT_NAMES
 
     side_column = None
+    named = side_named_by_column(account_column) if account_column else None
     if args.side:
         side = args.side
         side_confirmed = True
+        if named and named != side:
+            fail(f"--side {side} contradicts the account column {account_column!r}, which names "
+                 f"{named}. Pass --side {named}, or rename the column if this really is a {side} list.")
     else:
         side, side_column = guess_side(columns, rows)
+        if side is None and named:
+            side, side_column = named, account_column
         side_confirmed = side is not None
 
     number_column = guess_number_column(columns, account_column)

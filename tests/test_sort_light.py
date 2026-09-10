@@ -5,9 +5,10 @@ import json
 import unittest
 from pathlib import Path
 
+from kit_common import ENTITY_MAP_COLUMNS
 from test_place import KitFixture, rows, write_rows
 import sort_light
-from sort_light import (dates_in, parse_entity, parse_closed, core_name, header_key, entity_lines)
+from sort_light import (dates_in, parse_entity, parse_closed, core_name, header_key, entity_lines, as_at_in_headers)
 
 
 class ParsingTest(unittest.TestCase):
@@ -46,6 +47,9 @@ class ParsingTest(unittest.TestCase):
         self.assertEqual("supply_coverage", header_key("6. Supply Coverage (Supply coverage\n Question: ...)"))
         self.assertEqual("file_name", header_key("Name"))
         self.assertEqual("relation_to_parent", header_key("11. Relation to Parent"))
+        self.assertEqual("2026-09-09", as_at_in_headers(["Name", "9. Status (As at 2026-09-09, choose exactly one value. Current: ...)"]))
+        self.assertEqual("2026-09-09", as_at_in_headers(["Status (as at 9 September 2026 choose one)"]))
+        self.assertEqual("", as_at_in_headers(["9. Status (choose exactly one value)"]))
 
 
 COLUMNS = ["Name", "1. Title", "2. Reference", "3. Document Date", "4. Customer Entity",
@@ -118,6 +122,10 @@ class LightFilingTest(KitFixture):
     def test_folders_follow_the_answers_and_dates(self):
         out = self.light("--import", str(self.table), "--as-at", "2026-06-01")
         self.assertIn("9 rows matched to documents; 1 documents without a row", out)
+        self.assertIn("as-at 2026-06-01 (--as-at)", out)
+        self.assertIn("most frequent supplier entity: Marrowgate Supply Ltd (9 of 9 rows)", out)
+        self.assertIn("side customers: consistent", out)
+        self.assertIn("no error log supplied", out)
         unmatched = json.loads(self.light("--unmatched"))
         self.assertEqual(["Quillbeck Fasteners plc"], [u["name"] for u in unmatched["unmatched"]])
         self.assertIn("Filed 10 documents", self.light("--file"))
@@ -201,10 +209,84 @@ class LightFilingTest(KitFixture):
         self.assertIn(f"draft; executed version is doc {body_id}", draft["notes"])
         self.assertNotIn("draft dated after", draft["flags"])
 
+    def test_the_names_turn_writes_validated_rows_through_the_script(self):
+        self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        name, pellmont = "Quillbeck Fasteners plc", self.erp_accounts[1]
+        self.assertIn("--basis must be", self.light("--decide", name, "--account", pellmont, "--basis", "unknown",
+                                                    "--confidence", "sure", success=False))
+        self.assertIn("not an ERP account", self.light("--decide", name, "--account", "Quillbeck Group",
+                                                       "--basis", "known group", "--confidence", "fairly sure", success=False))
+        out = self.light("--decide", name, "--account", pellmont.lower(), "--basis", "known group",
+                         "--confidence", "sure", "--note", "invented test decision")
+        self.assertIn("fairly sure", out)                                     # known group is capped
+        unmatched = json.loads(self.light("--unmatched"))
+        self.assertEqual([], unmatched["unmatched"])
+        self.assertEqual([], unmatched["entity_map_ignored"])
+        self.assertEqual("present", unmatched["hints"]["our_entities_file"])
+        self.assertIn("Filed 10 documents", self.light("--file"))
+        nda = self.corpus()[(self.inventory["03 NDA scan.pdf"], pellmont)]
+        self.assertEqual("3-live-not-trade", nda["folder"])
+        self.assertEqual(("known group", "fairly sure"), (nda["basis"], nda["confidence"]))
+        row = next(r for r in rows(self.root / "inputs/entity-map.csv") if r["name_as_printed"] == name)
+        self.assertEqual((pellmont, "claude"), (row["account"], row["decided_by"]))
+        index = (self.root / "out/sort/INDEX.md").read_text(encoding="utf-8")
+        self.assertIn("## Entity map", index)
+        self.assertIn("Quillbeck Fasteners plc -> " + pellmont, index)
+        # A user decision is never overwritten.
+        write_rows(self.root / "inputs/entity-map.csv", [{**row, "decided_by": "user", "account": "_not-on-the-list"}],
+                   ENTITY_MAP_COLUMNS)
+        self.assertIn("user decision", self.light("--decide", name, "--account", pellmont, "--basis", "known group",
+                                                  "--confidence", "fairly sure", success=False))
+
+    def test_an_entity_map_row_the_script_cannot_apply_is_reported(self):
+        self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        existing = rows(self.root / "inputs/entity-map.csv")
+        write_rows(self.root / "inputs/entity-map.csv", existing + [
+            {"name_as_printed": "Quillbeck Fasteners plc", "account": "Pellmont Logistics", "basis": "known group",
+             "confidence": "fairly sure", "decided_by": "claude", "note": "misspelt account"}], ENTITY_MAP_COLUMNS)
+        unmatched = json.loads(self.light("--unmatched"))
+        self.assertEqual(["Quillbeck Fasteners plc"], [u["name"] for u in unmatched["unmatched"]])
+        self.assertIn("not an ERP account row", unmatched["unmatched"][0]["why_unresolved"])
+        self.assertIn("not an ERP account row", unmatched["entity_map_ignored"][0]["reason"])
+        self.assertIn("ignored", self.light("--file"))
+
+    def test_the_as_at_date_comes_from_the_status_question(self):
+        columns = [c if not c.startswith("11. Status") else
+                   "11. Status (As at 2026-06-01, choose exactly one value. Current: the document has commenced)"
+                   for c in self.COLUMNS]
+        write_rows(self.table, [dict(zip(columns, r.values())) for r in self.export()], columns)
+        self.assertIn("as-at 2026-06-01 (the Status question)", self.light("--import", str(self.table)))
+        self.assertIn("as at 2026-06-01", self.light("--file") and (self.root / "out/sort/INDEX.md").read_text())
+        self.assertIn("differs from the as-at date in the Status question (2026-06-01)",
+                      self.light("--import", str(self.table), "--as-at", "2026-07-01"))
+
+    def test_a_child_with_no_parent_named_links_to_the_accounts_only_master(self):
+        table = self.export()
+        table[1]["14. Parent Agreement"] = "—"                      # Amends, but the export names no parent
+        write_rows(self.table, table, self.COLUMNS)
+        self.light("--import", str(self.table), "--as-at", "2026-06-01")
+        self.light("--file")
+        amendment = self.corpus()[(self.inventory["02 Amendment 1.pdf"], self.erp_accounts[0])]
+        self.assertEqual(self.inventory["01 Supply Agreement.pdf"], amendment["parent_doc"])
+        self.assertEqual("1-governs-trade", amendment["folder"])
+        self.assertIn("parent inferred", amendment["flags"])
+
     def test_import_refuses_a_table_without_the_required_columns(self):
         write_rows(self.table, [{"Name": "01 Supply Agreement.pdf", "1. Title": "x"}], ["Name", "1. Title"])
         self.assertIn("missing columns", self.light("--import", str(self.table), success=False))
         self.assertFalse((self.root / "work/review-table-light/active.json").exists())
+
+
+class SideCheck(KitFixture):
+    def test_prepare_refuses_a_side_that_contradicts_the_account_column(self):
+        out = self.command("prepare.py", str(self.pile), "--account-column", "customer_account",
+                           "--side", "suppliers", success=False)
+        self.assertIn("contradicts the account column", out)
+
+    def test_prepare_derives_the_side_from_a_column_that_names_it(self):
+        out = self.command("prepare.py", str(self.pile), "--account-column", "customer_account")
+        self.assertIn("side: customers", out.lower())
+        self.assertIn('"side": "customers"', (self.root / "work/erp.json").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

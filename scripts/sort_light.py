@@ -9,6 +9,7 @@ Commands: --import [FILE] [--error-log FILE] [--as-at DATE], --unmatched, --file
 """
 
 import argparse
+from collections import Counter
 import csv
 import hashlib
 import json
@@ -23,7 +24,8 @@ from kit_common import (KIT, WORK, OUT, WORK_FILES, INVENTORY_CSV, STATUS_FOLDER
                         SORT_LOG_COLUMNS, read_csv, write_csv, read_json, write_json,
                         write_text, load_erp, erp_account_names, load_entity_map,
                         load_our_entities, entity_row_for, norm_name, group_key,
-                        safe_folder_name, filed_name, join_multi, say, warn, fail)
+                        safe_folder_name, filed_name, join_multi, say, warn, fail, ENTITY_MAP_COLUMNS, ENTITY_MAP_CSV,
+)
 
 ROOT = WORK / "review-table-light"
 ACTIVE = ROOT / "active.json"
@@ -31,6 +33,7 @@ SOURCE = WORK / "review-light-source.json"
 OUTPUT = OUT / "sort"
 SORT_LOG = WORK / "logs" / "sort.csv"
 PLAYBOOKS = KIT / "inputs" / "business-practice.csv"
+OUR_ENTITIES = KIT / "inputs" / "our-entities.csv"
 VERSION = "sort-light-v1"
 
 # Canonical keys; the export may number the headers and append the question text.
@@ -74,6 +77,12 @@ NON_GOVERNING = {"Pricing or rebate letter", "Notice letter", "NDA, MOU or lette
 FULL = {"All supply between the parties", "Substantially all supply"}
 PARTIAL = {"Part of supply", "Named division or site"}
 ENDING = {"Terminates", "Supersedes"}
+AMENDING = {"Amends", "Extends", "Renews", "Forms part of", "Agreed under", "Accedes to"}
+SIDE_EFFECTS = {"Confirms", "Varies", "Terminates", "Placed under", "Governed by"}
+INFERABLE = AMENDING | {"Governed by", "Placed under", "Varies", "Confirms"}
+BASES = ("same name", "in the document", "known group")
+CONFIDENCES = ("sure", "fairly sure", "not sure")
+HOLDING_TARGETS = ("_not-sure", "_not-on-the-list")
 F1, F2, F3, F4, F5, F6, UNSURE = STATUS_FOLDERS
 BLANKS = {"", "—", "–", "-", "n/a", "na", "none", "null"}
 
@@ -224,7 +233,18 @@ def read_export(path, sheet=None):
     for values in table[1:]:
         row = {k: (str(values[i]).strip() if i < len(values) else "") for i, k in enumerate(keys) if k}
         rows.append(row)
-    return rows, keys
+    return rows, keys, [str(h or "") for h in table[0]]
+
+
+def as_at_in_headers(headers):
+    """The as-at date the Status question states ("As at 2026-09-09, choose..."), or ''."""
+    for header in headers:
+        found = re.search(r"\bas\s+at\b\s*:?\s*(.{0,40})", str(header), re.I)
+        if found:
+            dates = dates_in(found.group(1))
+            if dates:
+                return dates[0]
+    return ""
 
 
 def read_error_log(path):
@@ -251,6 +271,42 @@ def read_error_log(path):
     return errors
 
 
+def side_check(packets, side):
+    """Lines saying which entities dominate each column and whether that fits the side."""
+    parsed = [p.get("parsed") or {} for p in packets.values() if not p.get("no_row")]
+    suppliers = Counter(p.get("supplier", "") for p in parsed if p.get("supplier"))
+    customers = Counter(p.get("customer", "") for p in parsed if p.get("customer"))
+    if not suppliers and not customers:
+        return []
+    ours = load_our_entities()
+    keys = {group_key(n) for n in ours} | {norm_name(n) for n in ours}
+
+    def is_ours(name):
+        return bool(name) and (norm_name(name) in keys or group_key(name) in keys)
+    top_s = suppliers.most_common(1)[0] if suppliers else ("", 0)
+    top_c = customers.most_common(1)[0] if customers else ("", 0)
+    lines = [f"most frequent supplier entity: {top_s[0] or 'none'} ({top_s[1]} of {len(parsed)} rows); "
+             f"most frequent customer entity: {top_c[0] or 'none'} ({top_c[1]} of {len(parsed)} rows)"]
+    if not ours:
+        lines.append("inputs/our-entities.csv is missing: the script cannot tell your own companies from "
+                     "counterparties. If the most frequent supplier entity is your company, list it there "
+                     "(current and former names of every group company that signs) before filing.")
+        return lines
+    expected_ours = "supplier" if side == "customers" else "customer"
+    other = "customer" if side == "customers" else "supplier"
+    ours_top = top_s if side == "customers" else top_c
+    theirs_top = top_c if side == "customers" else top_s
+    if is_ours(ours_top[0]):
+        lines.append(f"side {side}: consistent; the {expected_ours} column is mostly our own entity")
+    elif is_ours(theirs_top[0]):
+        lines.append(f"WARNING: side {side} looks wrong: the {other} column is mostly our own entity "
+                     f"({theirs_top[0]}). Re-run /prepare with the other --side.")
+    else:
+        lines.append(f"side {side}: neither column's most frequent entity is in inputs/our-entities.csv; "
+                     "check that file lists your contracting entities as the export prints them")
+    return lines
+
+
 def import_export(path, sheet=None, error_log=None, as_at=None):
     inventory = read_csv(INVENTORY_CSV)
     if not inventory:
@@ -259,7 +315,7 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
     if not erp.get("confirmed"):
         raise ValueError("Confirm the ERP account column and side with /prepare first")
     path = Path(path).expanduser().resolve()
-    rows, keys = read_export(path, sheet)
+    rows, keys, headers = read_export(path, sheet)
     control = {Path(erp.get("source_path", "")).name.casefold(), path.name.casefold()}
     by_name = {}
     for item in inventory:
@@ -317,12 +373,21 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
         packets[item["doc_id"]] = {"doc_id": item["doc_id"], "raw": {}, "answers": {}, "parsed": {},
                                    "inventory": item, "flags": [f"no row: {item_note}"], "no_row": item_note}
     export_date = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).date().isoformat()
-    as_at = as_at or export_date
+    stated = as_at_in_headers(headers)
+    if as_at:
+        source = "--as-at"
+        if stated and stated != as_at:
+            warn(f"--as-at {as_at} differs from the as-at date in the Status question ({stated}); "
+                 "the export's Current answers were given as at that date")
+    elif stated:
+        as_at, source = stated, "the Status question"
+    else:
+        as_at, source = export_date, "the export file's date; no as-at date in the Status question, pass --as-at if it is wrong"
     date.fromisoformat(as_at)
     write_json(folder / "rows.json", packets)
     write_json(ACTIVE, {"schema": VERSION, "source_path": str(path), "source_hash": source_hash,
                         "snapshot": str(snapshot), "sheet": sheet, "columns": keys,
-                        "export_date": export_date, "as_at": as_at,
+                        "export_date": export_date, "as_at": as_at, "as_at_source": source,
                         "error_log": str(Path(error_log).resolve()) if error_log else "",
                         "imported_at": datetime.now(timezone.utc).isoformat(),
                         "ignored_rows": ignored, "unknown_rows": unknown,
@@ -330,7 +395,11 @@ def import_export(path, sheet=None, error_log=None, as_at=None):
     write_json(SOURCE, {"source_path": str(path), "sha256": source_hash, "sheet": sheet})
     with_rows = len([p for p in packets.values() if not p.get("no_row")])
     say(f"Review_Table_Light: {with_rows} rows matched to documents; {len(missing)} documents without a row; "
-        f"{len(ignored)} control rows ignored; {len(unknown)} rows for unknown files; as-at {as_at}.")
+        f"{len(ignored)} control rows ignored; {len(unknown)} rows for unknown files; as-at {as_at} ({source}).")
+    if missing and not error_log:
+        say("no error log supplied: whether the review tool refused the documents without a row is unknown")
+    for line in side_check(packets, erp.get("side", "")):
+        say(line)
     for name in unknown:
         warn(f"export row for a file not in the inventory: {name}")
     for doc in sorted(packets):
@@ -381,8 +450,13 @@ def distinctive_tokens(name):
 
 
 def match_accounts(packets, playbooks=None):
-    """Deterministic account decisions per document. Returns {doc: [target dict, ...]}."""
+    """Deterministic account decisions per document.
+
+    Returns ({doc: [target dict, ...]}, report) where report says which entity-map rows were
+    applied and which were ignored and why, so a decision that did not take effect is visible.
+    """
     playbooks = playbooks or {}
+    report = {"applied": {}, "ignored": {}}
     erp = load_erp()
     accounts = erp_account_names(erp)
     by_norm = {norm_name(a): a for a in accounts}
@@ -415,13 +489,30 @@ def match_accounts(packets, playbooks=None):
         if len(hits) == 1:
             return hits[0], "same name", "sure"
         row = entity_row_for(entities, name)
-        if row is not None and row.get("account", "").strip():
-            target = row["account"].strip()
-            if target in ("_not-sure", "_not-on-the-list"):
-                return holding(target, name), row.get("basis", ""), row.get("confidence", "")
-            mapped = by_norm.get(norm_name(target))
-            if mapped:
-                return mapped, row.get("basis", "entity map"), row.get("confidence", "fairly sure")
+        if row is not None:
+            target = row.get("account", "").strip()
+            basis, confidence = row.get("basis", "").strip(), row.get("confidence", "").strip().lower()
+            if not target:
+                report["ignored"][name] = "the entity-map row has no account"
+            elif target in HOLDING_TARGETS:
+                report["applied"][name] = target
+                return holding(target, name), basis, confidence
+            else:
+                hits = [by_norm[norm_name(target)]] if norm_name(target) in by_norm else \
+                    (by_group.get(group_key(target), []) or by_core.get(core_name(target), []))
+                if len(hits) != 1:
+                    report["ignored"][name] = (f"mapped to {target!r}, which is not an ERP account row; "
+                                               "spell the account as the ERP record does")
+                elif basis not in BASES:
+                    report["ignored"][name] = (f"basis {basis!r} is not one of {', '.join(BASES)}; "
+                                               "left in _not-sure for the user")
+                    return holding("_not-sure", name), basis, confidence
+                elif confidence != "not sure" and confidence in CONFIDENCES:
+                    report["applied"][name] = hits[0]
+                    return hits[0], basis, confidence
+                else:
+                    report["applied"][name] = "_not-sure"
+                    return holding("_not-sure", name), basis, confidence or "not sure"
         tokens = distinctive_tokens(name)
         candidates = [a for a in accounts if tokens & distinctive_tokens(a)]
         if candidates:
@@ -489,7 +580,66 @@ def match_accounts(packets, playbooks=None):
                 row.update(target=numbers[number], basis="company number in the document",
                            confidence="sure", note=(row["note"] + " " if row["note"] else "")
                            + f"company number {number} matches a document filed under this account")
-    return decisions
+    return decisions, report
+
+
+def decide_name(name, account, basis, confidence, note=""):
+    """The names-only turn writes one decision through here: validated, never a hand-edited CSV."""
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("--decide needs the name as printed")
+    erp = load_erp()
+    accounts = erp_account_names(erp)
+    by_norm = {norm_name(a): a for a in accounts}
+    target = (account or "").strip()
+    basis, confidence = (basis or "").strip().lower(), (confidence or "").strip().lower()
+    if target in HOLDING_TARGETS:
+        confidence = confidence or "not sure"
+    else:
+        by_group, by_core = {}, {}
+        for a in accounts:
+            by_group.setdefault(group_key(a), []).append(a)
+            by_core.setdefault(core_name(a), []).append(a)
+        hits = [by_norm[norm_name(target)]] if norm_name(target) in by_norm else \
+            (by_group.get(group_key(target), []) or by_core.get(core_name(target), []))
+        if len(hits) != 1:
+            near = [a for a in accounts if distinctive_tokens(target) & distinctive_tokens(a)][:5]
+            raise ValueError(f"{target!r} is not an ERP account row (or matches several); spell it as the ERP does"
+                             + (": nearest rows " + "; ".join(near) if near else "")
+                             + ". Holding targets are _not-sure and _not-on-the-list.")
+        target = hits[0]
+        if basis not in BASES:
+            raise ValueError(f"--basis must be one of: {', '.join(BASES)}")
+        if confidence not in CONFIDENCES:
+            raise ValueError(f"--confidence must be one of: {', '.join(CONFIDENCES)}")
+        if basis == "known group" and confidence == "sure":
+            confidence = "fairly sure"
+            say("known group is never better than fairly sure; confidence set to fairly sure")
+    if confidence and confidence not in CONFIDENCES:
+        raise ValueError(f"--confidence must be one of: {', '.join(CONFIDENCES)}")
+    existing = read_csv(ENTITY_MAP_CSV) if ENTITY_MAP_CSV.is_file() else []
+    kept = []
+    for row in existing:
+        if norm_name(row.get("name_as_printed", "")) == norm_name(name):
+            if row.get("decided_by", "").strip().lower() == "user":
+                raise ValueError(f"{name!r} already has a user decision ({row.get('account')!r}); not overwritten")
+            continue
+        kept.append({c: row.get(c, "") for c in ENTITY_MAP_COLUMNS})
+    new_row = {"name_as_printed": name, "account": target, "basis": basis, "confidence": confidence,
+               "decided_by": "claude", "note": (note or "").strip()}
+    write_csv(ENTITY_MAP_CSV, kept + [new_row], ENTITY_MAP_COLUMNS)
+    say(f"entity map: {name!r} -> {target!r} ({basis or 'no basis'}, {confidence}); decided_by claude. "
+        "Run --unmatched to confirm it took effect.")
+    return new_row
+
+
+def map_report_lines(report):
+    lines = []
+    if report["applied"]:
+        lines.append("entity map applied: " + "; ".join(f"{n} -> {t}" for n, t in report["applied"].items()))
+    for name, reason in report["ignored"].items():
+        lines.append(f"WARNING: entity map row for {name!r} ignored: {reason}")
+    return lines
 
 
 def unmatched_names(decisions, packets):
@@ -719,6 +869,12 @@ def file_documents(as_at, decisions, packets, playbooks):
             if d.no_row or not d.relation:
                 continue
             parent, how = find_parent(d, siblings)
+            if parent is None and blank(d.parent_text) and d.relation in INFERABLE:
+                masters = [s for s in siblings if s is not d and not s.no_row and s.instrument in MASTERS
+                           and not s.is_draft and not s.duplicate_of and not s.copy_of and not s.draft_of]
+                if len(masters) == 1:
+                    parent, how = masters[0], "the account's only master; the export names no parent"
+                    d.flags.append(f"parent inferred: doc {parent.doc} is the account's only master")
             if parent is not None:
                 d.parent = parent
                 d.notes.append(f"{d.relation.lower()} doc {parent.doc} ({how})")
@@ -741,8 +897,6 @@ def file_documents(as_at, decisions, packets, playbooks):
             d.parent.flags.append(f"doc {d.doc} says it {d.relation.lower()} this document but gives no date")
 
     # 6. Folders for standalone rows, then children, then the rule 6 fallback.
-    AMENDING = {"Amends", "Extends", "Renews", "Forms part of", "Agreed under", "Accedes to"}
-    SIDE_EFFECTS = {"Confirms", "Varies", "Terminates", "Placed under", "Governed by"}
 
     def decide(d):
         if d.no_row:
@@ -891,7 +1045,8 @@ def cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
-def write_reports(active, docs):
+def write_reports(active, docs, report=None):
+    report = report or {"applied": {}, "ignored": {}}
     erp = load_erp()
     side = erp["side"]
     accounts = erp_account_names(erp)
@@ -946,9 +1101,19 @@ def write_reports(active, docs):
                 "unsure": len([r for r in by_account.get(a, []) if r["folder"] == UNSURE]),
                 "flags": len([r for r in by_account.get(a, []) if r["flags"]])} for a in accounts],
               ["account", "n_documents", "governs_trade", "unsure", "flags"])
-    index = ["# Light filing", "", f"Review_Table_Light filing by script, as at {active['as_at']}. "
+    no_row = [d for d in docs if d.no_row]
+    index = ["# Light filing", "", f"Review_Table_Light filing by script, as at {active['as_at']} "
+             f"(from {active.get('as_at_source', 'the import')}). "
              "Status folders follow stage1/sorting-rules.md section B on the export's answers; "
              "governing status is not verified against the contracts.", "",
+             "Two kinds of folder. Account holding folders (`_not-sure/<name>`, `_not-on-the-list/<name>`, "
+             "`_no-name-found`, `_unreadable`) hold documents whose ERP account is not settled (section A); "
+             "no status is assigned there, and the status columns below show zero for them. Status folders "
+             "(`1-governs-trade` to `6-business-practice` and `unsure`) are section B applied within an "
+             "account: `unsure` is a status, `_not-sure` is an account question.", "",
+             f"Documents without a row in the export: {len(no_row)}"
+             + (". The review tool's error log was supplied; its codes are on the rows." if active.get("error_log")
+                else ". No error log was supplied, so whether the review tool refused them is unknown."), "",
              f"[Corpus CSV]({side}/CORPUS.csv)", "", "| account | documents | 1 | 2 | 3 | 4 | 5 | 6 | unsure | flags |",
              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     targets = list(accounts) + sorted(a for a in by_account if a not in accounts)
@@ -975,9 +1140,15 @@ def write_reports(active, docs):
             write_csv(folder / status / "documents.csv", [r for r in group if r["folder"] == status], REPORT_COLUMNS)
     unresolved = [r for r in rows if r["account"].startswith("_")]
     if unresolved:
-        index += ["", "## Needs a decision", ""]
+        index += ["", "## Needs a decision", "",
+                  "Account holding folders, grouped by the name found. Decide each name once: the names-only "
+                  "turn of /sort writes decisions through `python scripts/sort_light.py --decide`, or edit "
+                  "`inputs/entity-map.csv` with `decided_by=user`, then run `--file` again.", ""]
         for r in unresolved:
             index.append(f"- doc {r['doc_id']}: {cell(r['account'])} ({cell(r['notes'] or r['flags'])})")
+    map_lines = map_report_lines(report)
+    if map_lines:
+        index += ["", "## Entity map", ""] + [f"- {line}" for line in map_lines]
     write_text(OUTPUT / "INDEX.md", "\n".join(index) + "\n")
     inventory = {r["doc_id"]: r for r in read_csv(INVENTORY_CSV)}
     log = [{"doc_id": r["doc_id"], "original_path": r["original_path"],
@@ -990,6 +1161,10 @@ def write_reports(active, docs):
     counts = {f: len([r for r in rows if r["folder"] == f]) for f in STATUS_FOLDERS}
     say(f"Filed {len(inventory) - 1 if 'erp' in inventory else len(inventory)} documents as {len(rows)} account rows under out/sort; "
         + ", ".join(f"{f}: {n}" for f, n in counts.items()) + f"; unresolved names: {len(unresolved)}.")
+    say(f"as-at {active['as_at']} ({active.get('as_at_source', 'the import')}); documents without a row: {len(no_row)}"
+        + ("" if active.get("error_log") else " (no error log supplied: refusals unknown)"))
+    for line in map_lines:
+        say(line)
 
 
 def load_playbooks():
@@ -1007,6 +1182,12 @@ def main():
     action.add_argument("--unmatched", action="store_true", help="names for the one model decision turn")
     action.add_argument("--file", action="store_true", help="write account and status folders under out/sort")
     action.add_argument("--status", action="store_true")
+    action.add_argument("--decide", metavar="NAME", help="write one names-turn decision to inputs/entity-map.csv "
+                                                          "(with --account, --basis, --confidence, --note)")
+    parser.add_argument("--account", help="with --decide: an ERP account row, _not-sure or _not-on-the-list")
+    parser.add_argument("--basis", help="with --decide: same name | in the document | known group")
+    parser.add_argument("--confidence", help="with --decide: sure | fairly sure | not sure")
+    parser.add_argument("--note", default="", help="with --decide: why")
     parser.add_argument("--sheet")
     parser.add_argument("--error-log", help="the review tool's error workbook for files it refused")
     parser.add_argument("--as-at", help="YYYY-MM-DD used for current/ended; default: export file date")
@@ -1021,20 +1202,50 @@ def main():
                     raise ValueError("No Review_Table_Light registered by /prepare; pass --import PATH")
             import_export(path, args.sheet, args.error_log, args.as_at)
             return 0
+        if args.decide:
+            if not args.account:
+                raise ValueError("--decide needs --account")
+            decide_name(args.decide, args.account, args.basis, args.confidence, args.note)
+            return 0
         active, packets = load_packets()
-        decisions = match_accounts(packets, load_playbooks())
+        decisions, report = match_accounts(packets, load_playbooks())
         if args.unmatched:
             erp = load_erp()
+            entities, _ = load_entity_map()
+            names = unmatched_names(decisions, packets)
+            suppliers = {}
+            for doc, packet in packets.items():
+                supplier = (packet.get("parsed") or {}).get("supplier", "")
+                if supplier:
+                    suppliers.setdefault(norm_name(supplier), []).append(doc)
+            unmatched = []
+            for name, docs in names.items():
+                row = entity_row_for(entities, name)
+                unmatched.append({"name": name, "docs": docs,
+                                  "entity_map_row": ({c: row.get(c, "") for c in ENTITY_MAP_COLUMNS} if row else None),
+                                  "why_unresolved": report["ignored"].get(name) or (
+                                      "row says not sure" if row else "no entity-map row"),
+                                  "also_the_supplier_entity_on": suppliers.get(norm_name(name), [])})
             say(json.dumps({"erp_accounts": erp_account_names(erp),
-                            "unmatched": [{"name": n, "docs": d} for n, d in unmatched_names(decisions, packets).items()]},
+                            "unmatched": unmatched,
+                            "entity_map_ignored": [{"name": n, "reason": r} for n, r in report["ignored"].items()],
+                            "permitted": {"account": "an ERP account row spelled as listed, _not-sure or _not-on-the-list",
+                                          "basis": list(BASES), "confidence": list(CONFIDENCES)},
+                            "hints": {"our_entities_file": "present" if OUR_ENTITIES.is_file() else "missing",
+                                      "side": erp.get("side", ""),
+                                      "note": "a name that is also the supplier entity on other rows is probably one "
+                                              "of our own companies: it belongs in inputs/our-entities.csv, not in "
+                                              "the entity map; a separate legal entity of a group is _not-sure"}},
                            ensure_ascii=False, indent=1))
         elif args.file:
             docs = file_documents(active["as_at"], decisions, packets, load_playbooks())
-            write_reports(active, docs)
+            write_reports(active, docs, report)
         else:
             names = unmatched_names(decisions, packets)
-            say(f"Review_Table_Light: {len(packets)} documents; as-at {active['as_at']}; "
-                f"{len(names)} customer names without an ERP match.")
+            say(f"Review_Table_Light: {len(packets)} documents; as-at {active['as_at']} "
+                f"({active.get('as_at_source', 'the import')}); {len(names)} customer names without an ERP match.")
+            for line in map_report_lines(report):
+                say(line)
     except (ValueError, OSError, ImportError, csv.Error, zipfile.BadZipFile) as err:
         fail(str(err))
     return 0
